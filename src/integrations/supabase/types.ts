@@ -59,6 +59,35 @@ export type Database = {
         }
         Relationships: []
       }
+      favorites: {
+        Row: {
+          club_user_id: string
+          created_at: string
+          id: string
+          player_id: string
+        }
+        Insert: {
+          club_user_id: string
+          created_at?: string
+          id?: string
+          player_id: string
+        }
+        Update: {
+          club_user_id?: string
+          created_at?: string
+          id?: string
+          player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string

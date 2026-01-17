@@ -17,7 +17,8 @@ import {
   CheckCircle,
   XCircle,
   Crown,
-  MessageSquare
+  MessageSquare,
+  Heart
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import FavoritesList from "@/components/favorites/FavoritesList";
 
 type Club = Tables<"clubs">;
 type Subscription = Tables<"subscriptions">;
@@ -339,6 +341,8 @@ const ClubDashboard = () => {
             transition={{ delay: 0.2 }}
             className="lg:col-span-2 space-y-6"
           >
+            {/* Favorites List */}
+            <FavoritesList />
             {/* Quick Actions */}
             <Card>
               <CardHeader>
