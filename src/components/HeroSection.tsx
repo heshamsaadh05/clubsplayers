@@ -1,14 +1,20 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, Trophy, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, Star, Trophy, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/hooks/useLanguage";
 import heroPlayer from "@/assets/hero-player.jpg";
+
 const HeroSection = () => {
+  const { t, direction } = useLanguage();
+  
   const stats = [
-    { icon: Users, value: "+500", label: "لاعب محترف" },
-    { icon: Trophy, value: "+120", label: "نادي شريك" },
-    { icon: Star, value: "+50", label: "صفقة ناجحة" },
+    { icon: Users, value: "+500", label: t('hero.stats.players', 'لاعب محترف') },
+    { icon: Trophy, value: "+120", label: t('hero.stats.clubs', 'نادي شريك') },
+    { icon: Star, value: "+50", label: t('hero.stats.deals', 'صفقة ناجحة') },
   ];
+
+  const ArrowIcon = direction === 'rtl' ? ArrowLeft : ArrowRight;
 
   return (
     <section
@@ -39,7 +45,9 @@ const HeroSection = () => {
             className="inline-flex items-center gap-2 bg-gold/10 border border-gold/30 rounded-full px-4 py-2 mb-8"
           >
             <Star className="w-4 h-4 text-gold" />
-            <span className="text-gold text-sm font-medium">وكالة اللاعبين الأولى في الوطن العربي</span>
+            <span className="text-gold text-sm font-medium">
+              {t('hero.badge', 'وكالة اللاعبين الأولى في الوطن العربي')}
+            </span>
           </motion.div>
 
           {/* Title */}
@@ -49,9 +57,9 @@ const HeroSection = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
           >
-            <span className="text-foreground">اكتشف موهبتك</span>
+            <span className="text-foreground">{t('hero.title.line1', 'اكتشف موهبتك')}</span>
             <br />
-            <span className="text-gradient-gold">وحقق حلمك الكروي</span>
+            <span className="text-gradient-gold">{t('hero.title.line2', 'وحقق حلمك الكروي')}</span>
           </motion.h1>
 
           {/* Description */}
@@ -61,8 +69,7 @@ const HeroSection = () => {
             transition={{ duration: 0.8, delay: 0.4 }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10"
           >
-            نربط بين المواهب الكروية الناشئة وأفضل الأندية حول العالم. 
-            نساعدك في بناء مسيرتك الاحترافية وتحقيق أحلامك في عالم كرة القدم.
+            {t('hero.subtitle', 'نربط بين المواهب الكروية الناشئة وأفضل الأندية حول العالم. نساعدك في بناء مسيرتك الاحترافية وتحقيق أحلامك في عالم كرة القدم.')}
           </motion.p>
 
           {/* CTA Buttons */}
@@ -74,16 +81,19 @@ const HeroSection = () => {
           >
             <Button size="lg" className="btn-gold rounded-full text-lg px-8 py-6" asChild>
               <Link to="/player-registration">
-                سجّل كلاعب الآن
-                <ArrowLeft className="w-5 h-5 mr-2" />
+                {t('hero.cta.player', 'سجّل كلاعب الآن')}
+                <ArrowIcon className={`w-5 h-5 ${direction === 'rtl' ? 'mr-2' : 'ml-2'}`} />
               </Link>
             </Button>
             <Button
               size="lg"
               variant="outline"
               className="rounded-full text-lg px-8 py-6 border-gold/50 text-gold hover:bg-gold/10"
+              asChild
             >
-              تصفح اللاعبين
+              <Link to="/browse-players">
+                {t('hero.cta.browse', 'تصفح اللاعبين')}
+              </Link>
             </Button>
           </motion.div>
 
