@@ -30,6 +30,8 @@ import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import FavoritesList from "@/components/favorites/FavoritesList";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { Progress } from "@/components/ui/progress";
 
 type Club = Tables<"clubs">;
 type Subscription = Tables<"subscriptions">;
@@ -38,6 +40,62 @@ type SubscriptionPlan = Tables<"subscription_plans">;
 interface SubscriptionWithPlan extends Subscription {
   subscription_plans: SubscriptionPlan;
 }
+
+// Usage Stats Component
+const UsageStatsSection = () => {
+  const { usage, limits, getRemainingViews, getRemainingMessages, loading } = useSubscriptionLimits();
+  
+  if (loading) return null;
+
+  const remainingViews = getRemainingViews();
+  const remainingMessages = getRemainingMessages();
+
+  const viewsPercentage = limits.playerViews === -1 
+    ? 0 
+    : Math.min(100, (usage.playerViews / limits.playerViews) * 100);
+  
+  const messagesPercentage = limits.messages === -1 
+    ? 0 
+    : Math.min(100, (usage.messagesSent / limits.messages) * 100);
+
+  return (
+    <div className="mt-4 p-4 bg-background/50 rounded-lg space-y-4">
+      <h4 className="font-semibold text-sm">الاستخدام الشهري</h4>
+      
+      {/* Player Views */}
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">مشاهدات اللاعبين</span>
+          <span className="font-medium">
+            {remainingViews === 'unlimited' 
+              ? 'غير محدود' 
+              : `${usage.playerViews} / ${limits.playerViews}`
+            }
+          </span>
+        </div>
+        {remainingViews !== 'unlimited' && (
+          <Progress value={viewsPercentage} className="h-2" />
+        )}
+      </div>
+
+      {/* Messages */}
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">الرسائل المرسلة</span>
+          <span className="font-medium">
+            {remainingMessages === 'unlimited' 
+              ? 'غير محدود' 
+              : `${usage.messagesSent} / ${limits.messages}`
+            }
+          </span>
+        </div>
+        {remainingMessages !== 'unlimited' && (
+          <Progress value={messagesPercentage} className="h-2" />
+        )}
+      </div>
+    </div>
+  );
+};
 
 const ClubDashboard = () => {
   const { user, signOut, loading: authLoading } = useAuth();
@@ -265,6 +323,9 @@ const ClubDashboard = () => {
                   </p>
                 </div>
               )}
+
+              {/* Usage Stats */}
+              {subscription && <UsageStatsSection />}
             </CardContent>
           </Card>
         </motion.div>
