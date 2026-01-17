@@ -18,7 +18,8 @@ import {
   Video,
   ArrowRight,
   LogOut,
-  MessageSquare
+  MessageSquare,
+  Edit
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import EditPlayerForm from "@/components/player/EditPlayerForm";
 
 type Player = Tables<"players">;
 
@@ -37,6 +39,7 @@ const PlayerDashboard = () => {
   const navigate = useNavigate();
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editFormOpen, setEditFormOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -44,27 +47,27 @@ const PlayerDashboard = () => {
     }
   }, [user, authLoading, navigate]);
 
+  const fetchPlayerData = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("players")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      setPlayer(data);
+    } catch (error) {
+      console.error("Error fetching player data:", error);
+      toast.error("حدث خطأ في جلب البيانات");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchPlayerData = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from("players")
-          .select("*")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
-        if (error) throw error;
-        setPlayer(data);
-      } catch (error) {
-        console.error("Error fetching player data:", error);
-        toast.error("حدث خطأ في جلب البيانات");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (user) {
       fetchPlayerData();
     }
@@ -256,6 +259,17 @@ const PlayerDashboard = () => {
                     </div>
                   )}
                 </div>
+
+                <Separator className="my-4" />
+
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => setEditFormOpen(true)}
+                >
+                  <Edit className="w-4 h-4 ml-2" />
+                  تعديل البيانات
+                </Button>
               </CardContent>
             </Card>
           </motion.div>
@@ -369,6 +383,16 @@ const PlayerDashboard = () => {
           </motion.div>
         </div>
       </main>
+
+      {/* Edit Player Form */}
+      {player && (
+        <EditPlayerForm
+          player={player}
+          isOpen={editFormOpen}
+          onClose={() => setEditFormOpen(false)}
+          onUpdate={fetchPlayerData}
+        />
+      )}
     </div>
   );
 };
