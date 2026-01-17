@@ -39,6 +39,7 @@ import { toast } from "sonner";
 import MessageComposer from "@/components/messages/MessageComposer";
 import { useFavorites } from "@/hooks/useFavorites";
 import PlayerRating from "@/components/player/PlayerRating";
+import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 
 type Player = Tables<"players">;
 
@@ -47,6 +48,12 @@ const PlayerProfile = () => {
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { 
+    recordPlayerView, 
+    getRemainingViews, 
+    limits,
+    hasActiveSubscription: subLimitsActive 
+  } = useSubscriptionLimits();
 
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,6 +61,7 @@ const PlayerProfile = () => {
   const [isClub, setIsClub] = useState(false);
   const [messageOpen, setMessageOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  const [viewRecorded, setViewRecorded] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -95,6 +103,14 @@ const PlayerProfile = () => {
 
         if (error) throw error;
         setPlayer(playerData);
+
+        // Record view if has access and is club
+        if (clubData && subData && playerData && !viewRecorded) {
+          const recorded = await recordPlayerView(id);
+          if (recorded) {
+            setViewRecorded(true);
+          }
+        }
       } catch (error) {
         console.error("Error:", error);
         toast.error("حدث خطأ في جلب البيانات");
@@ -106,7 +122,7 @@ const PlayerProfile = () => {
     if (user) {
       fetchPlayerAndCheckAccess();
     }
-  }, [user, id]);
+  }, [user, id, viewRecorded, recordPlayerView]);
 
   const calculateAge = (dateOfBirth: string): number => {
     const today = new Date();

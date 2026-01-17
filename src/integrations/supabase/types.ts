@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      club_usage: {
+        Row: {
+          club_user_id: string
+          created_at: string
+          favorites_count: number
+          id: string
+          messages_sent: number
+          month_year: string
+          player_views: number
+          updated_at: string
+        }
+        Insert: {
+          club_user_id: string
+          created_at?: string
+          favorites_count?: number
+          id?: string
+          messages_sent?: number
+          month_year: string
+          player_views?: number
+          updated_at?: string
+        }
+        Update: {
+          club_user_id?: string
+          created_at?: string
+          favorites_count?: number
+          id?: string
+          messages_sent?: number
+          month_year?: string
+          player_views?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       clubs: {
         Row: {
           city: string | null
@@ -230,6 +263,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "player_ratings_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_views: {
+        Row: {
+          club_user_id: string
+          id: string
+          player_id: string
+          viewed_at: string
+        }
+        Insert: {
+          club_user_id: string
+          id?: string
+          player_id: string
+          viewed_at?: string
+        }
+        Update: {
+          club_user_id?: string
+          id?: string
+          player_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_views_player_id_fkey"
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
