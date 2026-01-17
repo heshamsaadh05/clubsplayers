@@ -18,6 +18,7 @@ import ClubRegistration from "./pages/ClubRegistration";
 import ClubDashboard from "./pages/ClubDashboard";
 import BrowsePlayers from "./pages/BrowsePlayers";
 import PlayerProfile from "./pages/PlayerProfile";
+import Subscription from "./pages/Subscription";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/club-dashboard" element={<ClubDashboard />} />
             <Route path="/browse-players" element={<BrowsePlayers />} />
             <Route path="/player/:id" element={<PlayerProfile />} />
+            <Route path="/subscription" element={<Subscription />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/players" element={<AdminPlayers />} />
             <Route path="/admin/clubs" element={<AdminClubs />} />
