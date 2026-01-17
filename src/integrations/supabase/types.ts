@@ -401,6 +401,44 @@ export type Database = {
         }
         Relationships: []
       }
+      renewal_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          new_end_date: string
+          old_end_date: string
+          status: string
+          subscription_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          new_end_date: string
+          old_end_date: string
+          status?: string
+          subscription_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          new_end_date?: string
+          old_end_date?: string
+          status?: string
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "renewal_logs_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_settings: {
         Row: {
           id: string
@@ -472,36 +510,42 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          auto_renew: boolean
           created_at: string
           end_date: string
           id: string
           payment_method: string | null
           payment_reference: string | null
           plan_id: string
+          renewal_reminder_sent: boolean
           start_date: string
           status: Database["public"]["Enums"]["subscription_status"]
           updated_at: string
           user_id: string
         }
         Insert: {
+          auto_renew?: boolean
           created_at?: string
           end_date: string
           id?: string
           payment_method?: string | null
           payment_reference?: string | null
           plan_id: string
+          renewal_reminder_sent?: boolean
           start_date?: string
           status?: Database["public"]["Enums"]["subscription_status"]
           updated_at?: string
           user_id: string
         }
         Update: {
+          auto_renew?: boolean
           created_at?: string
           end_date?: string
           id?: string
           payment_method?: string | null
           payment_reference?: string | null
           plan_id?: string
+          renewal_reminder_sent?: boolean
           start_date?: string
           status?: Database["public"]["Enums"]["subscription_status"]
           updated_at?: string
