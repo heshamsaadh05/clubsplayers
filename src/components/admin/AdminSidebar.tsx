@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   LogOut,
-  ChevronLeft
+  ChevronLeft,
+  Receipt
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -25,6 +26,7 @@ const AdminSidebar = () => {
     { icon: LayoutDashboard, label: 'لوحة التحكم', path: '/admin' },
     { icon: Users, label: 'اللاعبون', path: '/admin/players' },
     { icon: Building2, label: 'الأندية', path: '/admin/clubs' },
+    { icon: Receipt, label: 'الاشتراكات', path: '/admin/subscriptions' },
     { icon: Package, label: 'باقات الاشتراك', path: '/admin/plans' },
     { icon: CreditCard, label: 'وسائل الدفع', path: '/admin/payments' },
     { icon: FileText, label: 'الصفحات', path: '/admin/pages' },
