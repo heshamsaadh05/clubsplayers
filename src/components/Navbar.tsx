@@ -57,9 +57,11 @@ const Navbar = () => {
                 تسجيل لاعب
               </Link>
             </Button>
-            <Button className="btn-gold rounded-full px-6">
-              <Building2 className="w-4 h-4 ml-2" />
-              انضمام نادي
+            <Button className="btn-gold rounded-full px-6" asChild>
+              <Link to="/club-registration">
+                <Building2 className="w-4 h-4 ml-2" />
+                انضمام نادي
+              </Link>
             </Button>
           </div>
 
@@ -104,9 +106,11 @@ const Navbar = () => {
                     تسجيل لاعب
                   </Link>
                 </Button>
-                <Button className="w-full btn-gold rounded-full">
-                  <Building2 className="w-4 h-4 ml-2" />
-                  انضمام نادي
+                <Button className="w-full btn-gold rounded-full" asChild>
+                  <Link to="/club-registration" onClick={() => setIsOpen(false)}>
+                    <Building2 className="w-4 h-4 ml-2" />
+                    انضمام نادي
+                  </Link>
                 </Button>
               </div>
             </div>
