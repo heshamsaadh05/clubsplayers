@@ -348,7 +348,7 @@ const ClubDashboard = () => {
                     <p className="text-sm text-muted-foreground mb-4">
                       يمكنك تصفح جميع اللاعبين المعتمدين والتواصل معهم
                     </p>
-                    <Button className="btn-gold">
+                    <Button className="btn-gold" onClick={() => navigate("/browse-players")}>
                       <Users className="w-4 h-4 ml-2" />
                       تصفح اللاعبين
                     </Button>
