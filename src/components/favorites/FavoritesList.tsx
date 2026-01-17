@@ -1,21 +1,37 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, User, MapPin, Ruler, Calendar, Trash2 } from 'lucide-react';
+import { Heart, User, MapPin, Ruler, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { Tables } from '@/integrations/supabase/types';
 import { useFavorites } from '@/hooks/useFavorites';
 
-type Player = Tables<'players'>;
+// Public player type excludes PII fields (email, phone, date_of_birth, id_document_url, rejection_reason)
+type PublicPlayer = {
+  id: string;
+  user_id: string;
+  full_name: string;
+  position: string | null;
+  nationality: string | null;
+  current_club: string | null;
+  previous_clubs: string[] | null;
+  bio: string | null;
+  profile_image_url: string | null;
+  video_urls: string[] | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  updated_at: string;
+};
 
 interface FavoriteWithPlayer {
   id: string;
   player_id: string;
   created_at: string;
-  player: Player;
+  player: PublicPlayer;
 }
 
 const FavoritesList = () => {
@@ -34,11 +50,11 @@ const FavoritesList = () => {
 
       try {
         const playerIds = favorites.map(f => f.player_id);
+        // Use public view to exclude PII like email, phone, DOB
         const { data: players, error } = await supabase
-          .from('players')
+          .from('players_public')
           .select('*')
-          .in('id', playerIds)
-          .eq('status', 'approved');
+          .in('id', playerIds);
 
         if (error) throw error;
 
@@ -65,16 +81,7 @@ const FavoritesList = () => {
     }
   }, [favorites, favLoading]);
 
-  const calculateAge = (dateOfBirth: string): number => {
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
+  // calculateAge removed - date_of_birth is now private PII
 
   if (loading || favLoading) {
     return (
@@ -157,10 +164,10 @@ const FavoritesList = () => {
                           {item.player.nationality}
                         </span>
                       )}
-                      {item.player.date_of_birth && (
+                      {item.player.height_cm && (
                         <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {calculateAge(item.player.date_of_birth)} سنة
+                          <Ruler className="w-3 h-3" />
+                          {item.player.height_cm} سم
                         </span>
                       )}
                     </div>

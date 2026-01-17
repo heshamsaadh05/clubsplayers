@@ -50,7 +50,24 @@ import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { useFavorites } from "@/hooks/useFavorites";
 
-type Player = Tables<"players">;
+// Public player type excludes PII fields (email, phone, date_of_birth, id_document_url, rejection_reason)
+type PublicPlayer = {
+  id: string;
+  user_id: string;
+  full_name: string;
+  position: string | null;
+  nationality: string | null;
+  current_club: string | null;
+  previous_clubs: string[] | null;
+  bio: string | null;
+  profile_image_url: string | null;
+  video_urls: string[] | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  updated_at: string;
+};
 
 const positions = [
   "حارس مرمى",
@@ -90,8 +107,8 @@ const BrowsePlayers = () => {
   const navigate = useNavigate();
   const { favorites, toggleFavorite, isFavorite } = useFavorites();
   
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [filteredPlayers, setFilteredPlayers] = useState<Player[]>([]);
+  const [players, setPlayers] = useState<PublicPlayer[]>([]);
+  const [filteredPlayers, setFilteredPlayers] = useState<PublicPlayer[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [isClub, setIsClub] = useState(false);
@@ -142,11 +159,10 @@ const BrowsePlayers = () => {
 
         setHasSubscription(!!subData);
 
-        // Fetch approved players
+        // Fetch approved players from public view (excludes PII like email, phone, DOB)
         const { data: playersData, error } = await supabase
-          .from("players")
+          .from("players_public")
           .select("*")
-          .eq("status", "approved")
           .order("created_at", { ascending: false });
 
         if (error) throw error;
@@ -193,12 +209,7 @@ const BrowsePlayers = () => {
       );
     }
 
-    // Age filter
-    result = result.filter((player) => {
-      if (!player.date_of_birth) return true;
-      const age = calculateAge(player.date_of_birth);
-      return age >= ageRange[0] && age <= ageRange[1];
-    });
+    // Note: Age filter removed - date_of_birth is private PII and not available in public view
 
     // Height filter
     result = result.filter((player) => {
@@ -239,10 +250,10 @@ const BrowsePlayers = () => {
           return (a.height_cm || 0) - (b.height_cm || 0);
         case 'height_desc':
           return (b.height_cm || 0) - (a.height_cm || 0);
+        // Note: Age sorting removed - date_of_birth is private PII
         case 'age_asc':
-          return calculateAge(a.date_of_birth || '') - calculateAge(b.date_of_birth || '');
         case 'age_desc':
-          return calculateAge(b.date_of_birth || '') - calculateAge(a.date_of_birth || '');
+          return 0;
         default:
           return 0;
       }
@@ -766,12 +777,6 @@ const BrowsePlayers = () => {
                               <span className="truncate">{player.nationality}</span>
                             </div>
                           )}
-                          {player.date_of_birth && (
-                            <div className="flex items-center gap-1 md:gap-2">
-                              <Calendar className="w-3 md:w-4 h-3 md:h-4 text-gold" />
-                              <span>{calculateAge(player.date_of_birth)} سنة</span>
-                            </div>
-                          )}
                         </div>
 
                         <div className="flex gap-2 md:gap-4 mt-2 md:mt-4 pt-2 md:pt-4 border-t border-border text-xs md:text-sm">
@@ -856,12 +861,6 @@ const BrowsePlayers = () => {
                               <div className="flex items-center gap-2">
                                 <MapPin className="w-4 h-4 text-gold" />
                                 <span>{player.nationality}</span>
-                              </div>
-                            )}
-                            {player.date_of_birth && (
-                              <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-gold" />
-                                <span>{calculateAge(player.date_of_birth)} سنة</span>
                               </div>
                             )}
                             {player.height_cm && (
