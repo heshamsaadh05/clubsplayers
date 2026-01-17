@@ -4,6 +4,7 @@ import { Menu, X, User, Building2, LogIn, LogOut, LayoutDashboard, Settings, Fil
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/hooks/useLanguage";
 import { usePublishedPages } from "@/hooks/usePublishedPages";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -18,6 +19,7 @@ import {
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, roles, signOut, loading } = useAuth();
+  const { t, direction } = useLanguage();
   const { pages: publishedPages } = usePublishedPages();
   const navigate = useNavigate();
   const [userType, setUserType] = useState<'player' | 'club' | 'admin' | null>(null);
@@ -87,11 +89,11 @@ const Navbar = () => {
   };
 
   const navLinks = [
-    { name: "الرئيسية", href: "#home" },
-    { name: "خدماتنا", href: "#services" },
-    { name: "اللاعبون", href: "#players" },
-    { name: "عن الوكالة", href: "#about" },
-    { name: "تواصل معنا", href: "#contact" },
+    { name: t('nav.home', 'الرئيسية'), href: "#home" },
+    { name: t('nav.services', 'خدماتنا'), href: "#services" },
+    { name: t('nav.players', 'اللاعبون'), href: "#players" },
+    { name: t('nav.about', 'عن الوكالة'), href: "#about" },
+    { name: t('nav.contact', 'تواصل معنا'), href: "#contact" },
   ];
 
   return (
@@ -134,7 +136,7 @@ const Navbar = () => {
                     whileHover={{ y: -2 }}
                   >
                     <FileText className="w-4 h-4" />
-                    صفحات
+                    {t('nav.pages', 'صفحات')}
                   </motion.button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-[150px]">
@@ -162,8 +164,8 @@ const Navbar = () => {
                   asChild
                 >
                   <Link to={getDashboardLink()}>
-                    <LayoutDashboard className="w-4 h-4 ml-2" />
-                    لوحة التحكم
+                    <LayoutDashboard className={`w-4 h-4 ${direction === 'rtl' ? 'ml-2' : 'mr-2'}`} />
+                    {t('nav.dashboard', 'لوحة التحكم')}
                   </Link>
                 </Button>
                 <Button
@@ -172,8 +174,8 @@ const Navbar = () => {
                   asChild
                 >
                   <Link to="/account-settings">
-                    <Settings className="w-4 h-4 ml-2" />
-                    الإعدادات
+                    <Settings className={`w-4 h-4 ${direction === 'rtl' ? 'ml-2' : 'mr-2'}`} />
+                    {t('nav.settings', 'الإعدادات')}
                   </Link>
                 </Button>
                 <Button
@@ -181,8 +183,8 @@ const Navbar = () => {
                   className="text-muted-foreground hover:text-destructive"
                   onClick={handleSignOut}
                 >
-                  <LogOut className="w-4 h-4 ml-2" />
-                  خروج
+                  <LogOut className={`w-4 h-4 ${direction === 'rtl' ? 'ml-2' : 'mr-2'}`} />
+                  {t('nav.logout', 'خروج')}
                 </Button>
               </>
             ) : (
@@ -193,8 +195,8 @@ const Navbar = () => {
                   asChild
                 >
                   <Link to="/auth">
-                    <LogIn className="w-4 h-4 ml-2" />
-                    تسجيل دخول
+                    <LogIn className={`w-4 h-4 ${direction === 'rtl' ? 'ml-2' : 'mr-2'}`} />
+                    {t('nav.login', 'تسجيل دخول')}
                   </Link>
                 </Button>
                 <Button
@@ -203,14 +205,14 @@ const Navbar = () => {
                   asChild
                 >
                   <Link to="/auth?type=player">
-                    <User className="w-4 h-4 ml-2" />
-                    تسجيل لاعب
+                    <User className={`w-4 h-4 ${direction === 'rtl' ? 'ml-2' : 'mr-2'}`} />
+                    {t('nav.registerPlayer', 'تسجيل لاعب')}
                   </Link>
                 </Button>
                 <Button className="btn-gold rounded-full px-6" asChild>
                   <Link to="/auth?type=club">
-                    <Building2 className="w-4 h-4 ml-2" />
-                    انضمام نادي
+                    <Building2 className={`w-4 h-4 ${direction === 'rtl' ? 'ml-2' : 'mr-2'}`} />
+                    {t('nav.joinClub', 'انضمام نادي')}
                   </Link>
                 </Button>
               </>

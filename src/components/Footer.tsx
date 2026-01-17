@@ -2,9 +2,11 @@ import { motion } from "framer-motion";
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePublishedPages } from "@/hooks/usePublishedPages";
+import { useLanguage } from "@/hooks/useLanguage";
 
 const Footer = () => {
   const { pages: publishedPages } = usePublishedPages();
+  const { t, currentLanguage } = useLanguage();
 
   const socialLinks = [
     { icon: Facebook, href: "#" },
@@ -14,11 +16,11 @@ const Footer = () => {
   ];
 
   const quickLinks = [
-    { name: "الرئيسية", href: "#home" },
-    { name: "خدماتنا", href: "#services" },
-    { name: "اللاعبون", href: "#players" },
-    { name: "عن الوكالة", href: "#about" },
-    { name: "تواصل معنا", href: "#contact" },
+    { name: t('nav.home', 'الرئيسية'), href: "#home" },
+    { name: t('nav.services', 'خدماتنا'), href: "#services" },
+    { name: t('nav.players', 'اللاعبون'), href: "#players" },
+    { name: t('nav.about', 'عن الوكالة'), href: "#about" },
+    { name: t('nav.contact', 'تواصل معنا'), href: "#contact" },
   ];
 
   return (
@@ -33,10 +35,10 @@ const Footer = () => {
             viewport={{ once: true }}
           >
             <h3 className="text-2xl font-bold text-gradient-gold font-playfair mb-4">
-              ستارز إيجنسي
+              {t('hero.title', 'ستارز إيجنسي')}
             </h3>
             <p className="text-muted-foreground mb-6 leading-relaxed">
-              الوكالة الرائدة في اكتشاف المواهب الكروية وربطها بأفضل الأندية حول العالم.
+              {t('footer.description', 'الوكالة الرائدة في اكتشاف المواهب الكروية وربطها بأفضل الأندية حول العالم.')}
             </p>
             <div className="flex gap-3">
               {socialLinks.map((social, index) => (
@@ -58,7 +60,9 @@ const Footer = () => {
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
           >
-            <h4 className="text-lg font-bold text-foreground mb-6">روابط سريعة</h4>
+            <h4 className="text-lg font-bold text-foreground mb-6">
+              {t('footer.quickLinks', 'روابط سريعة')}
+            </h4>
             <ul className="space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.name}>
@@ -80,7 +84,9 @@ const Footer = () => {
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
           >
-            <h4 className="text-lg font-bold text-foreground mb-6">صفحات مهمة</h4>
+            <h4 className="text-lg font-bold text-foreground mb-6">
+              {t('footer.importantPages', 'صفحات مهمة')}
+            </h4>
             <ul className="space-y-3">
               {publishedPages.length > 0 ? (
                 publishedPages.map((page) => (
@@ -89,7 +95,7 @@ const Footer = () => {
                       to={`/page/${page.slug}`}
                       className="text-muted-foreground hover:text-gold transition-colors"
                     >
-                      {page.title_ar || page.title}
+                      {currentLanguage?.code === 'en' ? page.title : (page.title_ar || page.title)}
                     </Link>
                   </li>
                 ))
@@ -97,12 +103,12 @@ const Footer = () => {
                 <>
                   <li>
                     <a href="#" className="text-muted-foreground hover:text-gold transition-colors">
-                      سياسة الخصوصية
+                      {t('footer.privacy', 'سياسة الخصوصية')}
                     </a>
                   </li>
                   <li>
                     <a href="#" className="text-muted-foreground hover:text-gold transition-colors">
-                      الشروط والأحكام
+                      {t('footer.terms', 'الشروط والأحكام')}
                     </a>
                   </li>
                 </>
@@ -117,11 +123,13 @@ const Footer = () => {
             viewport={{ once: true }}
             transition={{ delay: 0.3 }}
           >
-            <h4 className="text-lg font-bold text-foreground mb-6">تواصل معنا</h4>
+            <h4 className="text-lg font-bold text-foreground mb-6">
+              {t('footer.contactUs', 'تواصل معنا')}
+            </h4>
             <ul className="space-y-4">
               <li className="flex items-center gap-3 text-muted-foreground">
                 <MapPin className="w-5 h-5 text-gold" />
-                القاهرة، مصر
+                {t('footer.location', 'القاهرة، مصر')}
               </li>
               <li className="flex items-center gap-3 text-muted-foreground">
                 <Phone className="w-5 h-5 text-gold" />
@@ -137,7 +145,7 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="py-6 border-t border-border text-center text-muted-foreground text-sm">
-          <p>© 2025 ستارز إيجنسي. جميع الحقوق محفوظة.</p>
+          <p>© 2025 {t('hero.title', 'ستارز إيجنسي')}. {t('footer.rights', 'جميع الحقوق محفوظة')}.</p>
         </div>
       </div>
     </footer>
