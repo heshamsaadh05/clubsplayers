@@ -13,6 +13,7 @@ import AdminPlans from "./pages/admin/AdminPlans";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminPages from "./pages/admin/AdminPages";
 import PlayerRegistration from "./pages/PlayerRegistration";
 import PlayerDashboard from "./pages/PlayerDashboard";
 import ClubRegistration from "./pages/ClubRegistration";
@@ -22,6 +23,7 @@ import PlayerProfile from "./pages/PlayerProfile";
 import Subscription from "./pages/Subscription";
 import Messages from "./pages/Messages";
 import AccountSettings from "./pages/AccountSettings";
+import PageView from "./pages/PageView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,12 +47,14 @@ const App = () => (
             <Route path="/subscription" element={<Subscription />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/account-settings" element={<AccountSettings />} />
+            <Route path="/page/:slug" element={<PageView />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/players" element={<AdminPlayers />} />
             <Route path="/admin/clubs" element={<AdminClubs />} />
             <Route path="/admin/plans" element={<AdminPlans />} />
             <Route path="/admin/payments" element={<AdminPayments />} />
             <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
+            <Route path="/admin/pages" element={<AdminPages />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
