@@ -1,7 +1,11 @@
 import { motion } from "framer-motion";
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
+import { usePublishedPages } from "@/hooks/usePublishedPages";
 
 const Footer = () => {
+  const { pages: publishedPages } = usePublishedPages();
+
   const socialLinks = [
     { icon: Facebook, href: "#" },
     { icon: Twitter, href: "#" },
@@ -15,12 +19,6 @@ const Footer = () => {
     { name: "اللاعبون", href: "#players" },
     { name: "عن الوكالة", href: "#about" },
     { name: "تواصل معنا", href: "#contact" },
-  ];
-
-  const legalLinks = [
-    { name: "سياسة الخصوصية", href: "#" },
-    { name: "الشروط والأحكام", href: "#" },
-    { name: "سياسة الاسترداد", href: "#" },
   ];
 
   return (
@@ -75,25 +73,40 @@ const Footer = () => {
             </ul>
           </motion.div>
 
-          {/* Legal */}
+          {/* Published Pages */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
           >
-            <h4 className="text-lg font-bold text-foreground mb-6">قانوني</h4>
+            <h4 className="text-lg font-bold text-foreground mb-6">صفحات مهمة</h4>
             <ul className="space-y-3">
-              {legalLinks.map((link) => (
-                <li key={link.name}>
-                  <a
-                    href={link.href}
-                    className="text-muted-foreground hover:text-gold transition-colors"
-                  >
-                    {link.name}
-                  </a>
-                </li>
-              ))}
+              {publishedPages.length > 0 ? (
+                publishedPages.map((page) => (
+                  <li key={page.id}>
+                    <Link
+                      to={`/page/${page.slug}`}
+                      className="text-muted-foreground hover:text-gold transition-colors"
+                    >
+                      {page.title_ar || page.title}
+                    </Link>
+                  </li>
+                ))
+              ) : (
+                <>
+                  <li>
+                    <a href="#" className="text-muted-foreground hover:text-gold transition-colors">
+                      سياسة الخصوصية
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" className="text-muted-foreground hover:text-gold transition-colors">
+                      الشروط والأحكام
+                    </a>
+                  </li>
+                </>
+              )}
             </ul>
           </motion.div>
 

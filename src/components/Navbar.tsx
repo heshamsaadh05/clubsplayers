@@ -1,15 +1,23 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, User, Building2, LogIn, LogOut, LayoutDashboard, Settings } from "lucide-react";
+import { Menu, X, User, Building2, LogIn, LogOut, LayoutDashboard, Settings, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { usePublishedPages } from "@/hooks/usePublishedPages";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, roles, signOut, loading } = useAuth();
+  const { pages: publishedPages } = usePublishedPages();
   const navigate = useNavigate();
   const [userType, setUserType] = useState<'player' | 'club' | 'admin' | null>(null);
 
@@ -104,7 +112,7 @@ const Navbar = () => {
           </motion.div>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-8">
+          <div className="hidden lg:flex items-center gap-6">
             {navLinks.map((link) => (
               <motion.a
                 key={link.name}
@@ -115,6 +123,30 @@ const Navbar = () => {
                 {link.name}
               </motion.a>
             ))}
+
+            {/* Published Pages Dropdown */}
+            {publishedPages.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <motion.button
+                    className="text-foreground/80 hover:text-gold transition-colors font-medium flex items-center gap-1"
+                    whileHover={{ y: -2 }}
+                  >
+                    <FileText className="w-4 h-4" />
+                    صفحات
+                  </motion.button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[150px]">
+                  {publishedPages.map((page) => (
+                    <DropdownMenuItem key={page.id} asChild>
+                      <Link to={`/page/${page.slug}`} className="w-full">
+                        {page.title_ar || page.title}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
 
           {/* Auth Buttons - Desktop */}
@@ -213,6 +245,23 @@ const Navbar = () => {
                   {link.name}
                 </a>
               ))}
+
+              {/* Published Pages - Mobile */}
+              {publishedPages.length > 0 && (
+                <div className="pt-2 border-t border-border/50">
+                  <p className="text-sm text-muted-foreground mb-2">صفحات</p>
+                  {publishedPages.map((page) => (
+                    <Link
+                      key={page.id}
+                      to={`/page/${page.slug}`}
+                      className="block text-foreground/80 hover:text-gold transition-colors py-2 pr-4"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {page.title_ar || page.title}
+                    </Link>
+                  ))}
+                </div>
+              )}
               <div className="pt-4 space-y-3 border-t border-border">
                 {user ? (
                   <>
