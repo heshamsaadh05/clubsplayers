@@ -16,7 +16,7 @@ import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import RichTextEditor from '@/components/ui/rich-text-editor';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
@@ -501,17 +501,14 @@ const AdminPages = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>محتوى الصفحة (عربي)</Label>
-                  <Textarea
-                    value={formData.content_ar}
-                    onChange={(e) =>
-                      setFormData({ ...formData, content_ar: e.target.value })
+                  <RichTextEditor
+                    content={formData.content_ar}
+                    onChange={(content) =>
+                      setFormData({ ...formData, content_ar: content })
                     }
                     placeholder="اكتب محتوى الصفحة هنا..."
-                    className="min-h-[200px]"
+                    dir="rtl"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    يمكنك استخدام Markdown للتنسيق
-                  </p>
                 </div>
               </TabsContent>
 
@@ -529,13 +526,12 @@ const AdminPages = () => {
                 </div>
                 <div className="space-y-2">
                   <Label>Page Content (English)</Label>
-                  <Textarea
-                    value={formData.content}
-                    onChange={(e) =>
-                      setFormData({ ...formData, content: e.target.value })
+                  <RichTextEditor
+                    content={formData.content}
+                    onChange={(content) =>
+                      setFormData({ ...formData, content: content })
                     }
                     placeholder="Write page content here..."
-                    className="min-h-[200px]"
                     dir="ltr"
                   />
                 </div>

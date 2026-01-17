@@ -52,52 +52,9 @@ const PageView = () => {
     fetchPage();
   }, [slug]);
 
-  // Simple markdown-like rendering
-  const renderContent = (content: string) => {
-    return content
-      .split('\n')
-      .map((line, index) => {
-        // Headers
-        if (line.startsWith('### ')) {
-          return (
-            <h3 key={index} className="text-xl font-bold mt-6 mb-3">
-              {line.replace('### ', '')}
-            </h3>
-          );
-        }
-        if (line.startsWith('## ')) {
-          return (
-            <h2 key={index} className="text-2xl font-bold mt-8 mb-4">
-              {line.replace('## ', '')}
-            </h2>
-          );
-        }
-        if (line.startsWith('# ')) {
-          return (
-            <h1 key={index} className="text-3xl font-bold mt-8 mb-4">
-              {line.replace('# ', '')}
-            </h1>
-          );
-        }
-        // Lists
-        if (line.startsWith('- ')) {
-          return (
-            <li key={index} className="mr-4">
-              {line.replace('- ', '')}
-            </li>
-          );
-        }
-        // Empty lines = paragraph break
-        if (line.trim() === '') {
-          return <br key={index} />;
-        }
-        // Regular paragraph
-        return (
-          <p key={index} className="mb-2 leading-relaxed">
-            {line}
-          </p>
-        );
-      });
+  // Check if content is HTML (from rich text editor) or plain text
+  const isHtmlContent = (content: string) => {
+    return /<[a-z][\s\S]*>/i.test(content);
   };
 
   if (loading) {
@@ -165,9 +122,20 @@ const PageView = () => {
               </h1>
 
               {content ? (
-                <div className="prose prose-lg max-w-none text-foreground">
-                  {renderContent(content)}
-                </div>
+                isHtmlContent(content) ? (
+                  <div 
+                    className="prose prose-lg prose-invert max-w-none text-foreground
+                      prose-headings:text-foreground prose-p:text-foreground/90
+                      prose-strong:text-foreground prose-a:text-gold
+                      prose-li:text-foreground/90 prose-blockquote:border-gold
+                      prose-blockquote:text-muted-foreground"
+                    dangerouslySetInnerHTML={{ __html: content }}
+                  />
+                ) : (
+                  <div className="prose prose-lg max-w-none text-foreground whitespace-pre-wrap">
+                    {content}
+                  </div>
+                )
               ) : (
                 <p className="text-muted-foreground text-center py-8">
                   لا يوجد محتوى لهذه الصفحة
