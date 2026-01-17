@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -56,6 +57,7 @@ type PlayerFormData = z.infer<typeof playerSchema>;
 export default function PlayerRegistration() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t, direction } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
@@ -236,19 +238,19 @@ export default function PlayerRegistration() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex flex-col" dir="rtl">
+      <div className="min-h-screen bg-background flex flex-col" dir={direction}>
         <Navbar />
         <div className="flex-1 flex items-center justify-center">
           <Card className="w-full max-w-md mx-4">
             <CardHeader className="text-center">
-              <CardTitle>تسجيل الدخول مطلوب</CardTitle>
+              <CardTitle>{t('playerReg.loginRequired', 'تسجيل الدخول مطلوب')}</CardTitle>
               <CardDescription>
-                يجب تسجيل الدخول أولاً للتسجيل كلاعب
+                {t('playerReg.loginRequiredDesc', 'يجب تسجيل الدخول أولاً للتسجيل كلاعب')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button onClick={() => navigate('/auth')} className="w-full">
-                تسجيل الدخول
+                {t('nav.login', 'تسجيل الدخول')}
               </Button>
             </CardContent>
           </Card>
@@ -259,15 +261,15 @@ export default function PlayerRegistration() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col" dir="rtl">
+    <div className="min-h-screen bg-background flex flex-col" dir={direction}>
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">تسجيل لاعب جديد</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">{t('playerReg.title', 'تسجيل لاعب جديد')}</h1>
             <p className="text-muted-foreground">
-              أكمل النموذج التالي للانضمام إلى قاعدة بيانات اللاعبين
+              {t('playerReg.subtitle', 'أكمل النموذج التالي للانضمام إلى قاعدة بيانات اللاعبين')}
             </p>
           </div>
 
@@ -278,7 +280,7 @@ export default function PlayerRegistration() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="h-5 w-5" />
-                    البيانات الشخصية
+                    {t('playerReg.personalInfo', 'البيانات الشخصية')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -287,9 +289,9 @@ export default function PlayerRegistration() {
                     name="fullName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>الاسم الكامل *</FormLabel>
+                        <FormLabel>{t('playerReg.fullName', 'الاسم الكامل')} *</FormLabel>
                         <FormControl>
-                          <Input placeholder="أدخل اسمك الكامل" {...field} />
+                          <Input placeholder={t('playerReg.fullNamePlaceholder', 'أدخل اسمك الكامل')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -301,7 +303,7 @@ export default function PlayerRegistration() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>البريد الإلكتروني *</FormLabel>
+                        <FormLabel>{t('playerReg.email', 'البريد الإلكتروني')} *</FormLabel>
                         <FormControl>
                           <Input type="email" placeholder="example@email.com" {...field} />
                         </FormControl>
@@ -315,7 +317,7 @@ export default function PlayerRegistration() {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>رقم الهاتف *</FormLabel>
+                        <FormLabel>{t('playerReg.phone', 'رقم الهاتف')} *</FormLabel>
                         <FormControl>
                           <Input type="tel" placeholder="+966 5XX XXX XXXX" {...field} />
                         </FormControl>
@@ -329,7 +331,7 @@ export default function PlayerRegistration() {
                     name="dateOfBirth"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>تاريخ الميلاد *</FormLabel>
+                        <FormLabel>{t('playerReg.dateOfBirth', 'تاريخ الميلاد')} *</FormLabel>
                         <FormControl>
                           <Input type="date" {...field} />
                         </FormControl>
@@ -343,11 +345,11 @@ export default function PlayerRegistration() {
                     name="nationality"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>الجنسية *</FormLabel>
+                        <FormLabel>{t('playerReg.nationality', 'الجنسية')} *</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="اختر الجنسية" />
+                              <SelectValue placeholder={t('playerReg.selectNationality', 'اختر الجنسية')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -368,11 +370,11 @@ export default function PlayerRegistration() {
                     name="position"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>المركز *</FormLabel>
+                        <FormLabel>{t('playerReg.position', 'المركز')} *</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="اختر المركز" />
+                              <SelectValue placeholder={t('playerReg.selectPosition', 'اختر المركز')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -393,7 +395,7 @@ export default function PlayerRegistration() {
                     name="heightCm"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>الطول (سم) *</FormLabel>
+                        <FormLabel>{t('playerReg.height', 'الطول (سم)')} *</FormLabel>
                         <FormControl>
                           <Input type="number" min={100} max={250} {...field} />
                         </FormControl>
@@ -407,7 +409,7 @@ export default function PlayerRegistration() {
                     name="weightKg"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>الوزن (كجم) *</FormLabel>
+                        <FormLabel>{t('playerReg.weight', 'الوزن (كجم)')} *</FormLabel>
                         <FormControl>
                           <Input type="number" min={30} max={150} {...field} />
                         </FormControl>
@@ -421,9 +423,9 @@ export default function PlayerRegistration() {
                     name="currentClub"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>النادي الحالي</FormLabel>
+                        <FormLabel>{t('playerReg.currentClub', 'النادي الحالي')}</FormLabel>
                         <FormControl>
-                          <Input placeholder="اسم النادي الحالي (اختياري)" {...field} />
+                          <Input placeholder={t('playerReg.currentClubPlaceholder', 'اسم النادي الحالي (اختياري)')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -435,9 +437,9 @@ export default function PlayerRegistration() {
                     name="previousClubs"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>الأندية السابقة</FormLabel>
+                        <FormLabel>{t('playerReg.previousClubs', 'الأندية السابقة')}</FormLabel>
                         <FormControl>
-                          <Input placeholder="النادي 1، النادي 2، النادي 3" {...field} />
+                          <Input placeholder={t('playerReg.previousClubsPlaceholder', 'النادي 1، النادي 2، النادي 3')} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -450,10 +452,10 @@ export default function PlayerRegistration() {
                       name="bio"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>نبذة تعريفية</FormLabel>
+                          <FormLabel>{t('playerReg.bio', 'نبذة تعريفية')}</FormLabel>
                           <FormControl>
                             <Textarea
-                              placeholder="اكتب نبذة قصيرة عن نفسك وخبراتك..."
+                              placeholder={t('playerReg.bioPlaceholder', 'اكتب نبذة قصيرة عن نفسك وخبراتك...')}
                               className="min-h-[100px]"
                               {...field}
                             />
@@ -471,7 +473,7 @@ export default function PlayerRegistration() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Upload className="h-5 w-5" />
-                    الصورة الشخصية *
+                    {t('playerReg.profileImage', 'الصورة الشخصية')} *
                   </CardTitle>
                   <CardDescription>
                     صورة واضحة بخلفية فاتحة (الحد الأقصى 5 ميجابايت)
@@ -502,9 +504,9 @@ export default function PlayerRegistration() {
                         htmlFor="profile-image"
                         className="w-32 h-32 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer hover:border-primary transition-colors"
                       >
-                        <div className="text-center">
+                      <div className="text-center">
                           <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">رفع صورة</span>
+                          <span className="text-sm text-muted-foreground">{t('playerReg.selectImage', 'رفع صورة')}</span>
                         </div>
                       </Label>
                     )}
@@ -524,10 +526,10 @@ export default function PlayerRegistration() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="h-5 w-5" />
-                    صورة الهوية *
+                    {t('playerReg.idDocument', 'صورة الهوية')} *
                   </CardTitle>
                   <CardDescription>
-                    صورة واضحة للهوية الوطنية أو جواز السفر (الحد الأقصى 10 ميجابايت)
+                    {t('playerReg.idDocumentDesc', 'صورة واضحة للهوية الوطنية أو جواز السفر (الحد الأقصى 10 ميجابايت)')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -549,9 +551,9 @@ export default function PlayerRegistration() {
                         htmlFor="id-document"
                         className="flex-1 border-2 border-dashed rounded-lg p-6 flex items-center justify-center cursor-pointer hover:border-primary transition-colors"
                       >
-                        <div className="text-center">
+                      <div className="text-center">
                           <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">رفع صورة الهوية</span>
+                          <span className="text-sm text-muted-foreground">{t('playerReg.selectDocument', 'رفع صورة الهوية')}</span>
                         </div>
                       </Label>
                     )}
@@ -571,10 +573,10 @@ export default function PlayerRegistration() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Video className="h-5 w-5" />
-                    فيديوهات اللعب
+                    {t('playerReg.videos', 'فيديوهات اللعب')}
                   </CardTitle>
                   <CardDescription>
-                    يمكنك رفع حتى 5 فيديوهات (الحد الأقصى 100 ميجابايت لكل فيديو)
+                    {t('playerReg.videosDesc', 'يمكنك رفع حتى 5 فيديوهات (الحد الأقصى 100 ميجابايت لكل فيديو)')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -607,7 +609,7 @@ export default function PlayerRegistration() {
                       >
                         <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
                         <span className="text-sm text-muted-foreground">
-                          اضغط لرفع فيديو ({videos.length}/5)
+                          {t('playerReg.selectVideos', 'اضغط لرفع فيديو')} ({videos.length}/5)
                         </span>
                       </Label>
                     )}
@@ -632,10 +634,10 @@ export default function PlayerRegistration() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-                    جاري التسجيل...
+                    {t('playerReg.submitting', 'جاري التسجيل...')}
                   </>
                 ) : (
-                  'تقديم طلب التسجيل'
+                  t('playerReg.submit', 'تقديم طلب التسجيل')
                 )}
               </Button>
             </form>

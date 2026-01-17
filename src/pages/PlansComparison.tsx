@@ -7,6 +7,7 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 
 interface SubscriptionPlan {
@@ -97,6 +98,7 @@ const FEATURE_CATEGORIES = {
 
 const PlansComparison = () => {
   const navigate = useNavigate();
+  const { t, direction, currentLanguage } = useLanguage();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -136,11 +138,11 @@ const PlansComparison = () => {
   };
 
   const getDurationLabel = (days: number) => {
-    if (days === 30) return 'شهري';
-    if (days === 90) return '3 أشهر';
-    if (days === 180) return '6 أشهر';
-    if (days === 365) return 'سنوي';
-    return `${days} يوم`;
+    if (days === 30) return t('subscription.monthly', 'شهري');
+    if (days === 90) return t('subscription.quarterly', '3 أشهر');
+    if (days === 180) return t('subscription.semiAnnual', '6 أشهر');
+    if (days === 365) return t('subscription.annual', 'سنوي');
+    return `${days} ${currentLanguage?.code === 'en' ? 'days' : 'يوم'}`;
   };
 
   const hasFeature = (plan: SubscriptionPlan, featureId: string) => {
@@ -179,14 +181,14 @@ const PlansComparison = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">جاري التحميل...</p>
+          <p className="text-muted-foreground">{t('common.loading', 'جاري التحميل...')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-screen bg-background" dir={direction}>
       <Navbar />
       
       <main className="pt-24 pb-16">
@@ -198,10 +200,10 @@ const PlansComparison = () => {
             className="text-center mb-12"
           >
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              قارن بين الباقات
+              {t('plans.title', 'قارن بين الباقات')}
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              اختر الباقة المناسبة لاحتياجات ناديك واستمتع بجميع المميزات
+              {t('plans.subtitle', 'اختر الباقة المناسبة لاحتياجات ناديك واستمتع بجميع المميزات')}
             </p>
           </motion.div>
 
@@ -218,11 +220,11 @@ const PlansComparison = () => {
                   {index === 1 && (
                     <div className="absolute top-0 right-0 left-0 bg-gold text-background text-center py-1 text-sm font-bold flex items-center justify-center gap-1">
                       <Crown className="w-4 h-4" />
-                      الأكثر شعبية
+                      {t('subscription.mostPopular', 'الأكثر شعبية')}
                     </div>
                   )}
                   <CardHeader className={index === 1 ? 'pt-10' : ''}>
-                    <CardTitle className="text-2xl text-center">{plan.name_ar}</CardTitle>
+                    <CardTitle className="text-2xl text-center">{currentLanguage?.code === 'en' ? plan.name : plan.name_ar}</CardTitle>
                     <div className="text-center">
                       <span className="text-3xl font-bold text-gold">
                         {formatPrice(plan.price, plan.currency)}
@@ -243,7 +245,7 @@ const PlansComparison = () => {
                       className="w-full btn-gold"
                       onClick={() => navigate('/subscription')}
                     >
-                      اشترك الآن
+                      {t('plans.subscribeNow', 'اشترك الآن')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -277,10 +279,10 @@ const PlansComparison = () => {
                     {index === 1 && (
                       <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-background">
                         <Crown className="w-3 h-3 ml-1" />
-                        الأكثر شعبية
+                        {t('subscription.mostPopular', 'الأكثر شعبية')}
                       </Badge>
                     )}
-                    <h3 className="text-xl font-bold text-foreground mb-2">{plan.name_ar}</h3>
+                    <h3 className="text-xl font-bold text-foreground mb-2">{currentLanguage?.code === 'en' ? plan.name : plan.name_ar}</h3>
                     <div className="mb-2">
                       <span className="text-3xl font-bold text-gold">
                         {formatPrice(plan.price, plan.currency)}
@@ -294,7 +296,7 @@ const PlansComparison = () => {
                       variant={index === 1 ? 'default' : 'outline'}
                       onClick={() => navigate('/subscription')}
                     >
-                      اشترك الآن
+                      {t('plans.subscribeNow', 'اشترك الآن')}
                     </Button>
                   </motion.div>
                 ))}
@@ -364,7 +366,7 @@ const PlansComparison = () => {
                       onClick={() => navigate('/subscription')}
                     >
                       <Zap className="w-4 h-4 ml-2" />
-                      اشترك في {plan.name_ar}
+                      {t('plans.subscribeTo', 'اشترك في')} {currentLanguage?.code === 'en' ? plan.name : plan.name_ar}
                     </Button>
                   </div>
                 ))}
@@ -380,30 +382,30 @@ const PlansComparison = () => {
             className="mt-16 max-w-3xl mx-auto"
           >
             <h2 className="text-2xl font-bold text-foreground text-center mb-8">
-              الأسئلة الشائعة
+              {t('plans.faq', 'الأسئلة الشائعة')}
             </h2>
             <div className="space-y-4">
               <Card>
                 <CardContent className="pt-6">
-                  <h3 className="font-bold text-foreground mb-2">هل يمكنني ترقية باقتي؟</h3>
+                  <h3 className="font-bold text-foreground mb-2">{t('plans.faq.upgrade', 'هل يمكنني ترقية باقتي؟')}</h3>
                   <p className="text-muted-foreground">
-                    نعم، يمكنك الترقية في أي وقت. سيتم احتساب الفرق بين الباقتين فقط.
+                    {t('plans.faq.upgradeAnswer', 'نعم، يمكنك الترقية في أي وقت. سيتم احتساب الفرق بين الباقتين فقط.')}
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-6">
-                  <h3 className="font-bold text-foreground mb-2">ماذا يحدث عند انتهاء الاشتراك؟</h3>
+                  <h3 className="font-bold text-foreground mb-2">{t('plans.faq.expiry', 'ماذا يحدث عند انتهاء الاشتراك؟')}</h3>
                   <p className="text-muted-foreground">
-                    ستظل بياناتك محفوظة، لكن لن تتمكن من الوصول للمميزات المدفوعة حتى تجدد اشتراكك.
+                    {t('plans.faq.expiryAnswer', 'ستظل بياناتك محفوظة، لكن لن تتمكن من الوصول للمميزات المدفوعة حتى تجدد اشتراكك.')}
                   </p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="pt-6">
-                  <h3 className="font-bold text-foreground mb-2">هل يتم تجديد حدود الاستخدام شهرياً؟</h3>
+                  <h3 className="font-bold text-foreground mb-2">{t('plans.faq.limits', 'هل يتم تجديد حدود الاستخدام شهرياً؟')}</h3>
                   <p className="text-muted-foreground">
-                    نعم، يتم إعادة تعيين حدود المشاهدة والرسائل في بداية كل شهر.
+                    {t('plans.faq.limitsAnswer', 'نعم، يتم إعادة تعيين حدود المشاهدة والرسائل في بداية كل شهر.')}
                   </p>
                 </CardContent>
               </Card>

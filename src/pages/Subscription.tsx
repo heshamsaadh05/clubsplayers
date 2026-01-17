@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 
 interface SubscriptionPlan {
@@ -40,6 +41,7 @@ const Subscription = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+  const { t, direction, currentLanguage } = useLanguage();
   
   const [step, setStep] = useState(1);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
@@ -93,8 +95,8 @@ const Subscription = () => {
     } catch (error) {
       console.error('Error fetching data:', error);
       toast({
-        title: 'خطأ',
-        description: 'حدث خطأ أثناء تحميل البيانات',
+        title: t('common.error', 'خطأ'),
+        description: t('subscription.errorLoading', 'حدث خطأ أثناء تحميل البيانات'),
         variant: 'destructive',
       });
     } finally {
@@ -134,8 +136,8 @@ const Subscription = () => {
     const requiresProof = ['bank_transfer', 'wallet', 'fawry', 'opay'].includes(selectedPaymentMethod.type);
     if (requiresProof && !paymentReference && !proofFile) {
       toast({
-        title: 'خطأ',
-        description: 'يرجى إدخال رقم العملية أو رفع إثبات الدفع',
+        title: t('common.error', 'خطأ'),
+        description: t('subscription.validationError', 'يرجى إدخال رقم العملية أو رفع إثبات الدفع'),
         variant: 'destructive',
       });
       return;
@@ -161,16 +163,16 @@ const Subscription = () => {
       if (error) throw error;
 
       toast({
-        title: 'تم بنجاح!',
-        description: 'تم تسجيل اشتراكك بنجاح',
+        title: t('common.success', 'تم بنجاح!'),
+        description: t('subscription.successMessage', 'تم تسجيل اشتراكك بنجاح'),
       });
 
       navigate('/club-dashboard');
     } catch (error) {
       console.error('Error creating subscription:', error);
       toast({
-        title: 'خطأ',
-        description: 'حدث خطأ أثناء تسجيل الاشتراك',
+        title: t('common.error', 'خطأ'),
+        description: t('subscription.errorPayment', 'حدث خطأ أثناء تسجيل الاشتراك'),
         variant: 'destructive',
       });
     } finally {
@@ -186,11 +188,11 @@ const Subscription = () => {
   };
 
   const getDurationLabel = (days: number) => {
-    if (days === 30) return 'شهري';
-    if (days === 90) return '3 أشهر';
-    if (days === 180) return '6 أشهر';
-    if (days === 365) return 'سنوي';
-    return `${days} يوم`;
+    if (days === 30) return t('subscription.monthly', 'شهري');
+    if (days === 90) return t('subscription.quarterly', '3 أشهر');
+    if (days === 180) return t('subscription.semiAnnual', '6 أشهر');
+    if (days === 365) return t('subscription.annual', 'سنوي');
+    return `${days} ${currentLanguage?.code === 'en' ? 'days' : 'يوم'}`;
   };
 
   if (authLoading || loading) {
@@ -198,14 +200,14 @@ const Subscription = () => {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">جاري التحميل...</p>
+          <p className="text-muted-foreground">{t('common.loading', 'جاري التحميل...')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-screen bg-background" dir={direction}>
       <Navbar />
       
       <main className="pt-24 pb-16">
@@ -240,8 +242,8 @@ const Subscription = () => {
                 exit={{ opacity: 0, x: -20 }}
               >
                 <div className="text-center mb-10">
-                  <h1 className="text-3xl font-bold text-foreground mb-2">اختر خطة الاشتراك</h1>
-                  <p className="text-muted-foreground">اختر الخطة المناسبة لناديك للوصول إلى قاعدة بيانات اللاعبين</p>
+                  <h1 className="text-3xl font-bold text-foreground mb-2">{t('subscription.selectPlan', 'اختر خطة الاشتراك')}</h1>
+                  <p className="text-muted-foreground">{t('subscription.selectPlanDesc', 'اختر الخطة المناسبة لناديك للوصول إلى قاعدة بيانات اللاعبين')}</p>
                 </div>
 
                 <div className="grid md:grid-cols-3 gap-6">
@@ -262,13 +264,13 @@ const Subscription = () => {
                         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                           <span className="bg-gold text-background text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
                             <Crown className="w-3 h-3" />
-                            الأكثر شعبية
+                            {t('subscription.mostPopular', 'الأكثر شعبية')}
                           </span>
                         </div>
                       )}
 
                       <div className="text-center mb-6">
-                        <h3 className="text-xl font-bold text-foreground mb-1">{plan.name_ar}</h3>
+                        <h3 className="text-xl font-bold text-foreground mb-1">{currentLanguage?.code === 'en' ? plan.name : plan.name_ar}</h3>
                         <p className="text-sm text-muted-foreground">{getDurationLabel(plan.duration_days)}</p>
                       </div>
 
@@ -276,8 +278,10 @@ const Subscription = () => {
                         <span className="text-4xl font-bold text-gold">{formatPrice(plan.price, plan.currency)}</span>
                       </div>
 
-                      {plan.description_ar && (
-                        <p className="text-sm text-muted-foreground text-center mb-4">{plan.description_ar}</p>
+                      {(currentLanguage?.code === 'en' ? plan.description : plan.description_ar) && (
+                        <p className="text-sm text-muted-foreground text-center mb-4">
+                          {currentLanguage?.code === 'en' ? plan.description : plan.description_ar}
+                        </p>
                       )}
 
                       <ul className="space-y-3">
@@ -300,7 +304,7 @@ const Subscription = () => {
 
                 {plans.length === 0 && (
                   <div className="text-center py-12">
-                    <p className="text-muted-foreground">لا توجد خطط متاحة حالياً</p>
+                    <p className="text-muted-foreground">{t('subscription.noPlans', 'لا توجد خطط متاحة حالياً')}</p>
                   </div>
                 )}
 
@@ -311,7 +315,7 @@ const Subscription = () => {
                     disabled={!selectedPlan}
                     onClick={() => setStep(2)}
                   >
-                    التالي: اختيار طريقة الدفع
+                    {t('subscription.nextPayment', 'التالي: اختيار طريقة الدفع')}
                   </Button>
                 </div>
               </motion.div>
@@ -330,13 +334,13 @@ const Subscription = () => {
                   className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  العودة لاختيار الخطة
+                  {t('subscription.backToPlan', 'العودة لاختيار الخطة')}
                 </button>
 
                 <div className="text-center mb-10">
-                  <h1 className="text-3xl font-bold text-foreground mb-2">اختر طريقة الدفع</h1>
+                  <h1 className="text-3xl font-bold text-foreground mb-2">{t('subscription.selectPayment', 'اختر طريقة الدفع')}</h1>
                   <p className="text-muted-foreground">
-                    الخطة المختارة: {selectedPlan?.name_ar} - {formatPrice(selectedPlan?.price || 0, selectedPlan?.currency || 'USD')}
+                    {t('subscription.selectedPlan', 'الخطة المختارة')}: {currentLanguage?.code === 'en' ? selectedPlan?.name : selectedPlan?.name_ar} - {formatPrice(selectedPlan?.price || 0, selectedPlan?.currency || 'USD')}
                   </p>
                 </div>
 
@@ -368,8 +372,8 @@ const Subscription = () => {
                           {getPaymentIcon(method.type)}
                         </div>
                         <div className="flex-1">
-                          <p className="font-bold text-foreground">{method.name_ar}</p>
-                          <p className="text-sm text-muted-foreground">{method.name}</p>
+                          <p className="font-bold text-foreground">{currentLanguage?.code === 'en' ? method.name : method.name_ar}</p>
+                          <p className="text-sm text-muted-foreground">{currentLanguage?.code === 'en' ? method.name_ar : method.name}</p>
                         </div>
                         {selectedPaymentMethod?.id === method.id && (
                           <CheckCircle className="w-6 h-6 text-gold" />
@@ -381,7 +385,7 @@ const Subscription = () => {
 
                 {paymentMethods.length === 0 && (
                   <div className="text-center py-12">
-                    <p className="text-muted-foreground">لا توجد طرق دفع متاحة حالياً</p>
+                    <p className="text-muted-foreground">{t('subscription.noPaymentMethods', 'لا توجد طرق دفع متاحة حالياً')}</p>
                   </div>
                 )}
 
@@ -392,7 +396,7 @@ const Subscription = () => {
                     disabled={!selectedPaymentMethod}
                     onClick={() => setStep(3)}
                   >
-                    التالي: إتمام الدفع
+                    {t('subscription.nextComplete', 'التالي: إتمام الدفع')}
                   </Button>
                 </div>
               </motion.div>
@@ -411,13 +415,13 @@ const Subscription = () => {
                   className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  العودة لاختيار طريقة الدفع
+                  {t('subscription.backToPayment', 'العودة لاختيار طريقة الدفع')}
                 </button>
 
                 <div className="text-center mb-10">
-                  <h1 className="text-3xl font-bold text-foreground mb-2">إتمام الدفع</h1>
+                  <h1 className="text-3xl font-bold text-foreground mb-2">{t('subscription.completePayment', 'إتمام الدفع')}</h1>
                   <p className="text-muted-foreground">
-                    {selectedPlan?.name_ar} - {formatPrice(selectedPlan?.price || 0, selectedPlan?.currency || 'USD')}
+                    {currentLanguage?.code === 'en' ? selectedPlan?.name : selectedPlan?.name_ar} - {formatPrice(selectedPlan?.price || 0, selectedPlan?.currency || 'USD')}
                   </p>
                 </div>
 
@@ -428,8 +432,8 @@ const Subscription = () => {
                         {getPaymentIcon(selectedPaymentMethod.type)}
                       </div>
                       <div>
-                        <p className="font-bold text-foreground">{selectedPaymentMethod.name_ar}</p>
-                        <p className="text-sm text-muted-foreground">{selectedPaymentMethod.name}</p>
+                        <p className="font-bold text-foreground">{currentLanguage?.code === 'en' ? selectedPaymentMethod.name : selectedPaymentMethod.name_ar}</p>
+                        <p className="text-sm text-muted-foreground">{currentLanguage?.code === 'en' ? selectedPaymentMethod.name_ar : selectedPaymentMethod.name}</p>
                       </div>
                     </div>
 
