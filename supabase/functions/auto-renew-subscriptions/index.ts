@@ -13,6 +13,26 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authorization - only allow calls with service role key or from cron
+    const authHeader = req.headers.get("Authorization");
+    const expectedServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    // Check if this is an authorized request (service role key in Bearer token)
+    const isAuthorized = authHeader && 
+      (authHeader === `Bearer ${expectedServiceKey}` || 
+       authHeader.includes(expectedServiceKey!));
+    
+    if (!isAuthorized) {
+      console.error("Unauthorized access attempt to auto-renew function");
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 401,
+        }
+      );
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     
