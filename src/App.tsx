@@ -11,6 +11,7 @@ import AdminPlayers from "./pages/admin/AdminPlayers";
 import AdminClubs from "./pages/admin/AdminClubs";
 import AdminPlans from "./pages/admin/AdminPlans";
 import AdminPayments from "./pages/admin/AdminPayments";
+import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
 import AdminSettings from "./pages/admin/AdminSettings";
 import PlayerRegistration from "./pages/PlayerRegistration";
 import PlayerDashboard from "./pages/PlayerDashboard";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/admin/clubs" element={<AdminClubs />} />
             <Route path="/admin/plans" element={<AdminPlans />} />
             <Route path="/admin/payments" element={<AdminPayments />} />
+            <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
