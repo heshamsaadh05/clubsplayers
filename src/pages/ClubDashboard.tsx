@@ -16,7 +16,8 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Crown
+  Crown,
+  MessageSquare
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -191,6 +192,10 @@ const ClubDashboard = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-gradient-gold">لوحة تحكم النادي</h1>
           <div className="flex items-center gap-4">
+            <Button variant="outline" onClick={() => navigate("/messages")}>
+              <MessageSquare className="w-4 h-4 ml-2" />
+              الرسائل
+            </Button>
             <Button variant="ghost" onClick={() => navigate("/")}>
               الرئيسية
             </Button>
