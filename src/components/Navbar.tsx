@@ -3,8 +3,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, User, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import NotificationBell from "@/components/notifications/NotificationBell";
+
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user } = useAuth();
 
   const navLinks = [
     { name: "الرئيسية", href: "#home" },
@@ -47,6 +51,7 @@ const Navbar = () => {
 
           {/* Auth Buttons */}
           <div className="hidden lg:flex items-center gap-4">
+            {user && <NotificationBell />}
             <Button
               variant="ghost"
               className="text-foreground hover:text-gold hover:bg-gold/10"

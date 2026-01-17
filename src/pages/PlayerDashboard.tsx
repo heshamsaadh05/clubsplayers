@@ -28,6 +28,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import NotificationBell from "@/components/notifications/NotificationBell";
 
 type Player = Tables<"players">;
 
@@ -144,6 +145,7 @@ const PlayerDashboard = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-gradient-gold">لوحة تحكم اللاعب</h1>
           <div className="flex items-center gap-4">
+            <NotificationBell />
             <Button variant="outline" onClick={() => navigate("/messages")}>
               <MessageSquare className="w-4 h-4 ml-2" />
               الرسائل
