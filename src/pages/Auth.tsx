@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, User, Building2, ArrowRight, Loader2 } from 'lucide-react';
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 
 const authSchema = z.object({
@@ -20,13 +21,46 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { user, signIn, signUp, loading: authLoading } = useAuth();
+  const { user, roles, signIn, signUp, loading: authLoading } = useAuth();
   
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  // Function to determine redirect path based on user role
+  const getRedirectPath = useCallback(async (userId: string): Promise<string> => {
+    // Check if admin
+    if (roles.includes('admin')) {
+      return '/admin';
+    }
+
+    // Check if player exists
+    const { data: playerData } = await supabase
+      .from('players')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (playerData) {
+      return '/player-dashboard';
+    }
+
+    // Check if club exists
+    const { data: clubData } = await supabase
+      .from('clubs')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (clubData) {
+      return '/club-dashboard';
+    }
+
+    // Default to home page
+    return '/';
+  }, [roles]);
 
   useEffect(() => {
     const type = searchParams.get('type');
@@ -35,10 +69,14 @@ const Auth = () => {
   }, [searchParams]);
 
   useEffect(() => {
-    if (user && !authLoading) {
-      navigate('/');
-    }
-  }, [user, authLoading, navigate]);
+    const redirectUser = async () => {
+      if (user && !authLoading) {
+        const path = await getRedirectPath(user.id);
+        navigate(path);
+      }
+    };
+    redirectUser();
+  }, [user, authLoading, roles, navigate, getRedirectPath]);
 
   const validateForm = () => {
     try {
@@ -81,7 +119,7 @@ const Auth = () => {
             title: 'تم تسجيل الدخول بنجاح',
             description: 'مرحباً بك مجدداً!',
           });
-          navigate('/');
+          // Redirect will happen automatically via useEffect
         }
       } else {
         const { error } = await signUp(email, password);
@@ -96,9 +134,10 @@ const Auth = () => {
         } else {
           toast({
             title: 'تم إنشاء الحساب بنجاح',
-            description: 'يمكنك الآن تسجيل الدخول',
+            description: 'يمكنك الآن إكمال التسجيل',
           });
-          navigate(mode === 'register-player' ? '/player/profile' : '/club/profile');
+          // Redirect to registration page based on mode
+          navigate(mode === 'register-player' ? '/player-registration' : '/club-registration');
         }
       }
     } catch (error) {
