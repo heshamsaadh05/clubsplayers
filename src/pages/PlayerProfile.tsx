@@ -37,6 +37,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import MessageComposer from "@/components/messages/MessageComposer";
+import { useFavorites } from "@/hooks/useFavorites";
 
 type Player = Tables<"players">;
 
@@ -44,6 +45,7 @@ const PlayerProfile = () => {
   const { id } = useParams<{ id: string }>();
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,7 +53,6 @@ const PlayerProfile = () => {
   const [isClub, setIsClub] = useState(false);
   const [messageOpen, setMessageOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
-  const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -234,10 +235,10 @@ const PlayerProfile = () => {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => setIsFavorite(!isFavorite)}
+              onClick={() => id && toggleFavorite(id)}
             >
               <Heart
-                className={`w-4 h-4 ${isFavorite ? "fill-red-500 text-red-500" : ""}`}
+                className={`w-4 h-4 ${isFavorite(id || '') ? "fill-red-500 text-red-500" : ""}`}
               />
             </Button>
             <Button variant="outline" size="icon" onClick={handleShare}>
