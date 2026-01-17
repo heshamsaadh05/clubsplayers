@@ -25,7 +25,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +36,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
+import MessageComposer from "@/components/messages/MessageComposer";
 
 type Player = Tables<"players">;
 
@@ -49,8 +49,7 @@ const PlayerProfile = () => {
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
   const [isClub, setIsClub] = useState(false);
-  const [contactMessage, setContactMessage] = useState("");
-  const [isSending, setIsSending] = useState(false);
+  const [messageOpen, setMessageOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
 
@@ -116,20 +115,6 @@ const PlayerProfile = () => {
       age--;
     }
     return age;
-  };
-
-  const handleContact = async () => {
-    if (!contactMessage.trim()) {
-      toast.error("الرجاء كتابة رسالة");
-      return;
-    }
-
-    setIsSending(true);
-    // Simulate sending message (in production, this would send an email or create a message record)
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    toast.success("تم إرسال رسالتك بنجاح! سيتم التواصل معك قريباً.");
-    setContactMessage("");
-    setIsSending(false);
   };
 
   const handleShare = async () => {
@@ -486,25 +471,12 @@ const PlayerProfile = () => {
 
                 <div>
                   <p className="font-medium mb-3">إرسال رسالة مباشرة</p>
-                  <Textarea
-                    placeholder="اكتب رسالتك هنا... (مثال: نود التعاقد معك للموسم القادم)"
-                    value={contactMessage}
-                    onChange={(e) => setContactMessage(e.target.value)}
-                    className="min-h-[120px] resize-none"
-                  />
                   <Button
-                    className="w-full mt-4 btn-gold"
-                    onClick={handleContact}
-                    disabled={isSending}
+                    className="w-full btn-gold"
+                    onClick={() => setMessageOpen(true)}
                   >
-                    {isSending ? (
-                      <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        <MessageCircle className="w-4 h-4 ml-2" />
-                        إرسال الرسالة
-                      </>
-                    )}
+                    <MessageCircle className="w-4 h-4 ml-2" />
+                    إرسال رسالة
                   </Button>
                 </div>
               </CardContent>
@@ -512,6 +484,14 @@ const PlayerProfile = () => {
           </motion.div>
         </div>
       </main>
+
+      {/* Message Composer Dialog */}
+      <MessageComposer
+        isOpen={messageOpen}
+        onClose={() => setMessageOpen(false)}
+        recipientId={player.user_id}
+        recipientName={player.full_name}
+      />
     </div>
   );
 };
