@@ -157,16 +157,17 @@ const AdminPlayers = () => {
               className="pr-10 bg-secondary"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {['all', 'pending', 'approved', 'rejected'].map((status) => (
               <Button
                 key={status}
                 variant={statusFilter === status ? 'default' : 'outline'}
                 onClick={() => setStatusFilter(status)}
-                className={statusFilter === status ? 'btn-gold' : ''}
+                className={`text-xs sm:text-sm ${statusFilter === status ? 'btn-gold' : ''}`}
+                size="sm"
               >
                 {status === 'all' && 'الكل'}
-                {status === 'pending' && 'في الانتظار'}
+                {status === 'pending' && 'انتظار'}
                 {status === 'approved' && 'معتمد'}
                 {status === 'rejected' && 'مرفوض'}
               </Button>
@@ -174,8 +175,8 @@ const AdminPlayers = () => {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="card-glass rounded-2xl overflow-hidden">
+        {/* Table - Desktop */}
+        <div className="card-glass rounded-2xl overflow-hidden hidden md:block">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-secondary">
@@ -286,9 +287,103 @@ const AdminPlayers = () => {
           </div>
         </div>
 
+        {/* Mobile Cards View */}
+        <div className="md:hidden space-y-4">
+          {loading ? (
+            <div className="p-8 text-center text-muted-foreground">جاري التحميل...</div>
+          ) : filteredPlayers.length === 0 ? (
+            <div className="p-8 text-center text-muted-foreground">لا يوجد لاعبون</div>
+          ) : (
+            filteredPlayers.map((player) => (
+              <motion.div
+                key={player.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="card-glass rounded-xl p-4"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-full bg-gold/20 flex items-center justify-center flex-shrink-0">
+                    {player.profile_image_url ? (
+                      <img
+                        src={player.profile_image_url}
+                        alt={player.full_name}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-gold font-bold">
+                        {player.full_name?.charAt(0)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground truncate">{player.full_name}</p>
+                    <p className="text-sm text-muted-foreground truncate">{player.email}</p>
+                  </div>
+                  {getStatusBadge(player.status)}
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                  <div>
+                    <span className="text-muted-foreground">المركز: </span>
+                    <span>{player.position || '-'}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">النادي: </span>
+                    <span>{player.current_club || '-'}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between border-t border-border pt-3">
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(player.created_at).toLocaleDateString('ar-EG')}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setSelectedPlayer(player);
+                        setShowDetails(true);
+                      }}
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    {player.status === 'pending' && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-green-500"
+                          onClick={() => updatePlayerStatus(player.id, 'approved')}
+                        >
+                          <Check className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-red-500"
+                          onClick={() => updatePlayerStatus(player.id, 'rejected')}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive"
+                      onClick={() => deletePlayer(player.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            ))
+          )}
+        </div>
+
         {/* Player Details Dialog */}
         <Dialog open={showDetails} onOpenChange={setShowDetails}>
-          <DialogContent className="max-w-2xl bg-card">
+          <DialogContent className="max-w-2xl bg-card max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>تفاصيل اللاعب</DialogTitle>
             </DialogHeader>
