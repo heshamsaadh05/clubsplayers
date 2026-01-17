@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { usePublishedPages } from "@/hooks/usePublishedPages";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
@@ -151,6 +152,7 @@ const Navbar = () => {
 
           {/* Auth Buttons - Desktop */}
           <div className="hidden lg:flex items-center gap-3">
+            <LanguageSwitcher />
             {user ? (
               <>
                 <NotificationBell />

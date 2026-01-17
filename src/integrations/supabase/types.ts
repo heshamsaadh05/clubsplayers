@@ -121,6 +121,45 @@ export type Database = {
           },
         ]
       }
+      languages: {
+        Row: {
+          code: string
+          created_at: string
+          direction: string
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          native_name: string
+          order_index: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          direction?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          native_name: string
+          order_index?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          native_name?: string
+          order_index?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -558,6 +597,44 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "subscription_plans"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      translations: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          key: string
+          language_code: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          key: string
+          language_code: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          key?: string
+          language_code?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "translations_language_code_fkey"
+            columns: ["language_code"]
+            isOneToOne: false
+            referencedRelation: "languages"
+            referencedColumns: ["code"]
           },
         ]
       }
