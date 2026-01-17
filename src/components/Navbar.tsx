@@ -1,14 +1,81 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, User, Building2 } from "lucide-react";
+import { Menu, X, User, Building2, LogIn, LogOut, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import NotificationBell from "@/components/notifications/NotificationBell";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, roles, signOut, loading } = useAuth();
+  const navigate = useNavigate();
+  const [userType, setUserType] = useState<'player' | 'club' | 'admin' | null>(null);
+
+  useEffect(() => {
+    const checkUserType = async () => {
+      if (!user) {
+        setUserType(null);
+        return;
+      }
+
+      // Check admin first
+      if (roles.includes('admin')) {
+        setUserType('admin');
+        return;
+      }
+
+      // Check if player
+      const { data: playerData } = await supabase
+        .from('players')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (playerData) {
+        setUserType('player');
+        return;
+      }
+
+      // Check if club
+      const { data: clubData } = await supabase
+        .from('clubs')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (clubData) {
+        setUserType('club');
+        return;
+      }
+
+      setUserType(null);
+    };
+
+    if (!loading) {
+      checkUserType();
+    }
+  }, [user, roles, loading]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+    setIsOpen(false);
+  };
+
+  const getDashboardLink = () => {
+    switch (userType) {
+      case 'admin':
+        return '/admin';
+      case 'player':
+        return '/player-dashboard';
+      case 'club':
+        return '/club-dashboard';
+      default:
+        return '/auth';
+    }
+  };
 
   const navLinks = [
     { name: "الرئيسية", href: "#home" },
@@ -27,13 +94,14 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <motion.a
-            href="#"
-            className="text-2xl font-bold text-gradient-gold font-playfair"
-            whileHover={{ scale: 1.05 }}
-          >
-            ستارز إيجنسي
-          </motion.a>
+          <motion.div whileHover={{ scale: 1.05 }}>
+            <Link
+              to="/"
+              className="text-2xl font-bold text-gradient-gold font-playfair"
+            >
+              ستارز إيجنسي
+            </Link>
+          </motion.div>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-8">
@@ -49,25 +117,60 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Auth Buttons */}
-          <div className="hidden lg:flex items-center gap-4">
-            {user && <NotificationBell />}
-            <Button
-              variant="ghost"
-              className="text-foreground hover:text-gold hover:bg-gold/10"
-              asChild
-            >
-              <Link to="/player-registration">
-                <User className="w-4 h-4 ml-2" />
-                تسجيل لاعب
-              </Link>
-            </Button>
-            <Button className="btn-gold rounded-full px-6" asChild>
-              <Link to="/club-registration">
-                <Building2 className="w-4 h-4 ml-2" />
-                انضمام نادي
-              </Link>
-            </Button>
+          {/* Auth Buttons - Desktop */}
+          <div className="hidden lg:flex items-center gap-3">
+            {user ? (
+              <>
+                <NotificationBell />
+                <Button
+                  variant="outline"
+                  className="border-gold/30 hover:bg-gold/10"
+                  asChild
+                >
+                  <Link to={getDashboardLink()}>
+                    <LayoutDashboard className="w-4 h-4 ml-2" />
+                    لوحة التحكم
+                  </Link>
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="text-muted-foreground hover:text-destructive"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="w-4 h-4 ml-2" />
+                  خروج
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="ghost"
+                  className="text-foreground hover:text-gold hover:bg-gold/10"
+                  asChild
+                >
+                  <Link to="/auth">
+                    <LogIn className="w-4 h-4 ml-2" />
+                    تسجيل دخول
+                  </Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="border-gold/30 hover:bg-gold/10"
+                  asChild
+                >
+                  <Link to="/auth?type=player">
+                    <User className="w-4 h-4 ml-2" />
+                    تسجيل لاعب
+                  </Link>
+                </Button>
+                <Button className="btn-gold rounded-full px-6" asChild>
+                  <Link to="/auth?type=club">
+                    <Building2 className="w-4 h-4 ml-2" />
+                    انضمام نادي
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -101,22 +204,57 @@ const Navbar = () => {
                 </a>
               ))}
               <div className="pt-4 space-y-3 border-t border-border">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start text-foreground hover:text-gold"
-                  asChild
-                >
-                  <Link to="/player-registration" onClick={() => setIsOpen(false)}>
-                    <User className="w-4 h-4 ml-2" />
-                    تسجيل لاعب
-                  </Link>
-                </Button>
-                <Button className="w-full btn-gold rounded-full" asChild>
-                  <Link to="/club-registration" onClick={() => setIsOpen(false)}>
-                    <Building2 className="w-4 h-4 ml-2" />
-                    انضمام نادي
-                  </Link>
-                </Button>
+                {user ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start border-gold/30"
+                      asChild
+                    >
+                      <Link to={getDashboardLink()} onClick={() => setIsOpen(false)}>
+                        <LayoutDashboard className="w-4 h-4 ml-2" />
+                        لوحة التحكم
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-muted-foreground hover:text-destructive"
+                      onClick={handleSignOut}
+                    >
+                      <LogOut className="w-4 h-4 ml-2" />
+                      تسجيل الخروج
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-foreground hover:text-gold"
+                      asChild
+                    >
+                      <Link to="/auth" onClick={() => setIsOpen(false)}>
+                        <LogIn className="w-4 h-4 ml-2" />
+                        تسجيل دخول
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start border-gold/30"
+                      asChild
+                    >
+                      <Link to="/auth?type=player" onClick={() => setIsOpen(false)}>
+                        <User className="w-4 h-4 ml-2" />
+                        تسجيل لاعب
+                      </Link>
+                    </Button>
+                    <Button className="w-full btn-gold rounded-full" asChild>
+                      <Link to="/auth?type=club" onClick={() => setIsOpen(false)}>
+                        <Building2 className="w-4 h-4 ml-2" />
+                        انضمام نادي
+                      </Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </motion.div>
