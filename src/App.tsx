@@ -16,6 +16,7 @@ import PlayerRegistration from "./pages/PlayerRegistration";
 import PlayerDashboard from "./pages/PlayerDashboard";
 import ClubRegistration from "./pages/ClubRegistration";
 import ClubDashboard from "./pages/ClubDashboard";
+import BrowsePlayers from "./pages/BrowsePlayers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/player-dashboard" element={<PlayerDashboard />} />
             <Route path="/club-registration" element={<ClubRegistration />} />
             <Route path="/club-dashboard" element={<ClubDashboard />} />
+            <Route path="/browse-players" element={<BrowsePlayers />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/players" element={<AdminPlayers />} />
             <Route path="/admin/clubs" element={<AdminClubs />} />
