@@ -3,7 +3,8 @@ import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
 import Underline from '@tiptap/extension-underline';
-import { useEffect } from 'react';
+import Image from '@tiptap/extension-image';
+import { useEffect, useRef, useState } from 'react';
 import {
   Bold,
   Italic,
@@ -23,8 +24,9 @@ import {
   Undo,
   Redo,
   Minus,
+  ImageIcon,
+  Loader2,
 } from 'lucide-react';
-import { Button } from './button';
 import { Toggle } from './toggle';
 import { Separator } from './separator';
 import {
@@ -33,6 +35,8 @@ import {
   TooltipTrigger,
 } from './tooltip';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface RichTextEditorProps {
   content: string;
@@ -49,6 +53,9 @@ const RichTextEditor = ({
   dir = 'rtl',
   className,
 }: RichTextEditorProps) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -66,6 +73,11 @@ const RichTextEditor = ({
         types: ['heading', 'paragraph'],
       }),
       Underline,
+      Image.configure({
+        HTMLAttributes: {
+          class: 'max-w-full h-auto rounded-lg my-4',
+        },
+      }),
     ],
     content,
     onUpdate: ({ editor }) => {
@@ -87,6 +99,60 @@ const RichTextEditor = ({
       editor.commands.setContent(content);
     }
   }, [content, editor]);
+
+  const handleImageUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('يرجى اختيار ملف صورة صالح');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `pages/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('page-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('page-images')
+        .getPublicUrl(filePath);
+
+      editor?.chain().focus().setImage({ src: publicUrl }).run();
+      toast.success('تم رفع الصورة بنجاح');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('حدث خطأ أثناء رفع الصورة');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file);
+    }
+  };
+
+  const addImageFromUrl = () => {
+    const url = window.prompt('أدخل رابط الصورة:');
+    if (url) {
+      editor?.chain().focus().setImage({ src: url }).run();
+    }
+  };
 
   if (!editor) {
     return (
@@ -134,6 +200,15 @@ const RichTextEditor = ({
 
   return (
     <div className={cn('border border-border rounded-lg overflow-hidden bg-secondary/50', className)}>
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handleFileChange}
+        className="hidden"
+      />
+
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-1 p-2 border-b border-border bg-muted/50">
         {/* Text Formatting */}
@@ -261,6 +336,19 @@ const RichTextEditor = ({
 
         <Separator orientation="vertical" className="h-6 mx-1" />
 
+        {/* Image Upload */}
+        <ToolbarButton
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          tooltip="رفع صورة"
+        >
+          {uploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ImageIcon className="h-4 w-4" />
+          )}
+        </ToolbarButton>
+
         {/* Horizontal Rule */}
         <ToolbarButton
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
@@ -291,10 +379,13 @@ const RichTextEditor = ({
       {/* Editor Content */}
       <EditorContent editor={editor} />
 
-      {/* Placeholder */}
-      {editor.isEmpty && (
-        <div className="absolute top-[60px] right-4 text-muted-foreground pointer-events-none">
-          {placeholder}
+      {/* Uploading Overlay */}
+      {uploading && (
+        <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
+          <div className="flex items-center gap-2 bg-card p-4 rounded-lg shadow-lg">
+            <Loader2 className="h-5 w-5 animate-spin text-gold" />
+            <span>جاري رفع الصورة...</span>
+          </div>
         </div>
       )}
     </div>
