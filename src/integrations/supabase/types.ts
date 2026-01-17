@@ -199,6 +199,44 @@ export type Database = {
         }
         Relationships: []
       }
+      player_ratings: {
+        Row: {
+          club_user_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          player_id: string
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          club_user_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          player_id: string
+          rating: number
+          updated_at?: string
+        }
+        Update: {
+          club_user_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          player_id?: string
+          rating?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_ratings_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       players: {
         Row: {
           bio: string | null

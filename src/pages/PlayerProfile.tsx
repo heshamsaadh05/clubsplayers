@@ -38,6 +38,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import MessageComposer from "@/components/messages/MessageComposer";
 import { useFavorites } from "@/hooks/useFavorites";
+import PlayerRating from "@/components/player/PlayerRating";
 
 type Player = Tables<"players">;
 
@@ -482,6 +483,13 @@ const PlayerProfile = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Player Ratings */}
+            <PlayerRating
+              playerId={id || ''}
+              isClub={isClub}
+              hasAccess={hasAccess}
+            />
           </motion.div>
         </div>
       </main>
