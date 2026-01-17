@@ -409,6 +409,7 @@ const ClubDashboard = () => {
                           <Button 
                             className="w-full" 
                             variant={subscription ? "outline" : "default"}
+                            onClick={() => navigate("/subscription")}
                           >
                             {subscription ? "ترقية" : "اشترك الآن"}
                           </Button>
