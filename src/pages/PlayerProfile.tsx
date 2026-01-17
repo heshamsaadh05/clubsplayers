@@ -3,10 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   User,
-  Mail,
-  Phone,
   MapPin,
-  Calendar,
   Ruler,
   Weight,
   Trophy,
@@ -41,7 +38,24 @@ import { useFavorites } from "@/hooks/useFavorites";
 import PlayerRating from "@/components/player/PlayerRating";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 
-type Player = Tables<"players">;
+// Public player type excludes PII fields (email, phone, date_of_birth, id_document_url, rejection_reason)
+type PublicPlayer = {
+  id: string;
+  user_id: string;
+  full_name: string;
+  position: string | null;
+  nationality: string | null;
+  current_club: string | null;
+  previous_clubs: string[] | null;
+  bio: string | null;
+  profile_image_url: string | null;
+  video_urls: string[] | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+  updated_at: string;
+};
 
 const PlayerProfile = () => {
   const { id } = useParams<{ id: string }>();
@@ -55,7 +69,7 @@ const PlayerProfile = () => {
     hasActiveSubscription: subLimitsActive 
   } = useSubscriptionLimits();
 
-  const [player, setPlayer] = useState<Player | null>(null);
+  const [player, setPlayer] = useState<PublicPlayer | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
   const [isClub, setIsClub] = useState(false);
@@ -93,12 +107,11 @@ const PlayerProfile = () => {
 
         setHasAccess(!!subData);
 
-        // Fetch player data
+        // Fetch player data from public view (excludes PII like email, phone, DOB)
         const { data: playerData, error } = await supabase
-          .from("players")
+          .from("players_public")
           .select("*")
           .eq("id", id)
-          .eq("status", "approved")
           .maybeSingle();
 
         if (error) throw error;
@@ -124,16 +137,7 @@ const PlayerProfile = () => {
     }
   }, [user, id, viewRecorded, recordPlayerView]);
 
-  const calculateAge = (dateOfBirth: string): number => {
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
+  // calculateAge removed - date_of_birth is now private PII
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -329,13 +333,6 @@ const PlayerProfile = () => {
                   <p className="text-sm text-muted-foreground">كجم</p>
                 </div>
                 <div className="text-center p-4 bg-muted/50 rounded-lg">
-                  <Calendar className="w-6 h-6 text-gold mx-auto mb-2" />
-                  <p className="text-2xl font-bold">
-                    {player.date_of_birth ? calculateAge(player.date_of_birth) : "—"}
-                  </p>
-                  <p className="text-sm text-muted-foreground">سنة</p>
-                </div>
-                <div className="text-center p-4 bg-muted/50 rounded-lg">
                   <MapPin className="w-6 h-6 text-gold mx-auto mb-2" />
                   <p className="text-lg font-bold truncate">
                     {player.nationality || "—"}
@@ -464,31 +461,12 @@ const PlayerProfile = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {player.email && (
-                    <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
-                      <Mail className="w-5 h-5 text-gold" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">البريد الإلكتروني</p>
-                        <p className="font-medium">{player.email}</p>
-                      </div>
-                    </div>
-                  )}
-                  {player.phone && (
-                    <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
-                      <Phone className="w-5 h-5 text-gold" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">رقم الهاتف</p>
-                        <p className="font-medium" dir="ltr">{player.phone}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <Separator />
-
+                {/* Contact info removed for privacy - clubs can send messages directly */}
                 <div>
                   <p className="font-medium mb-3">إرسال رسالة مباشرة</p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    يمكنك التواصل مع اللاعب مباشرة عبر نظام الرسائل
+                  </p>
                   <Button
                     className="w-full btn-gold"
                     onClick={() => setMessageOpen(true)}

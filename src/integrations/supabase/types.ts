@@ -119,6 +119,13 @@ export type Database = {
             referencedRelation: "players"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "favorites_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       languages: {
@@ -307,6 +314,13 @@ export type Database = {
             referencedRelation: "players"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "player_ratings_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       player_views: {
@@ -334,6 +348,13 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_views_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players_public"
             referencedColumns: ["id"]
           },
         ]
@@ -658,9 +679,63 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      players_public: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          current_club: string | null
+          full_name: string | null
+          height_cm: number | null
+          id: string | null
+          nationality: string | null
+          position: string | null
+          previous_clubs: string[] | null
+          profile_image_url: string | null
+          status: Database["public"]["Enums"]["player_status"] | null
+          updated_at: string | null
+          user_id: string | null
+          video_urls: string[] | null
+          weight_kg: number | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          current_club?: string | null
+          full_name?: string | null
+          height_cm?: number | null
+          id?: string | null
+          nationality?: string | null
+          position?: string | null
+          previous_clubs?: string[] | null
+          profile_image_url?: string | null
+          status?: Database["public"]["Enums"]["player_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+          video_urls?: string[] | null
+          weight_kg?: number | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          current_club?: string | null
+          full_name?: string | null
+          height_cm?: number | null
+          id?: string | null
+          nationality?: string | null
+          position?: string | null
+          previous_clubs?: string[] | null
+          profile_image_url?: string | null
+          status?: Database["public"]["Enums"]["player_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+          video_urls?: string[] | null
+          weight_kg?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      has_active_subscription: { Args: { uid: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
