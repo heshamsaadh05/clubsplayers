@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Building2, 
   Mail, 
@@ -18,12 +18,18 @@ import {
   XCircle,
   Crown,
   MessageSquare,
-  Heart
+  Heart,
+  Zap,
+  ArrowUpCircle,
+  Check,
+  X,
+  Sparkles
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -94,6 +100,181 @@ const UsageStatsSection = () => {
         )}
       </div>
     </div>
+  );
+};
+
+// Upgrade Button Component
+interface UpgradeButtonProps {
+  currentPlan: SubscriptionPlan | undefined;
+  plans: SubscriptionPlan[];
+  onNavigate: () => void;
+}
+
+const UpgradeButton = ({ currentPlan, plans, onNavigate }: UpgradeButtonProps) => {
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const navigate = useNavigate();
+  
+  // Get higher tier plans
+  const upgradePlans = currentPlan 
+    ? plans.filter(p => p.price > currentPlan.price)
+    : plans;
+
+  if (!currentPlan) {
+    return (
+      <Button 
+        className="btn-gold"
+        onClick={onNavigate}
+      >
+        <Zap className="w-4 h-4 ml-2" />
+        اشترك الآن
+      </Button>
+    );
+  }
+
+  if (upgradePlans.length === 0) {
+    return (
+      <Badge className="bg-gold/20 text-gold border-gold/30">
+        <Sparkles className="w-3 h-3 ml-1" />
+        أعلى باقة
+      </Badge>
+    );
+  }
+
+  return (
+    <>
+      <Button 
+        variant="outline"
+        className="border-gold text-gold hover:bg-gold hover:text-gold-foreground"
+        onClick={() => setShowUpgradeDialog(true)}
+      >
+        <ArrowUpCircle className="w-4 h-4 ml-2" />
+        ترقية الباقة
+      </Button>
+
+      <Dialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+        <DialogContent className="max-w-2xl" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-xl flex items-center gap-2">
+              <ArrowUpCircle className="w-6 h-6 text-gold" />
+              ترقية الباقة
+            </DialogTitle>
+            <DialogDescription>
+              اختر الباقة التي تريد الترقية إليها للحصول على مميزات إضافية
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-4">
+            {/* Current Plan */}
+            <div className="p-4 rounded-lg bg-secondary/50 border border-border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">الباقة الحالية</p>
+                  <p className="font-bold text-lg">{currentPlan.name_ar}</p>
+                </div>
+                <Badge variant="outline">{currentPlan.price} {currentPlan.currency}</Badge>
+              </div>
+            </div>
+
+            {/* Upgrade Options */}
+            <div className="space-y-3">
+              {upgradePlans.map((plan) => {
+                const features = Array.isArray(plan.features) ? plan.features : [];
+                const currentFeatures = Array.isArray(currentPlan.features) ? currentPlan.features : [];
+                const newFeatures = features.filter(f => !currentFeatures.includes(f as string));
+                
+                return (
+                  <motion.div
+                    key={plan.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 rounded-lg border-2 border-gold/30 bg-gold/5 hover:border-gold transition-colors"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Crown className="w-5 h-5 text-gold" />
+                          <h3 className="font-bold text-lg">{plan.name_ar}</h3>
+                        </div>
+                        {plan.description_ar && (
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {plan.description_ar}
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-left">
+                        <p className="text-2xl font-bold text-gold">
+                          {plan.price} {plan.currency}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          / {plan.duration_days} يوم
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* New Features */}
+                    {newFeatures.length > 0 && (
+                      <div className="mb-4">
+                        <p className="text-sm font-medium mb-2 text-gold">المميزات الجديدة:</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {newFeatures.slice(0, 4).map((feature, i) => (
+                            <div key={i} className="flex items-center gap-1 text-sm">
+                              <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
+                              <span>{String(feature)}</span>
+                            </div>
+                          ))}
+                          {newFeatures.length > 4 && (
+                            <p className="text-sm text-muted-foreground col-span-2">
+                              +{newFeatures.length - 4} مميزات أخرى
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <Button 
+                        className="flex-1 btn-gold"
+                        onClick={() => {
+                          setShowUpgradeDialog(false);
+                          navigate("/subscription");
+                        }}
+                      >
+                        <Zap className="w-4 h-4 ml-2" />
+                        ترقية إلى هذه الباقة
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          setShowUpgradeDialog(false);
+                          navigate("/plans");
+                        }}
+                      >
+                        مقارنة
+                      </Button>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* Compare Link */}
+            <div className="text-center pt-2">
+              <Button 
+                variant="link" 
+                className="text-gold"
+                onClick={() => {
+                  setShowUpgradeDialog(false);
+                  navigate("/plans");
+                }}
+              >
+                عرض جميع الباقات والمقارنة بينها
+                <ArrowRight className="w-4 h-4 mr-1" />
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
@@ -298,27 +479,46 @@ const ClubDashboard = () => {
                     </Badge>
                   </div>
                 </div>
-                {subscription && (
-                  <div className="text-left">
-                    <p className="text-sm text-muted-foreground">ينتهي في</p>
-                    <p className="font-medium">
-                      {new Date(subscription.end_date).toLocaleDateString("ar-SA")}
-                    </p>
-                    {statusConfig.daysRemaining !== undefined && statusConfig.daysRemaining > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        ({statusConfig.daysRemaining} يوم متبقي)
+                <div className="flex items-center gap-3">
+                  {subscription && (
+                    <div className="text-left">
+                      <p className="text-sm text-muted-foreground">ينتهي في</p>
+                      <p className="font-medium">
+                        {new Date(subscription.end_date).toLocaleDateString("ar-SA")}
                       </p>
-                    )}
-                  </div>
-                )}
+                      {statusConfig.daysRemaining !== undefined && statusConfig.daysRemaining > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          ({statusConfig.daysRemaining} يوم متبقي)
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {/* Upgrade Button */}
+                  <UpgradeButton 
+                    currentPlan={subscription?.subscription_plans} 
+                    plans={plans}
+                    onNavigate={() => navigate("/subscription")}
+                  />
+                </div>
               </div>
               {subscription && subscription.subscription_plans && (
                 <div className="mt-4 p-4 bg-background/50 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Crown className="w-5 h-5 text-gold" />
-                    <span className="font-semibold">{subscription.subscription_plans.name_ar}</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Crown className="w-5 h-5 text-gold" />
+                      <span className="font-semibold">{subscription.subscription_plans.name_ar}</span>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => navigate("/plans")}
+                      className="text-gold hover:text-gold"
+                    >
+                      مقارنة الباقات
+                      <ArrowRight className="w-4 h-4 mr-1" />
+                    </Button>
                   </div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground mt-1">
                     {subscription.subscription_plans.description_ar}
                   </p>
                 </div>
