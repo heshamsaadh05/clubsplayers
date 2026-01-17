@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, DollarSign } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, ChevronDown, X } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -31,6 +40,76 @@ interface Plan {
   is_active: boolean;
 }
 
+// Predefined features with categories
+const PREDEFINED_FEATURES = {
+  viewing: {
+    label: 'عرض اللاعبين',
+    features: [
+      { id: 'view_5_players', label: 'مشاهدة 5 لاعبين', label_ar: 'مشاهدة 5 لاعبين' },
+      { id: 'view_10_players', label: 'مشاهدة 10 لاعبين', label_ar: 'مشاهدة 10 لاعبين' },
+      { id: 'view_25_players', label: 'مشاهدة 25 لاعب', label_ar: 'مشاهدة 25 لاعب' },
+      { id: 'view_50_players', label: 'مشاهدة 50 لاعب', label_ar: 'مشاهدة 50 لاعب' },
+      { id: 'view_unlimited', label: 'مشاهدة غير محدودة', label_ar: 'مشاهدة غير محدودة للاعبين' },
+    ],
+  },
+  priority: {
+    label: 'أولوية العرض',
+    features: [
+      { id: 'priority_featured', label: 'عرض اللاعبين المتميزين أولاً', label_ar: 'أولوية عرض اللاعبين المتميزين' },
+      { id: 'priority_new', label: 'عرض اللاعبين الجدد أولاً', label_ar: 'أولوية عرض اللاعبين الجدد' },
+      { id: 'priority_top_rated', label: 'عرض الأعلى تقييماً أولاً', label_ar: 'أولوية عرض الأعلى تقييماً' },
+      { id: 'early_access', label: 'الوصول المبكر للاعبين الجدد', label_ar: 'الوصول المبكر للاعبين الجدد' },
+    ],
+  },
+  search: {
+    label: 'البحث والفلترة',
+    features: [
+      { id: 'basic_search', label: 'البحث الأساسي', label_ar: 'البحث الأساسي' },
+      { id: 'advanced_filter', label: 'الفلترة المتقدمة', label_ar: 'الفلترة المتقدمة' },
+      { id: 'filter_position', label: 'فلترة حسب المركز', label_ar: 'الفلترة حسب المركز' },
+      { id: 'filter_nationality', label: 'فلترة حسب الجنسية', label_ar: 'الفلترة حسب الجنسية' },
+      { id: 'filter_age', label: 'فلترة حسب العمر', label_ar: 'الفلترة حسب العمر' },
+      { id: 'filter_physical', label: 'فلترة حسب المواصفات الجسدية', label_ar: 'الفلترة حسب المواصفات الجسدية' },
+      { id: 'save_searches', label: 'حفظ عمليات البحث', label_ar: 'حفظ عمليات البحث' },
+    ],
+  },
+  verification: {
+    label: 'التوثيق والميزات',
+    features: [
+      { id: 'club_verification', label: 'توثيق النادي', label_ar: 'توثيق النادي (علامة زرقاء)' },
+      { id: 'verified_badge', label: 'شارة التوثيق', label_ar: 'شارة التوثيق المميزة' },
+      { id: 'priority_support', label: 'دعم فني أولوي', label_ar: 'دعم فني ذو أولوية' },
+      { id: 'dedicated_manager', label: 'مدير حساب مخصص', label_ar: 'مدير حساب مخصص' },
+    ],
+  },
+  communication: {
+    label: 'التواصل',
+    features: [
+      { id: 'message_5', label: '5 رسائل شهرياً', label_ar: '5 رسائل شهرياً' },
+      { id: 'message_20', label: '20 رسالة شهرياً', label_ar: '20 رسالة شهرياً' },
+      { id: 'message_50', label: '50 رسالة شهرياً', label_ar: '50 رسالة شهرياً' },
+      { id: 'message_unlimited', label: 'رسائل غير محدودة', label_ar: 'رسائل غير محدودة' },
+      { id: 'direct_contact', label: 'التواصل المباشر مع اللاعبين', label_ar: 'التواصل المباشر مع اللاعبين' },
+      { id: 'contact_info', label: 'عرض معلومات الاتصال', label_ar: 'عرض معلومات الاتصال الكاملة' },
+    ],
+  },
+  extras: {
+    label: 'مميزات إضافية',
+    features: [
+      { id: 'favorites', label: 'إضافة للمفضلة', label_ar: 'إضافة لاعبين للمفضلة' },
+      { id: 'favorites_unlimited', label: 'مفضلة غير محدودة', label_ar: 'قائمة مفضلة غير محدودة' },
+      { id: 'player_videos', label: 'مشاهدة فيديوهات اللاعبين', label_ar: 'مشاهدة فيديوهات اللاعبين' },
+      { id: 'download_cv', label: 'تحميل السيرة الذاتية', label_ar: 'تحميل السيرة الذاتية للاعب' },
+      { id: 'export_list', label: 'تصدير قائمة اللاعبين', label_ar: 'تصدير قائمة اللاعبين' },
+      { id: 'analytics', label: 'إحصائيات وتقارير', label_ar: 'إحصائيات وتقارير مفصلة' },
+      { id: 'no_ads', label: 'بدون إعلانات', label_ar: 'تجربة بدون إعلانات' },
+    ],
+  },
+};
+
+// Flatten features for easy lookup
+const ALL_FEATURES = Object.values(PREDEFINED_FEATURES).flatMap(cat => cat.features);
+
 const AdminPlans = () => {
   const { toast } = useToast();
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -47,7 +126,8 @@ const AdminPlans = () => {
     currency: 'USD',
     duration_days: 30,
     plan_type: 'club',
-    features: '',
+    selectedFeatures: [] as string[],
+    customFeatures: '',
     is_active: true,
   });
 
@@ -88,10 +168,36 @@ const AdminPlans = () => {
     }
   };
 
+  const toggleFeature = (featureId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedFeatures: prev.selectedFeatures.includes(featureId)
+        ? prev.selectedFeatures.filter(f => f !== featureId)
+        : [...prev.selectedFeatures, featureId],
+    }));
+  };
+
+  const removeFeature = (featureId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedFeatures: prev.selectedFeatures.filter(f => f !== featureId),
+    }));
+  };
+
+  const getFeatureLabel = (featureId: string) => {
+    const feature = ALL_FEATURES.find(f => f.id === featureId);
+    return feature?.label_ar || featureId;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
+      // Combine selected features (as Arabic labels) + custom features
+      const featureLabels = formData.selectedFeatures.map(id => getFeatureLabel(id));
+      const customFeaturesList = formData.customFeatures.split('\n').filter(f => f.trim());
+      const allFeatures = [...featureLabels, ...customFeaturesList];
+
       const planData = {
         name: formData.name,
         name_ar: formData.name_ar,
@@ -101,7 +207,7 @@ const AdminPlans = () => {
         currency: formData.currency,
         duration_days: formData.duration_days,
         plan_type: formData.plan_type,
-        features: formData.features.split('\n').filter(f => f.trim()),
+        features: allFeatures,
         is_active: formData.is_active,
       };
 
@@ -157,6 +263,20 @@ const AdminPlans = () => {
 
   const editPlan = (plan: Plan) => {
     setEditingPlan(plan);
+    
+    // Try to match existing features back to IDs
+    const matchedFeatures: string[] = [];
+    const unmatchedFeatures: string[] = [];
+    
+    plan.features.forEach(feature => {
+      const found = ALL_FEATURES.find(f => f.label_ar === feature || f.label === feature);
+      if (found) {
+        matchedFeatures.push(found.id);
+      } else {
+        unmatchedFeatures.push(feature);
+      }
+    });
+
     setFormData({
       name: plan.name,
       name_ar: plan.name_ar,
@@ -166,7 +286,8 @@ const AdminPlans = () => {
       currency: plan.currency,
       duration_days: plan.duration_days,
       plan_type: plan.plan_type,
-      features: plan.features.join('\n'),
+      selectedFeatures: matchedFeatures,
+      customFeatures: unmatchedFeatures.join('\n'),
       is_active: plan.is_active,
     });
     setShowDialog(true);
@@ -183,7 +304,8 @@ const AdminPlans = () => {
       currency: 'USD',
       duration_days: 30,
       plan_type: 'club',
-      features: '',
+      selectedFeatures: [],
+      customFeatures: '',
       is_active: true,
     });
   };
@@ -194,7 +316,7 @@ const AdminPlans = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">باقات الاشتراك</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">باقات الاشتراك</h1>
             <p className="text-muted-foreground mt-1">إدارة باقات الاشتراك للأندية واللاعبين</p>
           </div>
           <Dialog open={showDialog} onOpenChange={(open) => {
@@ -207,7 +329,7 @@ const AdminPlans = () => {
                 إضافة باقة
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg bg-card">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card">
               <DialogHeader>
                 <DialogTitle>
                   {editingPlan ? 'تعديل الباقة' : 'إضافة باقة جديدة'}
@@ -242,6 +364,7 @@ const AdminPlans = () => {
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       className="bg-secondary"
+                      rows={2}
                     />
                   </div>
                   <div className="space-y-2">
@@ -250,6 +373,7 @@ const AdminPlans = () => {
                       value={formData.description_ar}
                       onChange={(e) => setFormData({ ...formData, description_ar: e.target.value })}
                       className="bg-secondary"
+                      rows={2}
                     />
                   </div>
                 </div>
@@ -287,39 +411,99 @@ const AdminPlans = () => {
                 <div className="space-y-2">
                   <Label>نوع الباقة</Label>
                   <div className="flex gap-4">
-                    <label className="flex items-center gap-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="radio"
                         value="club"
                         checked={formData.plan_type === 'club'}
                         onChange={(e) => setFormData({ ...formData, plan_type: e.target.value })}
+                        className="accent-gold"
                       />
                       للأندية
                     </label>
-                    <label className="flex items-center gap-2">
+                    <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="radio"
                         value="player"
                         checked={formData.plan_type === 'player'}
                         onChange={(e) => setFormData({ ...formData, plan_type: e.target.value })}
+                        className="accent-gold"
                       />
                       للاعبين
                     </label>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>المميزات (كل ميزة في سطر)</Label>
-                  <Textarea
-                    value={formData.features}
-                    onChange={(e) => setFormData({ ...formData, features: e.target.value })}
-                    placeholder="عرض ملفات اللاعبين&#10;التواصل مع اللاعبين&#10;دعم فني"
-                    rows={4}
-                    className="bg-secondary"
-                  />
+                {/* Features Dropdown */}
+                <div className="space-y-3">
+                  <Label>المميزات</Label>
+                  
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between bg-secondary">
+                        <span>اختر المميزات ({formData.selectedFeatures.length} محددة)</span>
+                        <ChevronDown className="w-4 h-4 mr-2" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-80 max-h-[400px] overflow-y-auto bg-card border-border">
+                      {Object.entries(PREDEFINED_FEATURES).map(([key, category]) => (
+                        <div key={key}>
+                          <DropdownMenuLabel className="text-gold font-bold">
+                            {category.label}
+                          </DropdownMenuLabel>
+                          {category.features.map(feature => (
+                            <DropdownMenuCheckboxItem
+                              key={feature.id}
+                              checked={formData.selectedFeatures.includes(feature.id)}
+                              onCheckedChange={() => toggleFeature(feature.id)}
+                              className="cursor-pointer"
+                            >
+                              {feature.label_ar}
+                            </DropdownMenuCheckboxItem>
+                          ))}
+                          <DropdownMenuSeparator />
+                        </div>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Selected Features Display */}
+                  {formData.selectedFeatures.length > 0 && (
+                    <div className="flex flex-wrap gap-2 p-3 bg-secondary/50 rounded-lg">
+                      {formData.selectedFeatures.map(featureId => (
+                        <Badge
+                          key={featureId}
+                          variant="secondary"
+                          className="flex items-center gap-1 bg-gold/20 text-gold"
+                        >
+                          <Check className="w-3 h-3" />
+                          {getFeatureLabel(featureId)}
+                          <button
+                            type="button"
+                            onClick={() => removeFeature(featureId)}
+                            className="mr-1 hover:text-destructive"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Custom Features */}
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">مميزات إضافية (كل ميزة في سطر)</Label>
+                    <Textarea
+                      value={formData.customFeatures}
+                      onChange={(e) => setFormData({ ...formData, customFeatures: e.target.value })}
+                      placeholder="أضف مميزات مخصصة..."
+                      rows={2}
+                      className="bg-secondary"
+                    />
+                  </div>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
                   <Label>الباقة مفعّلة</Label>
                   <Switch
                     checked={formData.is_active}
@@ -338,9 +522,13 @@ const AdminPlans = () => {
         {/* Plans Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? (
-            <p className="text-muted-foreground">جاري التحميل...</p>
+            <div className="col-span-full flex justify-center py-12">
+              <div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin" />
+            </div>
           ) : plans.length === 0 ? (
-            <p className="text-muted-foreground">لا توجد باقات</p>
+            <div className="col-span-full text-center py-12">
+              <p className="text-muted-foreground">لا توجد باقات</p>
+            </div>
           ) : (
             plans.map((plan, index) => (
               <motion.div
@@ -381,17 +569,24 @@ const AdminPlans = () => {
                   <span className="text-muted-foreground">/ {plan.duration_days} يوم</span>
                 </div>
 
-                <p className="text-muted-foreground text-sm mb-4">
-                  {plan.description_ar}
-                </p>
+                {plan.description_ar && (
+                  <p className="text-muted-foreground text-sm mb-4">
+                    {plan.description_ar}
+                  </p>
+                )}
 
                 <ul className="space-y-2">
-                  {plan.features.map((feature, i) => (
+                  {plan.features.slice(0, 6).map((feature, i) => (
                     <li key={i} className="flex items-center gap-2 text-sm">
-                      <DollarSign className="w-4 h-4 text-gold" />
+                      <Check className="w-4 h-4 text-gold flex-shrink-0" />
                       <span>{feature}</span>
                     </li>
                   ))}
+                  {plan.features.length > 6 && (
+                    <li className="text-sm text-muted-foreground">
+                      + {plan.features.length - 6} مميزات أخرى
+                    </li>
+                  )}
                 </ul>
 
                 {!plan.is_active && (
