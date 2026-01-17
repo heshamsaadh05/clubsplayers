@@ -192,21 +192,29 @@ const ClubDashboard = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gradient-gold">لوحة تحكم النادي</h1>
-          <div className="flex items-center gap-4">
-            <NotificationBell />
-            <Button variant="outline" onClick={() => navigate("/messages")}>
-              <MessageSquare className="w-4 h-4 ml-2" />
-              الرسائل
-            </Button>
-            <Button variant="ghost" onClick={() => navigate("/")}>
-              الرئيسية
-            </Button>
-            <Button variant="outline" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 ml-2" />
-              تسجيل خروج
-            </Button>
+        <div className="container mx-auto px-4 py-3 md:py-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-lg md:text-xl font-bold text-gradient-gold">لوحة تحكم النادي</h1>
+            <div className="flex items-center gap-2 md:gap-4">
+              <NotificationBell />
+              <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => navigate("/messages")}>
+                <MessageSquare className="w-4 h-4 ml-2" />
+                الرسائل
+              </Button>
+              <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => navigate("/messages")}>
+                <MessageSquare className="w-5 h-5" />
+              </Button>
+              <Button variant="ghost" size="sm" className="hidden md:inline-flex" onClick={() => navigate("/")}>
+                الرئيسية
+              </Button>
+              <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={handleSignOut}>
+                <LogOut className="w-4 h-4 ml-2" />
+                <span className="hidden md:inline">تسجيل خروج</span>
+              </Button>
+              <Button variant="ghost" size="icon" className="sm:hidden" onClick={handleSignOut}>
+                <LogOut className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </header>
