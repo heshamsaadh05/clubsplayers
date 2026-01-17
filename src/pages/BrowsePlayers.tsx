@@ -518,7 +518,11 @@ const BrowsePlayers = () => {
                         )}
                       </div>
 
-                      <Button className="w-full mt-4 btn-gold" size="sm">
+                      <Button 
+                        className="w-full mt-4 btn-gold" 
+                        size="sm"
+                        onClick={() => navigate(`/player/${player.id}`)}
+                      >
                         عرض الملف الكامل
                       </Button>
                     </CardContent>
