@@ -23,13 +23,15 @@ import {
   ArrowUpCircle,
   Check,
   X,
-  Sparkles
+  Sparkles,
+  RefreshCw
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
@@ -99,6 +101,85 @@ const UsageStatsSection = () => {
           <Progress value={messagesPercentage} className="h-2" />
         )}
       </div>
+    </div>
+  );
+};
+
+// Auto Renewal Section Component
+interface AutoRenewalSectionProps {
+  subscription: SubscriptionWithPlan;
+  onUpdate: (subscription: SubscriptionWithPlan) => void;
+}
+
+const AutoRenewalSection = ({ subscription, onUpdate }: AutoRenewalSectionProps) => {
+  const [loading, setLoading] = useState(false);
+  const [autoRenew, setAutoRenew] = useState(subscription.auto_renew || false);
+
+  const toggleAutoRenew = async () => {
+    setLoading(true);
+    try {
+      const newValue = !autoRenew;
+      const { error } = await supabase
+        .from("subscriptions")
+        .update({ auto_renew: newValue })
+        .eq("id", subscription.id);
+
+      if (error) throw error;
+
+      setAutoRenew(newValue);
+      onUpdate({ ...subscription, auto_renew: newValue });
+      
+      toast.success(
+        newValue 
+          ? "تم تفعيل التجديد التلقائي" 
+          : "تم إلغاء التجديد التلقائي"
+      );
+    } catch (error) {
+      console.error("Error toggling auto-renew:", error);
+      toast.error("حدث خطأ في تحديث الإعدادات");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mt-4 p-4 bg-background/50 rounded-lg">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+            autoRenew ? 'bg-green-500/20' : 'bg-muted'
+          }`}>
+            <RefreshCw className={`w-5 h-5 ${autoRenew ? 'text-green-500' : 'text-muted-foreground'}`} />
+          </div>
+          <div>
+            <p className="font-medium">التجديد التلقائي</p>
+            <p className="text-sm text-muted-foreground">
+              {autoRenew 
+                ? `سيتم تجديد اشتراكك تلقائياً لمدة ${subscription.subscription_plans.duration_days} يوم`
+                : 'سينتهي اشتراكك دون تجديد تلقائي'
+              }
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={autoRenew}
+            onCheckedChange={toggleAutoRenew}
+            disabled={loading}
+          />
+          {loading && (
+            <div className="w-4 h-4 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+          )}
+        </div>
+      </div>
+      {autoRenew && (
+        <div className="mt-3 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+          <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-2">
+            <CheckCircle className="w-4 h-4" />
+            سيتم تجديد اشتراكك تلقائياً قبل انتهائه بـ 24 ساعة
+          </p>
+        </div>
+      )}
     </div>
   );
 };
@@ -522,6 +603,14 @@ const ClubDashboard = () => {
                     {subscription.subscription_plans.description_ar}
                   </p>
                 </div>
+              )}
+
+              {/* Auto Renewal Toggle */}
+              {subscription && (
+                <AutoRenewalSection 
+                  subscription={subscription} 
+                  onUpdate={(updatedSub) => setSubscription(updatedSub)}
+                />
               )}
 
               {/* Usage Stats */}
