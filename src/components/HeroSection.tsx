@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, Star, Trophy, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import heroPlayer from "@/assets/hero-player.jpg";
-
 const HeroSection = () => {
   const stats = [
     { icon: Users, value: "+500", label: "لاعب محترف" },
@@ -72,9 +72,11 @@ const HeroSection = () => {
             transition={{ duration: 0.8, delay: 0.6 }}
             className="flex flex-col sm:flex-row gap-4 justify-center mb-16"
           >
-            <Button size="lg" className="btn-gold rounded-full text-lg px-8 py-6">
-              سجّل كلاعب الآن
-              <ArrowLeft className="w-5 h-5 mr-2" />
+            <Button size="lg" className="btn-gold rounded-full text-lg px-8 py-6" asChild>
+              <Link to="/player-registration">
+                سجّل كلاعب الآن
+                <ArrowLeft className="w-5 h-5 mr-2" />
+              </Link>
             </Button>
             <Button
               size="lg"

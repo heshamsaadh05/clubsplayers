@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, User, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
+import { Link } from "react-router-dom";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -50,9 +50,12 @@ const Navbar = () => {
             <Button
               variant="ghost"
               className="text-foreground hover:text-gold hover:bg-gold/10"
+              asChild
             >
-              <User className="w-4 h-4 ml-2" />
-              تسجيل لاعب
+              <Link to="/player-registration">
+                <User className="w-4 h-4 ml-2" />
+                تسجيل لاعب
+              </Link>
             </Button>
             <Button className="btn-gold rounded-full px-6">
               <Building2 className="w-4 h-4 ml-2" />
@@ -94,9 +97,12 @@ const Navbar = () => {
                 <Button
                   variant="ghost"
                   className="w-full justify-start text-foreground hover:text-gold"
+                  asChild
                 >
-                  <User className="w-4 h-4 ml-2" />
-                  تسجيل لاعب
+                  <Link to="/player-registration" onClick={() => setIsOpen(false)}>
+                    <User className="w-4 h-4 ml-2" />
+                    تسجيل لاعب
+                  </Link>
                 </Button>
                 <Button className="w-full btn-gold rounded-full">
                   <Building2 className="w-4 h-4 ml-2" />
