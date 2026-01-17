@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Save, X, Upload, Loader2 } from 'lucide-react';
+import { Save, X, Upload, Loader2, Video, Trash2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -49,6 +49,8 @@ const EditPlayerForm = ({ player, isOpen, onClose, onUpdate }: EditPlayerFormPro
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [videoUrls, setVideoUrls] = useState<string[]>(player.video_urls || []);
   
   const [formData, setFormData] = useState({
     full_name: player.full_name || '',
@@ -63,6 +65,88 @@ const EditPlayerForm = ({ player, isOpen, onClose, onUpdate }: EditPlayerFormPro
     bio: player.bio || '',
     profile_image_url: player.profile_image_url || '',
   });
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file
+    if (!file.type.startsWith('video/')) {
+      toast({
+        title: 'خطأ',
+        description: 'يرجى اختيار ملف فيديو صالح',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (file.size > 100 * 1024 * 1024) {
+      toast({
+        title: 'خطأ',
+        description: 'حجم الفيديو يجب أن لا يتجاوز 100 ميجابايت',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (videoUrls.length >= 5) {
+      toast({
+        title: 'خطأ',
+        description: 'يمكنك رفع 5 فيديوهات كحد أقصى',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setUploadingVideo(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${player.user_id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('player-videos')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('player-videos')
+        .getPublicUrl(fileName);
+
+      setVideoUrls(prev => [...prev, publicUrl]);
+      toast({ title: 'تم رفع الفيديو بنجاح' });
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      toast({
+        title: 'خطأ',
+        description: 'حدث خطأ أثناء رفع الفيديو',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploadingVideo(false);
+    }
+  };
+
+  const handleDeleteVideo = async (urlToDelete: string) => {
+    try {
+      // Extract file path from URL
+      const urlParts = urlToDelete.split('/player-videos/');
+      if (urlParts.length > 1) {
+        const filePath = urlParts[1];
+        await supabase.storage.from('player-videos').remove([filePath]);
+      }
+      
+      setVideoUrls(prev => prev.filter(url => url !== urlToDelete));
+      toast({ title: 'تم حذف الفيديو' });
+    } catch (error) {
+      console.error('Error deleting video:', error);
+      toast({
+        title: 'خطأ',
+        description: 'حدث خطأ أثناء حذف الفيديو',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -161,6 +245,7 @@ const EditPlayerForm = ({ player, isOpen, onClose, onUpdate }: EditPlayerFormPro
           previous_clubs: previousClubsArray.length > 0 ? previousClubsArray : null,
           bio: formData.bio.trim() || null,
           profile_image_url: formData.profile_image_url || null,
+          video_urls: videoUrls.length > 0 ? videoUrls : null,
         })
         .eq('id', player.id);
 
@@ -342,6 +427,85 @@ const EditPlayerForm = ({ player, isOpen, onClose, onUpdate }: EditPlayerFormPro
             <p className="text-xs text-muted-foreground text-left">
               {formData.bio.length}/1000
             </p>
+          </div>
+
+          {/* Videos Section */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-2">
+                <Video className="w-4 h-4" />
+                فيديوهات المهارات ({videoUrls.length}/5)
+              </Label>
+              <label className="cursor-pointer">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={uploadingVideo || videoUrls.length >= 5}
+                  asChild
+                >
+                  <span>
+                    {uploadingVideo ? (
+                      <>
+                        <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                        جاري الرفع...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-4 h-4 ml-2" />
+                        إضافة فيديو
+                      </>
+                    )}
+                  </span>
+                </Button>
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={handleVideoUpload}
+                  className="sr-only"
+                  disabled={uploadingVideo || videoUrls.length >= 5}
+                />
+              </label>
+            </div>
+
+            {videoUrls.length > 0 ? (
+              <div className="grid gap-3">
+                {videoUrls.map((url, index) => (
+                  <div
+                    key={index}
+                    className="relative bg-muted rounded-lg overflow-hidden"
+                  >
+                    <video
+                      src={url}
+                      controls
+                      className="w-full h-48 object-cover"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 left-2 h-8 w-8"
+                      onClick={() => handleDeleteVideo(url)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                    <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                      فيديو {index + 1}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+                <Video className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
+                <p className="text-muted-foreground text-sm">
+                  لم يتم رفع أي فيديوهات بعد
+                </p>
+                <p className="text-muted-foreground text-xs mt-1">
+                  يمكنك رفع حتى 5 فيديوهات (بحد أقصى 100 ميجابايت لكل فيديو)
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Actions */}
