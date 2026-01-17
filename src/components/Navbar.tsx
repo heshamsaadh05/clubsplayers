@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePublishedPages } from "@/hooks/usePublishedPages";
+import { useMenuItems } from "@/hooks/useMenuItems";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +26,8 @@ const Navbar = () => {
   const {
     pages: publishedPages
   } = usePublishedPages();
+  const { data: headerMenuItems = [] } = useMenuItems('header');
+  const { currentLanguage } = useLanguage();
   const navigate = useNavigate();
   const [userType, setUserType] = useState<'player' | 'club' | 'admin' | null>(null);
   useEffect(() => {
@@ -80,22 +83,12 @@ const Navbar = () => {
         return '/auth';
     }
   };
-  const navLinks = [{
-    name: t('nav.home', 'الرئيسية'),
-    href: "#home"
-  }, {
-    name: t('nav.services', 'خدماتنا'),
-    href: "#services"
-  }, {
-    name: t('nav.players', 'اللاعبون'),
-    href: "#players"
-  }, {
-    name: t('nav.about', 'عن الوكالة'),
-    href: "#about"
-  }, {
-    name: t('nav.contact', 'تواصل معنا'),
-    href: "#contact"
-  }];
+  // Use dynamic menu items from database
+  const navLinks = headerMenuItems.map(item => ({
+    name: currentLanguage?.code === 'en' ? item.title : (item.title_ar || item.title),
+    href: item.url,
+    isExternal: item.is_external,
+  }));
   return <motion.nav initial={{
     y: -100
   }} animate={{
@@ -114,11 +107,38 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-6">
-            {navLinks.map(link => <motion.a key={link.name} href={link.href} className="text-foreground/80 hover:text-gold transition-colors font-medium" whileHover={{
-            y: -2
-          }}>
-                {link.name}
-              </motion.a>)}
+            {navLinks.map(link => 
+              link.isExternal ? (
+                <motion.a 
+                  key={link.name} 
+                  href={link.href} 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-foreground/80 hover:text-gold transition-colors font-medium" 
+                  whileHover={{ y: -2 }}
+                >
+                  {link.name}
+                </motion.a>
+              ) : link.href.startsWith('#') ? (
+                <motion.a 
+                  key={link.name} 
+                  href={link.href} 
+                  className="text-foreground/80 hover:text-gold transition-colors font-medium" 
+                  whileHover={{ y: -2 }}
+                >
+                  {link.name}
+                </motion.a>
+              ) : (
+                <Link key={link.name} to={link.href}>
+                  <motion.span 
+                    className="text-foreground/80 hover:text-gold transition-colors font-medium block" 
+                    whileHover={{ y: -2 }}
+                  >
+                    {link.name}
+                  </motion.span>
+                </Link>
+              )
+            )}
 
             {/* Published Pages Dropdown */}
             {publishedPages.length > 0 && <DropdownMenu>
@@ -203,9 +223,38 @@ const Navbar = () => {
         height: 0
       }} className="lg:hidden bg-card border-t border-border">
             <div className="container mx-auto px-4 py-6 space-y-4">
-              {navLinks.map(link => <a key={link.name} href={link.href} className="block text-foreground/80 hover:text-gold transition-colors py-2" onClick={() => setIsOpen(false)}>
-                  {link.name}
-                </a>)}
+              {navLinks.map(link => 
+                link.isExternal ? (
+                  <a 
+                    key={link.name} 
+                    href={link.href} 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-foreground/80 hover:text-gold transition-colors py-2" 
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.name}
+                  </a>
+                ) : link.href.startsWith('#') ? (
+                  <a 
+                    key={link.name} 
+                    href={link.href} 
+                    className="block text-foreground/80 hover:text-gold transition-colors py-2" 
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.name}
+                  </a>
+                ) : (
+                  <Link 
+                    key={link.name} 
+                    to={link.href} 
+                    className="block text-foreground/80 hover:text-gold transition-colors py-2" 
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {link.name}
+                  </Link>
+                )
+              )}
 
               {/* Published Pages - Mobile */}
               {publishedPages.length > 0 && <div className="pt-2 border-t border-border/50">

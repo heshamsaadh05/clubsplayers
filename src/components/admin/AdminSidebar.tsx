@@ -46,6 +46,7 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
     { icon: Package, label: 'باقات الاشتراك', path: '/admin/plans' },
     { icon: CreditCard, label: 'وسائل الدفع', path: '/admin/payments' },
     { icon: FileText, label: 'الصفحات', path: '/admin/pages' },
+    { icon: Menu, label: 'القوائم', path: '/admin/menus' },
     { icon: Languages, label: 'اللغات', path: '/admin/languages' },
     { icon: Settings, label: 'الإعدادات', path: '/admin/settings' },
   ];

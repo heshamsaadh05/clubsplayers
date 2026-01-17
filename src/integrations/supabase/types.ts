@@ -167,6 +167,56 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_items: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          is_external: boolean
+          location: string
+          order_index: number
+          parent_id: string | null
+          title: string
+          title_ar: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_external?: boolean
+          location: string
+          order_index?: number
+          parent_id?: string | null
+          title: string
+          title_ar?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_external?: boolean
+          location?: string
+          order_index?: number
+          parent_id?: string | null
+          title?: string
+          title_ar?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_items_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string

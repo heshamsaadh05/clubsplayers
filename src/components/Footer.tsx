@@ -3,10 +3,12 @@ import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from "luci
 import { Link } from "react-router-dom";
 import { usePublishedPages } from "@/hooks/usePublishedPages";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useMenuItems } from "@/hooks/useMenuItems";
 
 const Footer = () => {
   const { pages: publishedPages } = usePublishedPages();
   const { t, currentLanguage } = useLanguage();
+  const { data: footerMenuItems = [] } = useMenuItems('footer');
 
   const socialLinks = [
     { icon: Facebook, href: "#" },
@@ -15,13 +17,12 @@ const Footer = () => {
     { icon: Youtube, href: "#" },
   ];
 
-  const quickLinks = [
-    { name: t('nav.home', 'الرئيسية'), href: "#home" },
-    { name: t('nav.services', 'خدماتنا'), href: "#services" },
-    { name: t('nav.players', 'اللاعبون'), href: "#players" },
-    { name: t('nav.about', 'عن الوكالة'), href: "#about" },
-    { name: t('nav.contact', 'تواصل معنا'), href: "#contact" },
-  ];
+  // Use dynamic menu items from database
+  const quickLinks = footerMenuItems.map(item => ({
+    name: currentLanguage?.code === 'en' ? item.title : (item.title_ar || item.title),
+    href: item.url,
+    isExternal: item.is_external,
+  }));
 
   return (
     <footer id="contact" className="bg-card border-t border-border">
@@ -66,12 +67,30 @@ const Footer = () => {
             <ul className="space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.name}>
-                  <a
-                    href={link.href}
-                    className="text-muted-foreground hover:text-gold transition-colors"
-                  >
-                    {link.name}
-                  </a>
+                  {link.isExternal ? (
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-gold transition-colors"
+                    >
+                      {link.name}
+                    </a>
+                  ) : link.href.startsWith('#') ? (
+                    <a
+                      href={link.href}
+                      className="text-muted-foreground hover:text-gold transition-colors"
+                    >
+                      {link.name}
+                    </a>
+                  ) : (
+                    <Link
+                      to={link.href}
+                      className="text-muted-foreground hover:text-gold transition-colors"
+                    >
+                      {link.name}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
