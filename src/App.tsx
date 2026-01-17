@@ -13,6 +13,7 @@ import AdminPlans from "./pages/admin/AdminPlans";
 import AdminPayments from "./pages/admin/AdminPayments";
 import AdminSettings from "./pages/admin/AdminSettings";
 import PlayerRegistration from "./pages/PlayerRegistration";
+import PlayerDashboard from "./pages/PlayerDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/player-registration" element={<PlayerRegistration />} />
+            <Route path="/player-dashboard" element={<PlayerDashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/players" element={<AdminPlayers />} />
             <Route path="/admin/clubs" element={<AdminClubs />} />
