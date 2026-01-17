@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, User, Building2, LogIn, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, User, Building2, LogIn, LogOut, LayoutDashboard, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -134,6 +134,16 @@ const Navbar = () => {
                 </Button>
                 <Button
                   variant="ghost"
+                  className="text-muted-foreground hover:text-gold"
+                  asChild
+                >
+                  <Link to="/account-settings">
+                    <Settings className="w-4 h-4 ml-2" />
+                    الإعدادات
+                  </Link>
+                </Button>
+                <Button
+                  variant="ghost"
                   className="text-muted-foreground hover:text-destructive"
                   onClick={handleSignOut}
                 >
@@ -214,6 +224,16 @@ const Navbar = () => {
                       <Link to={getDashboardLink()} onClick={() => setIsOpen(false)}>
                         <LayoutDashboard className="w-4 h-4 ml-2" />
                         لوحة التحكم
+                      </Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-muted-foreground hover:text-gold"
+                      asChild
+                    >
+                      <Link to="/account-settings" onClick={() => setIsOpen(false)}>
+                        <Settings className="w-4 h-4 ml-2" />
+                        إعدادات الحساب
                       </Link>
                     </Button>
                     <Button
