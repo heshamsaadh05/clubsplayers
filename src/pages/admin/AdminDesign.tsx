@@ -475,6 +475,129 @@ const AdminDesign = () => {
                                     />
                                   </div>
                                 </div>
+
+                                {/* Hero Stats */}
+                                <div className="pt-4 border-t border-border">
+                                  <Label className="mb-3 block font-semibold">الإحصائيات</Label>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {/* Players Stat */}
+                                    <div className="p-4 bg-background rounded-lg space-y-3">
+                                      <p className="text-sm font-medium text-muted-foreground">اللاعبين</p>
+                                      <div className="space-y-2">
+                                        <Label className="text-xs">القيمة</Label>
+                                        <Input
+                                          value={(sectionSettings.stat_players_value as string) || '+500'}
+                                          onChange={(e) => updateSection.mutateAsync({ 
+                                            id: section.id, 
+                                            settings: { ...sectionSettings, stat_players_value: e.target.value } 
+                                          })}
+                                          placeholder="+500"
+                                          dir="ltr"
+                                        />
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Label className="text-xs">التسمية (AR)</Label>
+                                        <Input
+                                          value={(sectionSettings.stat_players_label_ar as string) || ''}
+                                          onChange={(e) => updateSection.mutateAsync({ 
+                                            id: section.id, 
+                                            settings: { ...sectionSettings, stat_players_label_ar: e.target.value } 
+                                          })}
+                                          placeholder="لاعب محترف"
+                                        />
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Label className="text-xs">التسمية (EN)</Label>
+                                        <Input
+                                          value={(sectionSettings.stat_players_label as string) || ''}
+                                          onChange={(e) => updateSection.mutateAsync({ 
+                                            id: section.id, 
+                                            settings: { ...sectionSettings, stat_players_label: e.target.value } 
+                                          })}
+                                          placeholder="Pro Players"
+                                        />
+                                      </div>
+                                    </div>
+
+                                    {/* Clubs Stat */}
+                                    <div className="p-4 bg-background rounded-lg space-y-3">
+                                      <p className="text-sm font-medium text-muted-foreground">الأندية</p>
+                                      <div className="space-y-2">
+                                        <Label className="text-xs">القيمة</Label>
+                                        <Input
+                                          value={(sectionSettings.stat_clubs_value as string) || '+120'}
+                                          onChange={(e) => updateSection.mutateAsync({ 
+                                            id: section.id, 
+                                            settings: { ...sectionSettings, stat_clubs_value: e.target.value } 
+                                          })}
+                                          placeholder="+120"
+                                          dir="ltr"
+                                        />
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Label className="text-xs">التسمية (AR)</Label>
+                                        <Input
+                                          value={(sectionSettings.stat_clubs_label_ar as string) || ''}
+                                          onChange={(e) => updateSection.mutateAsync({ 
+                                            id: section.id, 
+                                            settings: { ...sectionSettings, stat_clubs_label_ar: e.target.value } 
+                                          })}
+                                          placeholder="نادي شريك"
+                                        />
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Label className="text-xs">التسمية (EN)</Label>
+                                        <Input
+                                          value={(sectionSettings.stat_clubs_label as string) || ''}
+                                          onChange={(e) => updateSection.mutateAsync({ 
+                                            id: section.id, 
+                                            settings: { ...sectionSettings, stat_clubs_label: e.target.value } 
+                                          })}
+                                          placeholder="Partner Clubs"
+                                        />
+                                      </div>
+                                    </div>
+
+                                    {/* Deals Stat */}
+                                    <div className="p-4 bg-background rounded-lg space-y-3">
+                                      <p className="text-sm font-medium text-muted-foreground">الصفقات</p>
+                                      <div className="space-y-2">
+                                        <Label className="text-xs">القيمة</Label>
+                                        <Input
+                                          value={(sectionSettings.stat_deals_value as string) || '+50'}
+                                          onChange={(e) => updateSection.mutateAsync({ 
+                                            id: section.id, 
+                                            settings: { ...sectionSettings, stat_deals_value: e.target.value } 
+                                          })}
+                                          placeholder="+50"
+                                          dir="ltr"
+                                        />
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Label className="text-xs">التسمية (AR)</Label>
+                                        <Input
+                                          value={(sectionSettings.stat_deals_label_ar as string) || ''}
+                                          onChange={(e) => updateSection.mutateAsync({ 
+                                            id: section.id, 
+                                            settings: { ...sectionSettings, stat_deals_label_ar: e.target.value } 
+                                          })}
+                                          placeholder="صفقة ناجحة"
+                                        />
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Label className="text-xs">التسمية (EN)</Label>
+                                        <Input
+                                          value={(sectionSettings.stat_deals_label as string) || ''}
+                                          onChange={(e) => updateSection.mutateAsync({ 
+                                            id: section.id, 
+                                            settings: { ...sectionSettings, stat_deals_label: e.target.value } 
+                                          })}
+                                          placeholder="Successful Deals"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             )}
                           </div>
