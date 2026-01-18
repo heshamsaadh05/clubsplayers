@@ -16,19 +16,22 @@ import { logError } from '@/lib/errorLogger';
 
 interface Player {
   id: string;
+  user_id: string;
   full_name: string;
-  email: string;
-  phone: string;
   position: string;
   nationality: string;
   current_club: string;
   height_cm: number;
   weight_kg: number;
-  date_of_birth: string;
   status: 'pending' | 'approved' | 'rejected';
   profile_image_url: string;
-  id_document_url: string;
   created_at: string;
+  // PII fields from player_private (admin only)
+  email?: string;
+  phone?: string;
+  date_of_birth?: string;
+  id_document_url?: string;
+  rejection_reason?: string;
 }
 
 const AdminPlayers = () => {
@@ -46,16 +49,43 @@ const AdminPlayers = () => {
 
   const fetchPlayers = async () => {
     try {
+      // Fetch players
       let query = supabase.from('players').select('*').order('created_at', { ascending: false });
       
       if (statusFilter !== 'all') {
         query = query.eq('status', statusFilter as 'pending' | 'approved' | 'rejected');
       }
 
-      const { data, error } = await query;
+      const { data: playersData, error: playersError } = await query;
+      if (playersError) throw playersError;
 
-      if (error) throw error;
-      setPlayers((data || []) as Player[]);
+      // Fetch PII from player_private (admin only)
+      const userIds = (playersData || []).map(p => p.user_id);
+      const { data: privateData, error: privateError } = await supabase
+        .from('player_private')
+        .select('*')
+        .in('user_id', userIds);
+      
+      if (privateError) throw privateError;
+
+      // Create a map for PII
+      const privateMap = new Map<string, any>();
+      (privateData || []).forEach(p => privateMap.set(p.user_id, p));
+
+      // Merge players with their private data
+      const mergedPlayers = (playersData || []).map(player => {
+        const pii = privateMap.get(player.user_id);
+        return {
+          ...player,
+          email: pii?.email,
+          phone: pii?.phone,
+          date_of_birth: pii?.date_of_birth,
+          id_document_url: pii?.id_document_url,
+          rejection_reason: pii?.rejection_reason,
+        };
+      });
+
+      setPlayers(mergedPlayers as Player[]);
     } catch (error) {
       logError(error, 'AdminPlayers:fetchPlayers');
     } finally {

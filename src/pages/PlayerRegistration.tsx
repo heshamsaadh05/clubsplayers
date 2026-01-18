@@ -190,15 +190,12 @@ export default function PlayerRegistration() {
         ? data.previousClubs.split(',').map(club => club.trim()).filter(Boolean)
         : null;
 
-      // Insert player data
+      // Insert public player data
       const { error: insertError } = await supabase
         .from('players')
         .insert({
           user_id: user.id,
           full_name: data.fullName,
-          email: data.email,
-          phone: data.phone,
-          date_of_birth: data.dateOfBirth,
           nationality: data.nationality,
           position: data.position,
           current_club: data.currentClub || null,
@@ -207,12 +204,24 @@ export default function PlayerRegistration() {
           weight_kg: data.weightKg,
           bio: data.bio || null,
           profile_image_url: profileImageUrl,
-          id_document_url: idDocumentUrl,
           video_urls: videoUrls.length > 0 ? videoUrls : null,
           status: 'pending',
         });
 
       if (insertError) throw insertError;
+
+      // Insert private PII data
+      const { error: privateInsertError } = await supabase
+        .from('player_private')
+        .insert({
+          user_id: user.id,
+          email: data.email,
+          phone: data.phone,
+          date_of_birth: data.dateOfBirth,
+          id_document_url: idDocumentUrl,
+        });
+
+      if (privateInsertError) throw privateInsertError;
 
       // Add player role
       const { error: roleError } = await supabase
