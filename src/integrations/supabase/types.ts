@@ -250,6 +250,36 @@ export type Database = {
         }
         Relationships: []
       }
+      page_sections: {
+        Row: {
+          id: string
+          is_visible: boolean
+          order_index: number
+          page_key: string
+          section_key: string
+          settings: Json | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          is_visible?: boolean
+          order_index?: number
+          page_key: string
+          section_key: string
+          settings?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          is_visible?: boolean
+          order_index?: number
+          page_key?: string
+          section_key?: string
+          settings?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pages: {
         Row: {
           content: string | null
@@ -588,6 +618,87 @@ export type Database = {
         }
         Relationships: []
       }
+      slider_items: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          link_url: string | null
+          order_index: number
+          settings: Json | null
+          slider_key: string
+          subtitle: string | null
+          subtitle_ar: string | null
+          title: string | null
+          title_ar: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          link_url?: string | null
+          order_index?: number
+          settings?: Json | null
+          slider_key?: string
+          subtitle?: string | null
+          subtitle_ar?: string | null
+          title?: string | null
+          title_ar?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          link_url?: string | null
+          order_index?: number
+          settings?: Json | null
+          slider_key?: string
+          subtitle?: string | null
+          subtitle_ar?: string | null
+          title?: string | null
+          title_ar?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      slider_settings: {
+        Row: {
+          auto_play: boolean
+          auto_play_interval: number
+          id: string
+          items_per_view: number
+          show_dots: boolean
+          show_navigation: boolean
+          slider_key: string
+          updated_at: string
+        }
+        Insert: {
+          auto_play?: boolean
+          auto_play_interval?: number
+          id?: string
+          items_per_view?: number
+          show_dots?: boolean
+          show_navigation?: boolean
+          slider_key: string
+          updated_at?: string
+        }
+        Update: {
+          auto_play?: boolean
+          auto_play_interval?: number
+          id?: string
+          items_per_view?: number
+          show_dots?: boolean
+          show_navigation?: boolean
+          slider_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscription_plans: {
         Row: {
           created_at: string
@@ -688,6 +799,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      theme_settings: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
       }
       translations: {
         Row: {
