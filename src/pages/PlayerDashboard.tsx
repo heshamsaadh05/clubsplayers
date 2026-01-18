@@ -32,7 +32,13 @@ import { toast } from "sonner";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import EditPlayerForm from "@/components/player/EditPlayerForm";
 
-type Player = Tables<"players">;
+type Player = Tables<"players"> & {
+  email?: string;
+  phone?: string;
+  date_of_birth?: string;
+  id_document_url?: string;
+  rejection_reason?: string;
+};
 
 const PlayerDashboard = () => {
   const { user, signOut, loading: authLoading } = useAuth();
@@ -51,14 +57,37 @@ const PlayerDashboard = () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
+      // Fetch player public data
+      const { data: playerData, error: playerError } = await supabase
         .from("players")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
 
-      if (error) throw error;
-      setPlayer(data);
+      if (playerError) throw playerError;
+
+      if (playerData) {
+        // Fetch player private data (PII)
+        const { data: privateData, error: privateError } = await supabase
+          .from("player_private")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (privateError) throw privateError;
+
+        // Merge both datasets
+        setPlayer({
+          ...playerData,
+          email: privateData?.email,
+          phone: privateData?.phone,
+          date_of_birth: privateData?.date_of_birth,
+          id_document_url: privateData?.id_document_url,
+          rejection_reason: privateData?.rejection_reason,
+        });
+      } else {
+        setPlayer(null);
+      }
     } catch (error) {
       console.error("Error fetching player data:", error);
       toast.error("حدث خطأ في جلب البيانات");

@@ -22,7 +22,13 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 
-type Player = Tables<'players'>;
+type Player = Tables<'players'> & {
+  email?: string;
+  phone?: string;
+  date_of_birth?: string;
+  id_document_url?: string;
+  rejection_reason?: string;
+};
 
 interface EditPlayerFormProps {
   player: Player;
@@ -231,13 +237,12 @@ const EditPlayerForm = ({ player, isOpen, onClose, onUpdate }: EditPlayerFormPro
         .map(club => club.trim())
         .filter(club => club.length > 0);
 
-      const { error } = await supabase
+      // Update public player data
+      const { error: playerError } = await supabase
         .from('players')
         .update({
           full_name: formData.full_name.trim(),
-          phone: formData.phone.trim() || null,
           nationality: formData.nationality.trim() || null,
-          date_of_birth: formData.date_of_birth || null,
           position: formData.position || null,
           height_cm: formData.height_cm ? parseInt(formData.height_cm) : null,
           weight_kg: formData.weight_kg ? parseInt(formData.weight_kg) : null,
@@ -249,7 +254,18 @@ const EditPlayerForm = ({ player, isOpen, onClose, onUpdate }: EditPlayerFormPro
         })
         .eq('id', player.id);
 
-      if (error) throw error;
+      if (playerError) throw playerError;
+
+      // Update private PII data
+      const { error: privateError } = await supabase
+        .from('player_private')
+        .update({
+          phone: formData.phone.trim() || null,
+          date_of_birth: formData.date_of_birth || null,
+        })
+        .eq('user_id', player.user_id);
+
+      if (privateError) throw privateError;
 
       toast({ title: 'تم حفظ التغييرات بنجاح' });
       onUpdate();

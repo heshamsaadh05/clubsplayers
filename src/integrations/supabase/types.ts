@@ -328,6 +328,39 @@ export type Database = {
         }
         Relationships: []
       }
+      player_private: {
+        Row: {
+          created_at: string
+          date_of_birth: string | null
+          email: string
+          id_document_url: string | null
+          phone: string | null
+          rejection_reason: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date_of_birth?: string | null
+          email: string
+          id_document_url?: string | null
+          phone?: string | null
+          rejection_reason?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string
+          id_document_url?: string | null
+          phone?: string | null
+          rejection_reason?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       player_ratings: {
         Row: {
           club_user_id: string
@@ -414,18 +447,13 @@ export type Database = {
           bio: string | null
           created_at: string
           current_club: string | null
-          date_of_birth: string | null
-          email: string
           full_name: string
           height_cm: number | null
           id: string
-          id_document_url: string | null
           nationality: string | null
-          phone: string | null
           position: string | null
           previous_clubs: string[] | null
           profile_image_url: string | null
-          rejection_reason: string | null
           status: Database["public"]["Enums"]["player_status"]
           updated_at: string
           user_id: string
@@ -436,18 +464,13 @@ export type Database = {
           bio?: string | null
           created_at?: string
           current_club?: string | null
-          date_of_birth?: string | null
-          email: string
           full_name: string
           height_cm?: number | null
           id?: string
-          id_document_url?: string | null
           nationality?: string | null
-          phone?: string | null
           position?: string | null
           previous_clubs?: string[] | null
           profile_image_url?: string | null
-          rejection_reason?: string | null
           status?: Database["public"]["Enums"]["player_status"]
           updated_at?: string
           user_id: string
@@ -458,18 +481,13 @@ export type Database = {
           bio?: string | null
           created_at?: string
           current_club?: string | null
-          date_of_birth?: string | null
-          email?: string
           full_name?: string
           height_cm?: number | null
           id?: string
-          id_document_url?: string | null
           nationality?: string | null
-          phone?: string | null
           position?: string | null
           previous_clubs?: string[] | null
           profile_image_url?: string | null
-          rejection_reason?: string | null
           status?: Database["public"]["Enums"]["player_status"]
           updated_at?: string
           user_id?: string
