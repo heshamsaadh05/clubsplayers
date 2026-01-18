@@ -206,6 +206,96 @@ const Subscription = () => {
     }
   };
 
+  const handlePayPalCheckout = async () => {
+    if (!selectedPlan || !user) return;
+
+    setSubmitting(true);
+    try {
+      const baseUrl = window.location.origin;
+      const returnUrl = `${baseUrl}/subscription?paypal=success&planId=${selectedPlan.id}`;
+      const cancelUrl = `${baseUrl}/subscription?paypal=cancelled`;
+
+      const { data, error } = await supabase.functions.invoke('paypal-checkout', {
+        body: {
+          action: 'create-order',
+          planId: selectedPlan.id,
+          returnUrl,
+          cancelUrl,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.approvalUrl) {
+        window.location.href = data.approvalUrl;
+      } else {
+        throw new Error('No approval URL returned');
+      }
+    } catch (error) {
+      logError(error, 'Subscription:handlePayPalCheckout');
+      toast({
+        title: t('common.error', 'خطأ'),
+        description: t('subscription.paypalError', 'حدث خطأ أثناء الاتصال بـ PayPal'),
+        variant: 'destructive',
+      });
+      setSubmitting(false);
+    }
+  };
+
+  const capturePayPalPayment = async (orderId: string, planIdParam: string) => {
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('paypal-checkout', {
+        body: {
+          action: 'capture-order',
+          orderId,
+          planId: planIdParam,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: t('common.success', 'تم بنجاح!'),
+          description: t('subscription.paypalSuccess', 'تم تفعيل اشتراكك بنجاح'),
+        });
+        navigate('/club-dashboard');
+      } else {
+        throw new Error(data.error || 'Payment capture failed');
+      }
+    } catch (error) {
+      logError(error, 'Subscription:capturePayPalPayment');
+      toast({
+        title: t('common.error', 'خطأ'),
+        description: t('subscription.paypalCaptureError', 'حدث خطأ أثناء تأكيد الدفع'),
+        variant: 'destructive',
+      });
+      window.history.replaceState({}, '', '/subscription');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Handle PayPal return
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paypalStatus = urlParams.get('paypal');
+    const planIdParam = urlParams.get('planId');
+    const token = urlParams.get('token');
+
+    if (paypalStatus === 'success' && planIdParam && token) {
+      capturePayPalPayment(token, planIdParam);
+    } else if (paypalStatus === 'cancelled') {
+      toast({
+        title: t('subscription.paypalCancelled', 'تم إلغاء الدفع'),
+        description: t('subscription.paypalCancelledDesc', 'تم إلغاء عملية الدفع عبر PayPal'),
+        variant: 'destructive',
+      });
+      window.history.replaceState({}, '', '/subscription');
+    }
+  }, []);
+
   const formatPrice = (price: number, currency: string) => {
     return new Intl.NumberFormat('ar-EG', {
       style: 'currency',
@@ -514,11 +604,16 @@ const Subscription = () => {
 
                     {['stripe', 'paypal', '2checkout'].includes(selectedPaymentMethod.type) && (
                       <div className="text-center py-6">
-                        <p className="text-muted-foreground mb-4">سيتم تحويلك لإتمام الدفع</p>
+                        <p className="text-muted-foreground mb-4">
+                          {selectedPaymentMethod.type === 'paypal' 
+                            ? t('subscription.paypalRedirect', 'سيتم تحويلك لصفحة PayPal لإتمام الدفع')
+                            : t('subscription.paymentRedirect', 'سيتم تحويلك لإتمام الدفع')
+                          }
+                        </p>
                         <Button
                           size="lg"
                           className="btn-gold"
-                          onClick={handleSubmit}
+                          onClick={selectedPaymentMethod.type === 'paypal' ? handlePayPalCheckout : handleSubmit}
                           disabled={submitting}
                         >
                           {submitting ? 'جاري المعالجة...' : `الدفع ${formatPrice(selectedPlan?.price || 0, selectedPlan?.currency || 'USD')}`}
