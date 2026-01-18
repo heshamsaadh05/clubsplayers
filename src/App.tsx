@@ -18,6 +18,7 @@ import AdminPages from "./pages/admin/AdminPages";
 import AdminLanguages from "./pages/admin/AdminLanguages";
 import AdminMenus from "./pages/admin/AdminMenus";
 import AdminDesign from "./pages/admin/AdminDesign";
+import AdminFooter from "./pages/admin/AdminFooter";
 import PlayerRegistration from "./pages/PlayerRegistration";
 import PlayerDashboard from "./pages/PlayerDashboard";
 import ClubRegistration from "./pages/ClubRegistration";
@@ -66,6 +67,7 @@ const App = () => (
               <Route path="/admin/menus" element={<AdminMenus />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
               <Route path="/admin/design" element={<AdminDesign />} />
+              <Route path="/admin/footer" element={<AdminFooter />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
