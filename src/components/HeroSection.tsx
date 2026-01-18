@@ -33,16 +33,22 @@ const HeroSection = ({ backgroundImage }: HeroSectionProps) => {
     : (heroSettings.subtitle as string) || t('hero.subtitle', 'We connect emerging football talents with the best clubs around the world.');
   const stats = [{
     icon: Users,
-    value: "+500",
-    label: t('hero.stats.players', 'لاعب محترف')
+    value: (heroSettings.stat_players_value as string) || "+500",
+    label: isArabic 
+      ? (heroSettings.stat_players_label_ar as string) || t('hero.stats.players', 'لاعب محترف')
+      : (heroSettings.stat_players_label as string) || t('hero.stats.players', 'Pro Players')
   }, {
     icon: Trophy,
-    value: "+120",
-    label: t('hero.stats.clubs', 'نادي شريك')
+    value: (heroSettings.stat_clubs_value as string) || "+120",
+    label: isArabic
+      ? (heroSettings.stat_clubs_label_ar as string) || t('hero.stats.clubs', 'نادي شريك')
+      : (heroSettings.stat_clubs_label as string) || t('hero.stats.clubs', 'Partner Clubs')
   }, {
     icon: Star,
-    value: "+50",
-    label: t('hero.stats.deals', 'صفقة ناجحة')
+    value: (heroSettings.stat_deals_value as string) || "+50",
+    label: isArabic
+      ? (heroSettings.stat_deals_label_ar as string) || t('hero.stats.deals', 'صفقة ناجحة')
+      : (heroSettings.stat_deals_label as string) || t('hero.stats.deals', 'Successful Deals')
   }];
   const ArrowIcon = direction === 'rtl' ? ArrowLeft : ArrowRight;
   return <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
