@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Palette, Layers, Image, Save, Loader2, Eye, EyeOff, GripVertical, Plus, Trash2 } from 'lucide-react';
+import { Palette, Layers, Image, Save, Loader2, Eye, EyeOff, GripVertical, Plus, Trash2, Upload } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -128,6 +129,44 @@ const AdminDesign = () => {
       toast.success('تم الحذف');
     } catch {
       toast.error('حدث خطأ');
+    }
+  };
+
+  const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
+
+  const handleImageUpload = async (itemId: string, file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('يرجى اختيار ملف صورة');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+      return;
+    }
+
+    setUploadingItemId(itemId);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${itemId}-${Date.now()}.${fileExt}`;
+      const filePath = `slider/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('slider-images')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('slider-images')
+        .getPublicUrl(filePath);
+
+      await updateSliderItem.mutateAsync({ id: itemId, image_url: publicUrl });
+      toast.success('تم رفع الصورة بنجاح');
+    } catch {
+      toast.error('حدث خطأ أثناء رفع الصورة');
+    } finally {
+      setUploadingItemId(null);
     }
   };
 
@@ -394,13 +433,52 @@ const AdminDesign = () => {
                                 onChange={(e) => handleUpdateSliderItem(item.id, { subtitle_ar: e.target.value })}
                               />
                             </div>
-                            <div className="space-y-2">
-                              <Label>رابط الصورة</Label>
-                              <Input
-                                value={item.image_url || ''}
-                                onChange={(e) => handleUpdateSliderItem(item.id, { image_url: e.target.value })}
-                                dir="ltr"
-                              />
+                            <div className="space-y-2 md:col-span-2">
+                              <Label>الصورة</Label>
+                              <div className="flex items-center gap-4">
+                                {item.image_url && (
+                                  <img 
+                                    src={item.image_url} 
+                                    alt={item.title || 'Slider image'} 
+                                    className="w-20 h-14 object-cover rounded-lg border border-border"
+                                  />
+                                )}
+                                <div className="flex-1 flex gap-2">
+                                  <Input
+                                    value={item.image_url || ''}
+                                    onChange={(e) => handleUpdateSliderItem(item.id, { image_url: e.target.value })}
+                                    placeholder="أو أدخل رابط الصورة"
+                                    dir="ltr"
+                                    className="flex-1"
+                                  />
+                                  <label className="cursor-pointer">
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleImageUpload(item.id, file);
+                                      }}
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      disabled={uploadingItemId === item.id}
+                                      asChild
+                                    >
+                                      <span>
+                                        {uploadingItemId === item.id ? (
+                                          <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                          <Upload className="w-4 h-4" />
+                                        )}
+                                      </span>
+                                    </Button>
+                                  </label>
+                                </div>
+                              </div>
                             </div>
                             <div className="space-y-2">
                               <Label>رابط الانتقال</Label>
