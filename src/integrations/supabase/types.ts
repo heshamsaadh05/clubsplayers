@@ -749,6 +749,9 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          admin_notes: string | null
+          approved_at: string | null
+          approved_by: string | null
           auto_renew: boolean
           created_at: string
           end_date: string
@@ -756,6 +759,7 @@ export type Database = {
           payment_method: string | null
           payment_reference: string | null
           plan_id: string
+          proof_url: string | null
           renewal_reminder_sent: boolean
           start_date: string
           status: Database["public"]["Enums"]["subscription_status"]
@@ -763,6 +767,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           auto_renew?: boolean
           created_at?: string
           end_date: string
@@ -770,6 +777,7 @@ export type Database = {
           payment_method?: string | null
           payment_reference?: string | null
           plan_id: string
+          proof_url?: string | null
           renewal_reminder_sent?: boolean
           start_date?: string
           status?: Database["public"]["Enums"]["subscription_status"]
@@ -777,6 +785,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
           auto_renew?: boolean
           created_at?: string
           end_date?: string
@@ -784,6 +795,7 @@ export type Database = {
           payment_method?: string | null
           payment_reference?: string | null
           plan_id?: string
+          proof_url?: string | null
           renewal_reminder_sent?: boolean
           start_date?: string
           status?: Database["public"]["Enums"]["subscription_status"]
@@ -987,7 +999,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "player" | "club"
       player_status: "pending" | "approved" | "rejected"
-      subscription_status: "active" | "expired" | "cancelled"
+      subscription_status: "active" | "expired" | "cancelled" | "pending"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1117,7 +1129,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "player", "club"],
       player_status: ["pending", "approved", "rejected"],
-      subscription_status: ["active", "expired", "cancelled"],
+      subscription_status: ["active", "expired", "cancelled", "pending"],
     },
   },
 } as const

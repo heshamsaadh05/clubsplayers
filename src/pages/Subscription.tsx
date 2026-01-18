@@ -146,8 +146,31 @@ const Subscription = () => {
     setSubmitting(true);
 
     try {
+      let proofUrl = null;
+
+      // Upload payment proof if provided
+      if (proofFile) {
+        const fileExt = proofFile.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('payment-proofs')
+          .upload(fileName, proofFile);
+        
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('payment-proofs')
+          .getPublicUrl(fileName);
+        
+        proofUrl = publicUrl;
+      }
+
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + selectedPlan.duration_days);
+
+      // Manual payment methods require admin approval (pending status)
+      const isPending = requiresProof;
 
       const { error } = await supabase
         .from('subscriptions')
@@ -155,8 +178,9 @@ const Subscription = () => {
           user_id: user.id,
           plan_id: selectedPlan.id,
           payment_method: selectedPaymentMethod.type,
-          payment_reference: paymentReference,
-          status: requiresProof ? 'active' : 'active', // Could be 'pending' if manual approval needed
+          payment_reference: paymentReference || null,
+          proof_url: proofUrl,
+          status: isPending ? 'pending' : 'active',
           end_date: endDate.toISOString(),
         });
 
@@ -164,7 +188,9 @@ const Subscription = () => {
 
       toast({
         title: t('common.success', 'تم بنجاح!'),
-        description: t('subscription.successMessage', 'تم تسجيل اشتراكك بنجاح'),
+        description: isPending 
+          ? t('subscription.pendingMessage', 'تم إرسال طلب الاشتراك وسيتم مراجعته قريباً')
+          : t('subscription.successMessage', 'تم تسجيل اشتراكك بنجاح'),
       });
 
       navigate('/club-dashboard');

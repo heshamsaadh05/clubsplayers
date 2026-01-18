@@ -51,9 +51,13 @@ interface Subscription {
   id: string;
   user_id: string;
   plan_id: string;
-  status: 'active' | 'expired' | 'cancelled';
+  status: 'active' | 'expired' | 'cancelled' | 'pending';
   payment_method: string | null;
   payment_reference: string | null;
+  proof_url: string | null;
+  admin_notes: string | null;
+  approved_at: string | null;
+  approved_by: string | null;
   start_date: string;
   end_date: string;
   created_at: string;
@@ -191,6 +195,14 @@ const AdminSubscriptions = () => {
     const end = new Date(endDate);
     const daysRemaining = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
+    if (status === 'pending') {
+      return {
+        label: 'في انتظار الموافقة',
+        icon: Clock,
+        className: 'bg-orange-500/10 text-orange-500 border-orange-500/30',
+      };
+    }
+
     if (status === 'cancelled') {
       return {
         label: 'ملغي',
@@ -249,6 +261,7 @@ const AdminSubscriptions = () => {
   // Stats
   const stats = {
     total: subscriptions.length,
+    pending: subscriptions.filter(s => s.status === 'pending').length,
     active: subscriptions.filter(s => s.status === 'active').length,
     expired: subscriptions.filter(s => s.status === 'expired').length,
     cancelled: subscriptions.filter(s => s.status === 'cancelled').length,
@@ -273,7 +286,7 @@ const AdminSubscriptions = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -281,6 +294,16 @@ const AdminSubscriptions = () => {
           >
             <p className="text-sm text-muted-foreground">إجمالي الاشتراكات</p>
             <p className="text-2xl font-bold text-foreground">{stats.total}</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="card-glass rounded-xl p-4 cursor-pointer hover:ring-2 hover:ring-orange-500"
+            onClick={() => setStatusFilter('pending')}
+          >
+            <p className="text-sm text-muted-foreground">في الانتظار</p>
+            <p className="text-2xl font-bold text-orange-500">{stats.pending}</p>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -338,6 +361,7 @@ const AdminSubscriptions = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">الكل</SelectItem>
+              <SelectItem value="pending">في الانتظار</SelectItem>
               <SelectItem value="active">نشط</SelectItem>
               <SelectItem value="expired">منتهي</SelectItem>
               <SelectItem value="cancelled">ملغي</SelectItem>
@@ -463,12 +487,12 @@ const AdminSubscriptions = () => {
 
         {/* Details Dialog */}
         <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>تفاصيل الاشتراك</DialogTitle>
             </DialogHeader>
             {selectedSubscription && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">النادي</p>
@@ -506,32 +530,94 @@ const AdminSubscriptions = () => {
                   </div>
                 </div>
 
-                <div className="flex gap-2 pt-4">
-                  {selectedSubscription.status === 'active' ? (
-                    <>
+                {/* Payment Proof Section */}
+                {selectedSubscription.proof_url && (
+                  <div className="space-y-2 p-4 bg-secondary rounded-xl">
+                    <p className="text-sm font-medium text-foreground">إثبات الدفع</p>
+                    <a 
+                      href={selectedSubscription.proof_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="block"
+                    >
+                      <img 
+                        src={selectedSubscription.proof_url} 
+                        alt="إثبات الدفع" 
+                        className="max-w-full max-h-64 rounded-lg border border-border mx-auto cursor-pointer hover:opacity-80 transition-opacity"
+                      />
+                    </a>
+                    <p className="text-xs text-muted-foreground text-center">اضغط على الصورة لفتحها في نافذة جديدة</p>
+                  </div>
+                )}
+
+                {/* Admin Notes */}
+                {selectedSubscription.admin_notes && (
+                  <div className="p-4 bg-yellow-500/10 rounded-xl border border-yellow-500/30">
+                    <p className="text-sm font-medium text-yellow-600 mb-1">ملاحظات المدير</p>
+                    <p className="text-sm">{selectedSubscription.admin_notes}</p>
+                  </div>
+                )}
+
+                {/* Pending Subscription - Approval Actions */}
+                {selectedSubscription.status === 'pending' && (
+                  <div className="p-4 bg-orange-500/10 rounded-xl border border-orange-500/30">
+                    <p className="text-sm font-medium text-orange-500 mb-3">هذا الاشتراك في انتظار الموافقة</p>
+                    <div className="flex gap-3">
                       <Button
-                        variant="outline"
-                        className="flex-1"
+                        className="flex-1 bg-green-600 hover:bg-green-700"
                         onClick={() => {
-                          extendSubscription(selectedSubscription, 30);
+                          updateSubscriptionStatus(selectedSubscription.id, 'active');
                           setDetailsOpen(false);
                         }}
                       >
-                        <Calendar className="w-4 h-4 ml-2" />
-                        تمديد 30 يوم
+                        <CheckCircle className="w-4 h-4 ml-2" />
+                        الموافقة وتفعيل
                       </Button>
                       <Button
                         variant="destructive"
+                        className="flex-1"
                         onClick={() => {
                           updateSubscriptionStatus(selectedSubscription.id, 'cancelled');
                           setDetailsOpen(false);
                         }}
                       >
                         <XCircle className="w-4 h-4 ml-2" />
-                        إلغاء
+                        رفض
                       </Button>
-                    </>
-                  ) : (
+                    </div>
+                  </div>
+                )}
+
+                {/* Active Subscription Actions */}
+                {selectedSubscription.status === 'active' && (
+                  <div className="flex gap-2 pt-4 border-t border-border">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        extendSubscription(selectedSubscription, 30);
+                        setDetailsOpen(false);
+                      }}
+                    >
+                      <Calendar className="w-4 h-4 ml-2" />
+                      تمديد 30 يوم
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        updateSubscriptionStatus(selectedSubscription.id, 'cancelled');
+                        setDetailsOpen(false);
+                      }}
+                    >
+                      <XCircle className="w-4 h-4 ml-2" />
+                      إلغاء
+                    </Button>
+                  </div>
+                )}
+
+                {/* Expired/Cancelled Subscription Actions */}
+                {(selectedSubscription.status === 'expired' || selectedSubscription.status === 'cancelled') && (
+                  <div className="flex gap-2 pt-4 border-t border-border">
                     <Button
                       className="flex-1 btn-gold"
                       onClick={() => {
@@ -540,10 +626,10 @@ const AdminSubscriptions = () => {
                       }}
                     >
                       <CheckCircle className="w-4 h-4 ml-2" />
-                      تفعيل الاشتراك
+                      إعادة تفعيل
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             )}
           </DialogContent>
