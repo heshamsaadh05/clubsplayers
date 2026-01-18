@@ -47,7 +47,7 @@ export const useUpdatePageSection = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; is_visible?: boolean; order_index?: number }) => {
+    mutationFn: async ({ id, ...updates }: { id: string; is_visible?: boolean; order_index?: number; settings?: Json }) => {
       const { error } = await supabase
         .from('page_sections')
         .update(updates)

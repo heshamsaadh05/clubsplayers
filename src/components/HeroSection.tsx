@@ -3,8 +3,18 @@ import { ArrowLeft, ArrowRight, Star, Trophy, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/hooks/useLanguage";
-import heroPlayer from "@/assets/hero-player.jpg";
-const HeroSection = () => {
+import { usePageSections } from "@/hooks/usePageSections";
+import heroPlayerDefault from "@/assets/hero-player.jpg";
+
+interface HeroSectionProps {
+  backgroundImage?: string;
+}
+
+const HeroSection = ({ backgroundImage }: HeroSectionProps) => {
+  const { data: sections } = usePageSections('home');
+  const heroSection = sections?.find(s => s.section_key === 'hero');
+  const heroSettings = (heroSection?.settings || {}) as Record<string, unknown>;
+  const heroImage = backgroundImage || (heroSettings.background_image as string) || heroPlayerDefault;
   const {
     t,
     direction
@@ -26,7 +36,7 @@ const HeroSection = () => {
   return <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
-        <img src={heroPlayer} alt="Football Player" className="w-full h-full object-cover opacity-40" />
+        <img src={heroImage} alt="Football Player" className="w-full h-full object-cover opacity-40" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
       </div>
 

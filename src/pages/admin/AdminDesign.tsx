@@ -82,6 +82,47 @@ const AdminDesign = () => {
     }
   };
 
+  const [uploadingHero, setUploadingHero] = useState(false);
+
+  const handleHeroImageUpload = async (sectionId: string, file: File, currentSettings: Record<string, unknown>) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('يرجى اختيار ملف صورة');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('حجم الصورة يجب أن يكون أقل من 5 ميجابايت');
+      return;
+    }
+
+    setUploadingHero(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `hero-${Date.now()}.${fileExt}`;
+      const filePath = `hero/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('slider-images')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('slider-images')
+        .getPublicUrl(filePath);
+
+      await updateSection.mutateAsync({ 
+        id: sectionId, 
+        settings: { ...currentSettings, background_image: publicUrl } 
+      });
+      toast.success('تم رفع صورة الهيرو بنجاح');
+    } catch {
+      toast.error('حدث خطأ أثناء رفع الصورة');
+    } finally {
+      setUploadingHero(false);
+    }
+  };
+
   const handleSliderSettingChange = async (key: string, value: number | boolean) => {
     try {
       await updateSliderSettings.mutateAsync({ 
@@ -265,35 +306,85 @@ const AdminDesign = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {sections?.filter(s => s.page_key === 'home').map((section) => (
-                        <div
-                          key={section.id}
-                          className="flex items-center justify-between p-4 bg-secondary/50 rounded-xl"
-                        >
-                          <div className="flex items-center gap-3">
-                            <GripVertical className="w-5 h-5 text-muted-foreground cursor-grab" />
-                            <div>
-                              <p className="font-medium">
-                                {sectionLabels[section.section_key] || section.section_key}
-                              </p>
-                              <p className="text-sm text-muted-foreground">
-                                الترتيب: {section.order_index}
-                              </p>
+                      {sections?.filter(s => s.page_key === 'home').map((section) => {
+                        const sectionSettings = (section.settings || {}) as Record<string, unknown>;
+                        const heroImage = sectionSettings.background_image as string | undefined;
+                        
+                        return (
+                          <div
+                            key={section.id}
+                            className="p-4 bg-secondary/50 rounded-xl space-y-4"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <GripVertical className="w-5 h-5 text-muted-foreground cursor-grab" />
+                                <div>
+                                  <p className="font-medium">
+                                    {sectionLabels[section.section_key] || section.section_key}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    الترتيب: {section.order_index}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                {section.is_visible ? (
+                                  <Eye className="w-5 h-5 text-green-500" />
+                                ) : (
+                                  <EyeOff className="w-5 h-5 text-muted-foreground" />
+                                )}
+                                <Switch
+                                  checked={section.is_visible}
+                                  onCheckedChange={(checked) => toggleSectionVisibility(section.id, checked)}
+                                />
+                              </div>
                             </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            {section.is_visible ? (
-                              <Eye className="w-5 h-5 text-green-500" />
-                            ) : (
-                              <EyeOff className="w-5 h-5 text-muted-foreground" />
+                            
+                            {/* Hero Background Image Upload */}
+                            {section.section_key === 'hero' && (
+                              <div className="pt-4 border-t border-border">
+                                <Label className="mb-3 block">صورة خلفية الهيرو</Label>
+                                <div className="flex items-center gap-4">
+                                  {heroImage && (
+                                    <img 
+                                      src={heroImage} 
+                                      alt="Hero background" 
+                                      className="w-24 h-16 object-cover rounded-lg border border-border"
+                                    />
+                                  )}
+                                  <label className="cursor-pointer flex-1">
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleHeroImageUpload(section.id, file, sectionSettings);
+                                      }}
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      className="w-full"
+                                      disabled={uploadingHero}
+                                      asChild
+                                    >
+                                      <span className="flex items-center justify-center gap-2">
+                                        {uploadingHero ? (
+                                          <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                          <Upload className="w-4 h-4" />
+                                        )}
+                                        {heroImage ? 'تغيير الصورة' : 'رفع صورة'}
+                                      </span>
+                                    </Button>
+                                  </label>
+                                </div>
+                              </div>
                             )}
-                            <Switch
-                              checked={section.is_visible}
-                              onCheckedChange={(checked) => toggleSectionVisibility(section.id, checked)}
-                            />
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </CardContent>
                 </Card>
