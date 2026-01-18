@@ -729,6 +729,45 @@ export type Database = {
       }
     }
     Views: {
+      payment_methods_public: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          id: string | null
+          instructions: string | null
+          instructions_ar: string | null
+          is_active: boolean | null
+          name: string | null
+          name_ar: string | null
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          id?: string | null
+          instructions?: string | null
+          instructions_ar?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          name_ar?: string | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          id?: string | null
+          instructions?: string | null
+          instructions_ar?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          name_ar?: string | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       players_public: {
         Row: {
           bio: string | null

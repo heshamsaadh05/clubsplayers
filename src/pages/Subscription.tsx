@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
+import { logError } from '@/lib/errorLogger';
 
 interface SubscriptionPlan {
   id: string;
@@ -72,9 +73,8 @@ const Subscription = () => {
           .eq('plan_type', 'club')
           .order('price', { ascending: true }),
         supabase
-          .from('payment_methods')
+          .from('payment_methods_public')
           .select('*')
-          .eq('is_active', true)
       ]);
 
       if (plansRes.error) throw plansRes.error;
@@ -93,7 +93,7 @@ const Subscription = () => {
       setPlans(processedPlans as SubscriptionPlan[]);
       setPaymentMethods(processedMethods as PaymentMethod[]);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      logError(error, 'Subscription:fetchData');
       toast({
         title: t('common.error', 'خطأ'),
         description: t('subscription.errorLoading', 'حدث خطأ أثناء تحميل البيانات'),
@@ -169,7 +169,7 @@ const Subscription = () => {
 
       navigate('/club-dashboard');
     } catch (error) {
-      console.error('Error creating subscription:', error);
+      logError(error, 'Subscription:handleSubmit');
       toast({
         title: t('common.error', 'خطأ'),
         description: t('subscription.errorPayment', 'حدث خطأ أثناء تسجيل الاشتراك'),
