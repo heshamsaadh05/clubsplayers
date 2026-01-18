@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { logError } from '@/lib/errorLogger';
 
 interface Player {
   id: string;
@@ -56,7 +57,7 @@ const AdminPlayers = () => {
       if (error) throw error;
       setPlayers((data || []) as Player[]);
     } catch (error) {
-      console.error('Error fetching players:', error);
+      logError(error, 'AdminPlayers:fetchPlayers');
     } finally {
       setLoading(false);
     }

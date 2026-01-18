@@ -37,6 +37,7 @@ import MessageComposer from "@/components/messages/MessageComposer";
 import { useFavorites } from "@/hooks/useFavorites";
 import PlayerRating from "@/components/player/PlayerRating";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
+import { logError } from "@/lib/errorLogger";
 
 // Public player type excludes PII fields (email, phone, date_of_birth, id_document_url, rejection_reason)
 type PublicPlayer = {
@@ -125,7 +126,7 @@ const PlayerProfile = () => {
           }
         }
       } catch (error) {
-        console.error("Error:", error);
+        logError(error, 'PlayerProfile:fetchPlayer');
         toast.error("حدث خطأ في جلب البيانات");
       } finally {
         setLoading(false);

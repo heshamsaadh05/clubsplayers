@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, FileText } from 'lucide-react';
+import DOMPurify from 'dompurify';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { logError } from '@/lib/errorLogger';
 
 type Page = Tables<'pages'>;
 
@@ -42,7 +44,7 @@ const PageView = () => {
           setPage(data);
         }
       } catch (error) {
-        console.error('Error fetching page:', error);
+        logError(error, 'PageView:fetchPage');
         setNotFound(true);
       } finally {
         setLoading(false);
@@ -55,6 +57,15 @@ const PageView = () => {
   // Check if content is HTML (from rich text editor) or plain text
   const isHtmlContent = (content: string) => {
     return /<[a-z][\s\S]*>/i.test(content);
+  };
+
+  // Sanitize HTML content to prevent XSS attacks
+  const sanitizeHtml = (html: string): string => {
+    return DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'span', 'div'],
+      ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'class', 'style', 'target', 'rel'],
+      ALLOW_DATA_ATTR: false,
+    });
   };
 
   if (loading) {
@@ -129,7 +140,7 @@ const PageView = () => {
                       prose-strong:text-foreground prose-a:text-gold
                       prose-li:text-foreground/90 prose-blockquote:border-gold
                       prose-blockquote:text-muted-foreground"
-                    dangerouslySetInnerHTML={{ __html: content }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
                   />
                 ) : (
                   <div className="prose prose-lg max-w-none text-foreground whitespace-pre-wrap">
