@@ -11,14 +11,26 @@ interface HeroSectionProps {
 }
 
 const HeroSection = ({ backgroundImage }: HeroSectionProps) => {
+  const { t, direction } = useLanguage();
   const { data: sections } = usePageSections('home');
   const heroSection = sections?.find(s => s.section_key === 'hero');
   const heroSettings = (heroSection?.settings || {}) as Record<string, unknown>;
   const heroImage = backgroundImage || (heroSettings.background_image as string) || heroPlayerDefault;
-  const {
-    t,
-    direction
-  } = useLanguage();
+  
+  // Dynamic texts from settings
+  const isArabic = direction === 'rtl';
+  const badge = isArabic 
+    ? (heroSettings.badge_ar as string) || t('hero.badge', 'وكالة اللاعبين الأولى في الوطن العربي')
+    : (heroSettings.badge as string) || t('hero.badge', 'The Premier Player Agency');
+  const titleLine1 = isArabic
+    ? (heroSettings.title_line1_ar as string) || t('hero.title.line1', 'اكتشف موهبتك')
+    : (heroSettings.title_line1 as string) || t('hero.title.line1', 'Discover Your Talent');
+  const titleLine2 = isArabic
+    ? (heroSettings.title_line2_ar as string) || t('hero.title.line2', 'وحقق حلمك الكروي')
+    : (heroSettings.title_line2 as string) || t('hero.title.line2', 'Achieve Your Football Dream');
+  const subtitle = isArabic
+    ? (heroSettings.subtitle_ar as string) || t('hero.subtitle', 'نربط بين المواهب الكروية الناشئة وأفضل الأندية حول العالم. نساعدك في بناء مسيرتك الاحترافية وتحقيق أحلامك في عالم كرة القدم.')
+    : (heroSettings.subtitle as string) || t('hero.subtitle', 'We connect emerging football talents with the best clubs around the world.');
   const stats = [{
     icon: Users,
     value: "+500",
@@ -60,7 +72,7 @@ const HeroSection = ({ backgroundImage }: HeroSectionProps) => {
         }} className="inline-flex items-center gap-2 border rounded-full px-4 py-2 mb-8 bg-primary border-secondary">
             <Star className="w-4 h-4 text-gold" />
             <span className="text-sm font-medium text-secondary">
-              {t('hero.badge', 'وكالة اللاعبين الأولى في الوطن العربي')}
+              {badge}
             </span>
           </motion.div>
 
@@ -75,9 +87,9 @@ const HeroSection = ({ backgroundImage }: HeroSectionProps) => {
           duration: 0.8,
           delay: 0.2
         }} className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-            <span className="text-foreground">{t('hero.title.line1', 'اكتشف موهبتك')}</span>
+            <span className="text-foreground">{titleLine1}</span>
             <br />
-            <span className="text-gradient-gold">{t('hero.title.line2', 'وحقق حلمك الكروي')}</span>
+            <span className="text-gradient-gold">{titleLine2}</span>
           </motion.h1>
 
           {/* Description */}
@@ -91,7 +103,7 @@ const HeroSection = ({ backgroundImage }: HeroSectionProps) => {
           duration: 0.8,
           delay: 0.4
         }} className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-            {t('hero.subtitle', 'نربط بين المواهب الكروية الناشئة وأفضل الأندية حول العالم. نساعدك في بناء مسيرتك الاحترافية وتحقيق أحلامك في عالم كرة القدم.')}
+            {subtitle}
           </motion.p>
 
           {/* CTA Buttons */}

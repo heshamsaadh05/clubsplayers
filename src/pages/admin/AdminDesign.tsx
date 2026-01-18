@@ -342,43 +342,138 @@ const AdminDesign = () => {
                             
                             {/* Hero Background Image Upload */}
                             {section.section_key === 'hero' && (
-                              <div className="pt-4 border-t border-border">
-                                <Label className="mb-3 block">صورة خلفية الهيرو</Label>
-                                <div className="flex items-center gap-4">
-                                  {heroImage && (
-                                    <img 
-                                      src={heroImage} 
-                                      alt="Hero background" 
-                                      className="w-24 h-16 object-cover rounded-lg border border-border"
+                              <div className="pt-4 border-t border-border space-y-4">
+                                {/* Hero Background Image */}
+                                <div>
+                                  <Label className="mb-3 block">صورة خلفية الهيرو</Label>
+                                  <div className="flex items-center gap-4">
+                                    {heroImage && (
+                                      <img 
+                                        src={heroImage} 
+                                        alt="Hero background" 
+                                        className="w-24 h-16 object-cover rounded-lg border border-border"
+                                      />
+                                    )}
+                                    <label className="cursor-pointer flex-1">
+                                      <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0];
+                                          if (file) handleHeroImageUpload(section.id, file, sectionSettings);
+                                        }}
+                                      />
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="w-full"
+                                        disabled={uploadingHero}
+                                        asChild
+                                      >
+                                        <span className="flex items-center justify-center gap-2">
+                                          {uploadingHero ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                          ) : (
+                                            <Upload className="w-4 h-4" />
+                                          )}
+                                          {heroImage ? 'تغيير الصورة' : 'رفع صورة'}
+                                        </span>
+                                      </Button>
+                                    </label>
+                                  </div>
+                                </div>
+
+                                {/* Hero Texts */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label>الشارة (EN)</Label>
+                                    <Input
+                                      value={(sectionSettings.badge as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, badge: e.target.value } 
+                                      })}
+                                      placeholder="The Premier Player Agency"
                                     />
-                                  )}
-                                  <label className="cursor-pointer flex-1">
-                                    <input
-                                      type="file"
-                                      accept="image/*"
-                                      className="hidden"
-                                      onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) handleHeroImageUpload(section.id, file, sectionSettings);
-                                      }}
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>الشارة (AR)</Label>
+                                    <Input
+                                      value={(sectionSettings.badge_ar as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, badge_ar: e.target.value } 
+                                      })}
+                                      placeholder="وكالة اللاعبين الأولى"
                                     />
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      className="w-full"
-                                      disabled={uploadingHero}
-                                      asChild
-                                    >
-                                      <span className="flex items-center justify-center gap-2">
-                                        {uploadingHero ? (
-                                          <Loader2 className="w-4 h-4 animate-spin" />
-                                        ) : (
-                                          <Upload className="w-4 h-4" />
-                                        )}
-                                        {heroImage ? 'تغيير الصورة' : 'رفع صورة'}
-                                      </span>
-                                    </Button>
-                                  </label>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>العنوان - السطر الأول (EN)</Label>
+                                    <Input
+                                      value={(sectionSettings.title_line1 as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, title_line1: e.target.value } 
+                                      })}
+                                      placeholder="Discover Your Talent"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>العنوان - السطر الأول (AR)</Label>
+                                    <Input
+                                      value={(sectionSettings.title_line1_ar as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, title_line1_ar: e.target.value } 
+                                      })}
+                                      placeholder="اكتشف موهبتك"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>العنوان - السطر الثاني (EN)</Label>
+                                    <Input
+                                      value={(sectionSettings.title_line2 as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, title_line2: e.target.value } 
+                                      })}
+                                      placeholder="Achieve Your Football Dream"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>العنوان - السطر الثاني (AR)</Label>
+                                    <Input
+                                      value={(sectionSettings.title_line2_ar as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, title_line2_ar: e.target.value } 
+                                      })}
+                                      placeholder="وحقق حلمك الكروي"
+                                    />
+                                  </div>
+                                  <div className="space-y-2 md:col-span-2">
+                                    <Label>الوصف (EN)</Label>
+                                    <Input
+                                      value={(sectionSettings.subtitle as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, subtitle: e.target.value } 
+                                      })}
+                                      placeholder="We connect emerging football talents..."
+                                    />
+                                  </div>
+                                  <div className="space-y-2 md:col-span-2">
+                                    <Label>الوصف (AR)</Label>
+                                    <Input
+                                      value={(sectionSettings.subtitle_ar as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, subtitle_ar: e.target.value } 
+                                      })}
+                                      placeholder="نربط بين المواهب الكروية الناشئة..."
+                                    />
+                                  </div>
                                 </div>
                               </div>
                             )}
