@@ -49,6 +49,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { useFavorites } from "@/hooks/useFavorites";
+import { logError } from "@/lib/errorLogger";
 
 // Public player type excludes PII fields (email, phone, date_of_birth, id_document_url, rejection_reason)
 type PublicPlayer = {
@@ -169,7 +170,7 @@ const BrowsePlayers = () => {
         setPlayers(playersData || []);
         setFilteredPlayers(playersData || []);
       } catch (error) {
-        console.error("Error:", error);
+        logError(error, 'BrowsePlayers:fetchPlayers');
         toast.error("حدث خطأ في جلب البيانات");
       } finally {
         setLoading(false);

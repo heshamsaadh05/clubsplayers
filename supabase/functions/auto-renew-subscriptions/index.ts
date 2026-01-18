@@ -13,17 +13,19 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authorization - only allow calls with service role key or from cron
+    // Verify authorization - only allow calls with service role key (strict Bearer token validation)
     const authHeader = req.headers.get("Authorization");
     const expectedServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
-    // Check if this is an authorized request (service role key in Bearer token)
-    const isAuthorized = authHeader && 
-      (authHeader === `Bearer ${expectedServiceKey}` || 
-       authHeader.includes(expectedServiceKey!));
+    // Strict Bearer token validation - no loose includes() check
+    const isAuthorized = authHeader && expectedServiceKey && 
+      authHeader === `Bearer ${expectedServiceKey}`;
     
     if (!isAuthorized) {
-      console.error("Unauthorized access attempt to auto-renew function");
+      console.error("Unauthorized access attempt to auto-renew function", {
+        timestamp: new Date().toISOString(),
+        hasAuthHeader: !!authHeader,
+      });
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         {

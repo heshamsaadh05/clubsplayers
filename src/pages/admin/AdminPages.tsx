@@ -48,6 +48,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
+import { logError } from '@/lib/errorLogger';
 
 type Page = Tables<'pages'>;
 
@@ -123,7 +124,7 @@ const AdminPages = () => {
       if (error) throw error;
       setPages(data || []);
     } catch (error) {
-      console.error('Error fetching pages:', error);
+      logError(error, 'AdminPages:fetchPages');
       toast.error('حدث خطأ في جلب الصفحات');
     } finally {
       setLoading(false);
@@ -168,7 +169,7 @@ const AdminPages = () => {
       toast.success('تم حذف الصفحة بنجاح');
       await fetchPages();
     } catch (error) {
-      console.error('Error deleting page:', error);
+      logError(error, 'AdminPages:confirmDelete');
       toast.error('حدث خطأ أثناء حذف الصفحة');
     } finally {
       setDeleteDialogOpen(false);
@@ -236,7 +237,7 @@ const AdminPages = () => {
       setEditDialogOpen(false);
       await fetchPages();
     } catch (error) {
-      console.error('Error saving page:', error);
+      logError(error, 'AdminPages:handleSave');
       toast.error('حدث خطأ أثناء حفظ الصفحة');
     } finally {
       setSaving(false);
@@ -255,7 +256,7 @@ const AdminPages = () => {
       toast.success(page.is_published ? 'تم إلغاء نشر الصفحة' : 'تم نشر الصفحة');
       await fetchPages();
     } catch (error) {
-      console.error('Error toggling publish:', error);
+      logError(error, 'AdminPages:togglePublish');
       toast.error('حدث خطأ');
     }
   };
@@ -274,7 +275,7 @@ const AdminPages = () => {
         )
       );
     } catch (error) {
-      console.error('Error reordering:', error);
+      logError(error, 'AdminPages:handleReorder');
       toast.error('حدث خطأ في إعادة الترتيب');
       await fetchPages();
     }
