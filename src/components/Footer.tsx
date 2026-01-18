@@ -4,18 +4,21 @@ import { Link } from "react-router-dom";
 import { usePublishedPages } from "@/hooks/usePublishedPages";
 import { useLanguage } from "@/hooks/useLanguage";
 import { useMenuItems } from "@/hooks/useMenuItems";
+import { useFooterSettings } from "@/hooks/useFooterSettings";
 
 const Footer = () => {
   const { pages: publishedPages } = usePublishedPages();
   const { t, currentLanguage } = useLanguage();
   const { data: footerMenuItems = [] } = useMenuItems('footer');
+  const { contact, social, branding } = useFooterSettings();
+  const isEnglish = currentLanguage?.code === 'en';
 
   const socialLinks = [
-    { icon: Facebook, href: "#" },
-    { icon: Twitter, href: "#" },
-    { icon: Instagram, href: "#" },
-    { icon: Youtube, href: "#" },
-  ];
+    { icon: Facebook, href: social.facebook, label: 'Facebook' },
+    { icon: Twitter, href: social.twitter, label: 'Twitter' },
+    { icon: Instagram, href: social.instagram, label: 'Instagram' },
+    { icon: Youtube, href: social.youtube, label: 'YouTube' },
+  ].filter(link => link.href && link.href !== '#' && link.href.trim() !== '');
 
   // Use dynamic menu items from database
   const quickLinks = footerMenuItems.map(item => ({
@@ -35,23 +38,34 @@ const Footer = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h3 className="text-2xl font-bold text-gradient-gold font-playfair mb-4">
-              {t('hero.title', 'ستارز إيجنسي')}
-            </h3>
+            {branding.logo_url ? (
+              <img src={branding.logo_url} alt="Logo" className="h-12 mb-4" />
+            ) : (
+              <h3 className="text-2xl font-bold text-gradient-gold font-playfair mb-4">
+                {t('hero.title', 'ستارز إيجنسي')}
+              </h3>
+            )}
             <p className="text-muted-foreground mb-6 leading-relaxed">
-              {t('footer.description', 'الوكالة الرائدة في اكتشاف المواهب الكروية وربطها بأفضل الأندية حول العالم.')}
+              {isEnglish && branding.description_en 
+                ? branding.description_en 
+                : (branding.description || t('footer.description', 'الوكالة الرائدة في اكتشاف المواهب الكروية وربطها بأفضل الأندية حول العالم.'))}
             </p>
-            <div className="flex gap-3">
-              {socialLinks.map((social, index) => (
-                <a
-                  key={index}
-                  href={social.href}
-                  className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-gold/20 hover:text-gold transition-colors"
-                >
-                  <social.icon className="w-5 h-5" />
-                </a>
-              ))}
-            </div>
+            {socialLinks.length > 0 && (
+              <div className="flex gap-3">
+                {socialLinks.map((socialLink, index) => (
+                  <a
+                    key={index}
+                    href={socialLink.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={socialLink.label}
+                    className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-gold/20 hover:text-gold transition-colors"
+                  >
+                    <socialLink.icon className="w-5 h-5" />
+                  </a>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           {/* Quick Links */}
@@ -146,18 +160,28 @@ const Footer = () => {
               {t('footer.contactUs', 'تواصل معنا')}
             </h4>
             <ul className="space-y-4">
-              <li className="flex items-center gap-3 text-muted-foreground">
-                <MapPin className="w-5 h-5 text-gold" />
-                {t('footer.location', 'القاهرة، مصر')}
-              </li>
-              <li className="flex items-center gap-3 text-muted-foreground">
-                <Phone className="w-5 h-5 text-gold" />
-                +20 123 456 7890
-              </li>
-              <li className="flex items-center gap-3 text-muted-foreground">
-                <Mail className="w-5 h-5 text-gold" />
-                info@starsagency.com
-              </li>
+              {(contact.location || contact.location_en) && (
+                <li className="flex items-center gap-3 text-muted-foreground">
+                  <MapPin className="w-5 h-5 text-gold flex-shrink-0" />
+                  {isEnglish && contact.location_en ? contact.location_en : contact.location}
+                </li>
+              )}
+              {contact.phone && (
+                <li className="flex items-center gap-3 text-muted-foreground">
+                  <Phone className="w-5 h-5 text-gold flex-shrink-0" />
+                  <a href={`tel:${contact.phone}`} className="hover:text-gold transition-colors">
+                    {contact.phone}
+                  </a>
+                </li>
+              )}
+              {contact.email && (
+                <li className="flex items-center gap-3 text-muted-foreground">
+                  <Mail className="w-5 h-5 text-gold flex-shrink-0" />
+                  <a href={`mailto:${contact.email}`} className="hover:text-gold transition-colors">
+                    {contact.email}
+                  </a>
+                </li>
+              )}
             </ul>
           </motion.div>
         </div>

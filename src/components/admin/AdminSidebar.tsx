@@ -15,7 +15,8 @@ import {
   ChevronLeft,
   Receipt,
   Languages,
-  Palette
+  Palette,
+  Footprints
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -49,8 +50,9 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
     { icon: FileText, label: 'الصفحات', path: '/admin/pages' },
     { icon: Menu, label: 'القوائم', path: '/admin/menus' },
     { icon: Languages, label: 'اللغات', path: '/admin/languages' },
-    { icon: Settings, label: 'الإعدادات', path: '/admin/settings' },
     { icon: Palette, label: 'التصميم', path: '/admin/design' },
+    { icon: Footprints, label: 'الفوتر', path: '/admin/footer' },
+    { icon: Settings, label: 'الإعدادات', path: '/admin/settings' },
   ];
 
   const handleLinkClick = () => {
