@@ -25,7 +25,8 @@ import {
   X,
   Sparkles,
   RefreshCw,
-  Edit
+  Edit,
+  Settings
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -526,6 +527,13 @@ const ClubDashboard = () => {
               </Button>
               <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => navigate("/messages")}>
                 <MessageSquare className="w-5 h-5" />
+              </Button>
+              <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => navigate("/account-settings")}>
+                <Settings className="w-4 h-4 ml-2" />
+                الإعدادات
+              </Button>
+              <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => navigate("/account-settings")}>
+                <Settings className="w-5 h-5" />
               </Button>
               <Button variant="ghost" size="sm" className="hidden md:inline-flex" onClick={() => navigate("/")}>
                 الرئيسية
