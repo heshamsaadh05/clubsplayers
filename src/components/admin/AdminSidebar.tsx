@@ -17,7 +17,8 @@ import {
   Languages,
   Palette,
   Footprints,
-  Layers
+  Layers,
+  Share2
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -54,6 +55,7 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
     { icon: Palette, label: 'التصميم', path: '/admin/design' },
     { icon: Layers, label: 'السيكشنز', path: '/admin/sections' },
     { icon: Footprints, label: 'الفوتر', path: '/admin/footer' },
+    { icon: Share2, label: 'التواصل الاجتماعي', path: '/admin/footer?tab=social' },
     { icon: Settings, label: 'الإعدادات', path: '/admin/settings' },
   ];
 
