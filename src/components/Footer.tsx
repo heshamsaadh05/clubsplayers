@@ -14,16 +14,22 @@ const Footer = () => {
   const { contact, socialAdvanced, branding, style } = useFooterSettings();
   const isEnglish = currentLanguage?.code === 'en';
 
-  // Build social links array from advanced platforms (filtered by enabled and has URL)
+  // Build social links array from advanced platforms
+  // Note: we show enabled platforms even if URL is empty/# (admin may still be configuring links).
   const socialLinks = socialAdvanced.platforms
-    .filter(p => p.enabled && p.url && p.url.trim() !== '' && p.url !== '#')
+    .filter((p) => p.enabled)
     .sort((a, b) => a.order - b.order)
-    .map(p => ({
-      id: p.id,
-      href: p.url,
-      label: isEnglish ? p.name : p.name_ar,
-      iconUrl: p.icon_url,
-    }));
+    .map((p) => {
+      const href = (p.url || '').trim();
+      const hasValidHref = href !== '' && href !== '#';
+
+      return {
+        id: p.id,
+        href: hasValidHref ? href : null,
+        label: isEnglish ? p.name : p.name_ar,
+        iconUrl: p.icon_url,
+      };
+    });
 
   // Use dynamic menu items from database
   const quickLinks = footerMenuItems.map(item => ({
@@ -78,19 +84,39 @@ const Footer = () => {
             </p>
             {socialLinks.length > 0 && (
               <div className="flex gap-3 flex-wrap">
-                {socialLinks.map((socialLink) => (
-                  <a
-                    key={socialLink.id}
-                    href={socialLink.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={socialLink.label}
-                    className="w-10 h-10 rounded-full bg-secondary/50 flex items-center justify-center hover:opacity-80 transition-colors"
-                    style={accentStyle}
-                  >
-                    <SocialIcon platformId={socialLink.id} iconUrl={socialLink.iconUrl} className="w-5 h-5" />
-                  </a>
-                ))}
+                {socialLinks.map((socialLink) => {
+                  const Icon = (
+                    <SocialIcon
+                      platformId={socialLink.id}
+                      iconUrl={socialLink.iconUrl}
+                      className="w-5 h-5"
+                    />
+                  );
+
+                  return socialLink.href ? (
+                    <a
+                      key={socialLink.id}
+                      href={socialLink.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={socialLink.label}
+                      className="w-10 h-10 rounded-full bg-secondary/50 flex items-center justify-center hover:opacity-80 transition-colors"
+                      style={accentStyle}
+                    >
+                      {Icon}
+                    </a>
+                  ) : (
+                    <span
+                      key={socialLink.id}
+                      aria-label={socialLink.label}
+                      title={isEnglish ? 'Add link in admin' : 'أضف الرابط من لوحة التحكم'}
+                      className="w-10 h-10 rounded-full bg-secondary/50 flex items-center justify-center opacity-80"
+                      style={accentStyle}
+                    >
+                      {Icon}
+                    </span>
+                  );
+                })}
               </div>
             )}
           </motion.div>
