@@ -10,12 +10,24 @@ interface HeroSectionProps {
   backgroundImage?: string;
 }
 
+// Helper to detect if URL is a video
+const isVideoUrl = (url: string): boolean => {
+  if (!url) return false;
+  const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+  const lowerUrl = url.toLowerCase();
+  return videoExtensions.some(ext => lowerUrl.includes(ext));
+};
+
 const HeroSection = ({ backgroundImage }: HeroSectionProps) => {
   const { t, direction } = useLanguage();
   const { data: sections } = usePageSections('home');
   const heroSection = sections?.find(s => s.section_key === 'hero');
   const heroSettings = (heroSection?.settings || {}) as Record<string, unknown>;
+  
+  // Media settings
+  const heroVideo = (heroSettings.background_video as string) || '';
   const heroImage = backgroundImage || (heroSettings.background_image as string) || heroPlayerDefault;
+  const useVideo = heroVideo && isVideoUrl(heroVideo);
   
   // Dynamic texts from settings
   const isArabic = direction === 'rtl';
@@ -52,9 +64,20 @@ const HeroSection = ({ backgroundImage }: HeroSectionProps) => {
   }];
   const ArrowIcon = direction === 'rtl' ? ArrowLeft : ArrowRight;
   return <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-      {/* Background Image */}
+      {/* Background Media (Video or Image) */}
       <div className="absolute inset-0 z-0">
-        <img src={heroImage} alt="Football Player" className="w-full h-full object-cover opacity-40" />
+        {useVideo ? (
+          <video
+            src={heroVideo}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover opacity-40"
+          />
+        ) : (
+          <img src={heroImage} alt="Football Player" className="w-full h-full object-cover opacity-40" />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
       </div>
 
