@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -19,6 +20,8 @@ import { AddCustomPlatformDialog } from "@/components/admin/AddCustomPlatformDia
 
 const AdminFooter = () => {
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get('tab') || 'branding';
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   
@@ -208,7 +211,7 @@ const AdminFooter = () => {
           <p className="text-muted-foreground">تحكم في جميع عناصر الفوتر</p>
         </div>
 
-        <Tabs defaultValue="branding" className="w-full">
+        <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="branding">العلامة التجارية</TabsTrigger>
             <TabsTrigger value="style">الألوان</TabsTrigger>
