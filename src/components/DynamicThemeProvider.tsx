@@ -1,23 +1,11 @@
 import { useEffect } from 'react';
-import { useThemeSettings } from '@/hooks/useThemeSettings';
+import { useThemeSettings, ThemeColors } from '@/hooks/useThemeSettings';
 import { useThemeMode } from '@/hooks/useThemeMode';
-
-interface ThemeColors {
-  primary: string;
-  primary_foreground: string;
-  secondary: string;
-  secondary_foreground: string;
-  background: string;
-  foreground: string;
-  accent: string;
-  accent_foreground: string;
-  muted: string;
-  muted_foreground: string;
-}
 
 interface DynamicThemeProviderProps {
   children: React.ReactNode;
   previewColors?: Partial<ThemeColors>;
+  previewMode?: 'light' | 'dark'; // Which mode the preview colors are for
 }
 
 /**
@@ -25,17 +13,12 @@ interface DynamicThemeProviderProps {
  * Also supports preview mode for live color changes before saving
  * And handles light/dark mode switching
  */
-const DynamicThemeProvider = ({ children, previewColors }: DynamicThemeProviderProps) => {
+const DynamicThemeProvider = ({ children, previewColors, previewMode }: DynamicThemeProviderProps) => {
   const { data: themeColors } = useThemeSettings();
-  
-  // Initialize theme mode (this handles applying dark class to document)
-  useThemeMode();
+  const { resolvedTheme } = useThemeMode();
 
   useEffect(() => {
-    // Merge database colors with preview colors (preview takes precedence)
-    const colors = { ...themeColors, ...previewColors };
-    
-    if (!colors || Object.keys(colors).length === 0) return;
+    if (!themeColors) return;
 
     const root = document.documentElement;
 
@@ -53,8 +36,18 @@ const DynamicThemeProvider = ({ children, previewColors }: DynamicThemeProviderP
       muted_foreground: '--muted-foreground',
     };
 
+    // Get colors for current theme mode
+    const currentModeColors = themeColors[resolvedTheme];
+    
+    if (!currentModeColors) return;
+
+    // Merge database colors with preview colors if preview is for current mode
+    const colorsToApply = previewMode === resolvedTheme && previewColors 
+      ? { ...currentModeColors, ...previewColors }
+      : currentModeColors;
+
     // Apply each color to CSS variables
-    Object.entries(colors).forEach(([key, value]) => {
+    Object.entries(colorsToApply).forEach(([key, value]) => {
       const cssVar = cssVarMap[key];
       if (cssVar && value) {
         root.style.setProperty(cssVar, value);
@@ -64,13 +57,16 @@ const DynamicThemeProvider = ({ children, previewColors }: DynamicThemeProviderP
     // Cleanup function to reset colors when component unmounts
     return () => {
       // Only reset if we were in preview mode
-      if (previewColors) {
-        Object.values(cssVarMap).forEach((cssVar) => {
-          root.style.removeProperty(cssVar);
+      if (previewColors && previewMode === resolvedTheme) {
+        Object.entries(currentModeColors).forEach(([key, value]) => {
+          const cssVar = cssVarMap[key];
+          if (cssVar && value) {
+            root.style.setProperty(cssVar, value);
+          }
         });
       }
     };
-  }, [themeColors, previewColors]);
+  }, [themeColors, previewColors, previewMode, resolvedTheme]);
 
   return <>{children}</>;
 };

@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { useThemeSettings, useUpdateThemeSettings } from '@/hooks/useThemeSettings';
+import { useThemeSettings, useUpdateThemeSettings, ThemeColors, useUpdateThemeColorsForMode } from '@/hooks/useThemeSettings';
 import { useThemeModeSettings, useUpdateThemeModeSettings, ThemeMode } from '@/hooks/useThemeMode';
 import { useCustomColorTemplates, useAddCustomColorTemplate, useDeleteCustomColorTemplate } from '@/hooks/useCustomColorTemplates';
 import { useAllPageSections, useUpdatePageSection, useAddPageSection } from '@/hooks/usePageSections';
@@ -182,10 +182,12 @@ const colorTemplates = [
 
 const AdminDesign = () => {
   const [activeTab, setActiveTab] = useState('colors');
+  const [editingColorMode, setEditingColorMode] = useState<'light' | 'dark'>('dark');
   
   // Theme
   const { data: themeColors, isLoading: loadingTheme } = useThemeSettings();
   const updateTheme = useUpdateThemeSettings();
+  const updateThemeForMode = useUpdateThemeColorsForMode();
   const [localColors, setLocalColors] = useState<Record<string, string>>({});
   const [previewEnabled, setPreviewEnabled] = useState(true);
 
@@ -200,9 +202,12 @@ const AdminDesign = () => {
   const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
   const [newTemplateName, setNewTemplateName] = useState('');
 
+  // Get current mode colors for editing
+  const currentModeColors = themeColors?.[editingColorMode];
+
   // Apply live preview
   useEffect(() => {
-    if (!previewEnabled || Object.keys(localColors).length === 0) return;
+    if (!previewEnabled || Object.keys(localColors).length === 0 || !currentModeColors) return;
 
     const root = document.documentElement;
     const cssVarMap: Record<string, string> = {
@@ -218,18 +223,24 @@ const AdminDesign = () => {
       muted_foreground: '--muted-foreground',
     };
 
-    // Apply preview colors
-    Object.entries(localColors).forEach(([key, value]) => {
-      const cssVar = cssVarMap[key];
-      if (cssVar && value) {
-        root.style.setProperty(cssVar, value);
-      }
-    });
+    // Check if we're in the editing mode to apply preview
+    const isDarkMode = root.classList.contains('dark');
+    const currentThemeMode = isDarkMode ? 'dark' : 'light';
+    
+    // Only apply preview if we're editing the current active theme
+    if (currentThemeMode === editingColorMode) {
+      Object.entries(localColors).forEach(([key, value]) => {
+        const cssVar = cssVarMap[key];
+        if (cssVar && value) {
+          root.style.setProperty(cssVar, value);
+        }
+      });
+    }
 
     return () => {
       // Reset to original when preview disabled or colors cleared
-      if (themeColors) {
-        Object.entries(themeColors).forEach(([key, value]) => {
+      if (currentModeColors && currentThemeMode === editingColorMode) {
+        Object.entries(currentModeColors).forEach(([key, value]) => {
           const cssVar = cssVarMap[key];
           if (cssVar && value) {
             root.style.setProperty(cssVar, value);
@@ -237,7 +248,12 @@ const AdminDesign = () => {
         });
       }
     };
-  }, [localColors, previewEnabled, themeColors]);
+  }, [localColors, previewEnabled, currentModeColors, editingColorMode]);
+
+  // Reset local colors when switching editing mode
+  useEffect(() => {
+    setLocalColors({});
+  }, [editingColorMode]);
 
   // Sections
   const { data: sections, isLoading: loadingSections } = useAllPageSections();
@@ -284,10 +300,11 @@ const AdminDesign = () => {
       return;
     }
 
-    // Get current colors (either local or saved)
+    // Get current colors for the editing mode
+    const baseColors = currentModeColors;
     const colorsToSave = Object.keys(localColors).length > 0 
-      ? { ...themeColors, ...localColors }
-      : themeColors;
+      ? { ...baseColors, ...localColors }
+      : baseColors;
 
     if (!colorsToSave) {
       toast.error('لا توجد ألوان للحفظ');
@@ -319,12 +336,12 @@ const AdminDesign = () => {
   };
 
   const saveColors = async () => {
-    if (!themeColors) return;
+    if (!currentModeColors) return;
     
-    const newColors = { ...themeColors, ...localColors };
+    const newColors = { ...currentModeColors, ...localColors } as ThemeColors;
     try {
-      await updateTheme.mutateAsync(newColors);
-      toast.success('تم حفظ الألوان بنجاح');
+      await updateThemeForMode.mutateAsync({ mode: editingColorMode, colors: newColors });
+      toast.success(`تم حفظ ألوان الوضع ${editingColorMode === 'dark' ? 'الداكن' : 'الفاتح'} بنجاح`);
       setLocalColors({});
     } catch {
       toast.error('حدث خطأ أثناء الحفظ');
@@ -753,13 +770,67 @@ const AdminDesign = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-6"
               >
+                {/* Mode Selector */}
+                <Card className="border-gold/30">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Palette className="w-5 h-5 text-gold" />
+                      اختر الوضع للتعديل
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      يمكنك تعديل ألوان كل وضع بشكل منفصل
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4 max-w-md">
+                      <button
+                        onClick={() => setEditingColorMode('light')}
+                        className={`p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${
+                          editingColorMode === 'light'
+                            ? 'border-gold bg-gold/10'
+                            : 'border-border hover:border-gold/50'
+                        }`}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-200 to-orange-300 flex items-center justify-center">
+                          <Sun className="w-5 h-5 text-yellow-700" />
+                        </div>
+                        <div className="text-right">
+                          <span className="font-semibold block">الوضع الفاتح</span>
+                          <span className="text-xs text-muted-foreground">Light Mode</span>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => setEditingColorMode('dark')}
+                        className={`p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${
+                          editingColorMode === 'dark'
+                            ? 'border-gold bg-gold/10'
+                            : 'border-border hover:border-gold/50'
+                        }`}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center">
+                          <Moon className="w-5 h-5 text-slate-300" />
+                        </div>
+                        <div className="text-right">
+                          <span className="font-semibold block">الوضع الداكن</span>
+                          <span className="text-xs text-muted-foreground">Dark Mode</span>
+                        </div>
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 {/* Action Bar */}
                 <Card>
                   <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
                       <CardTitle className="flex items-center gap-2">
-                        <Palette className="w-5 h-5 text-gold" />
-                        نظام الألوان
+                        {editingColorMode === 'dark' ? (
+                          <Moon className="w-5 h-5 text-gold" />
+                        ) : (
+                          <Sun className="w-5 h-5 text-gold" />
+                        )}
+                        ألوان الوضع {editingColorMode === 'dark' ? 'الداكن' : 'الفاتح'}
                       </CardTitle>
                       <p className="text-sm text-muted-foreground mt-1">
                         غيّر ألوان الموقع وشاهد المعاينة مباشرة
@@ -800,15 +871,15 @@ const AdminDesign = () => {
                       {/* Save Button */}
                       <Button 
                         onClick={saveColors} 
-                        disabled={updateTheme.isPending || Object.keys(localColors).length === 0}
+                        disabled={updateThemeForMode.isPending || Object.keys(localColors).length === 0}
                         className="btn-gold"
                       >
-                        {updateTheme.isPending ? (
+                        {updateThemeForMode.isPending ? (
                           <Loader2 className="w-4 h-4 animate-spin ml-2" />
                         ) : (
                           <Save className="w-4 h-4 ml-2" />
                         )}
-                        حفظ التغييرات
+                        حفظ ألوان {editingColorMode === 'dark' ? 'الداكن' : 'الفاتح'}
                       </Button>
                     </div>
                   </CardHeader>
@@ -936,12 +1007,12 @@ const AdminDesign = () => {
                       <CardTitle className="text-lg">الألوان الرئيسية</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                      {themeColors && ['primary', 'primary_foreground', 'background', 'foreground'].map((key) => (
+                      {currentModeColors && ['primary', 'primary_foreground', 'background', 'foreground'].map((key) => (
                         <ColorPicker
-                          key={key}
+                          key={`${editingColorMode}-${key}`}
                           label={colorLabels[key] || key}
-                          value={localColors[key] ?? themeColors[key as keyof typeof themeColors]}
-                          originalValue={themeColors[key as keyof typeof themeColors]}
+                          value={localColors[key] ?? currentModeColors[key as keyof ThemeColors]}
+                          originalValue={currentModeColors[key as keyof ThemeColors]}
                           onChange={(value) => handleColorChange(key, value)}
                           onReset={() => resetColor(key)}
                         />
@@ -955,12 +1026,12 @@ const AdminDesign = () => {
                       <CardTitle className="text-lg">الألوان الثانوية</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                      {themeColors && ['secondary', 'secondary_foreground', 'accent', 'accent_foreground'].map((key) => (
+                      {currentModeColors && ['secondary', 'secondary_foreground', 'accent', 'accent_foreground'].map((key) => (
                         <ColorPicker
-                          key={key}
+                          key={`${editingColorMode}-${key}`}
                           label={colorLabels[key] || key}
-                          value={localColors[key] ?? themeColors[key as keyof typeof themeColors]}
-                          originalValue={themeColors[key as keyof typeof themeColors]}
+                          value={localColors[key] ?? currentModeColors[key as keyof ThemeColors]}
+                          originalValue={currentModeColors[key as keyof ThemeColors]}
                           onChange={(value) => handleColorChange(key, value)}
                           onReset={() => resetColor(key)}
                         />
@@ -975,12 +1046,12 @@ const AdminDesign = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {themeColors && ['muted', 'muted_foreground'].map((key) => (
+                        {currentModeColors && ['muted', 'muted_foreground'].map((key) => (
                           <ColorPicker
-                            key={key}
+                            key={`${editingColorMode}-${key}`}
                             label={colorLabels[key] || key}
-                            value={localColors[key] ?? themeColors[key as keyof typeof themeColors]}
-                            originalValue={themeColors[key as keyof typeof themeColors]}
+                            value={localColors[key] ?? currentModeColors[key as keyof ThemeColors]}
+                            originalValue={currentModeColors[key as keyof ThemeColors]}
                             onChange={(value) => handleColorChange(key, value)}
                             onReset={() => resetColor(key)}
                           />
