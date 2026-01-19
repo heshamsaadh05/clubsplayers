@@ -9,6 +9,7 @@ import { usePublishedPages } from "@/hooks/usePublishedPages";
 import { useMenuItems } from "@/hooks/useMenuItems";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import ThemeModeToggle from "@/components/ThemeModeToggle";
 import { supabase } from "@/integrations/supabase/client";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 const Navbar = () => {
@@ -162,6 +163,7 @@ const Navbar = () => {
 
           {/* Auth Buttons - Desktop */}
           <div className="hidden lg:flex items-center gap-3">
+            <ThemeModeToggle />
             <LanguageSwitcher />
             {user ? <>
                 <NotificationBell />

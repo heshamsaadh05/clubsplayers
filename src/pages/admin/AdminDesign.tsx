@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Palette, Layers, Image, Save, Loader2, Eye, EyeOff, GripVertical, Plus, Trash2, Upload, RotateCcw, ExternalLink } from 'lucide-react';
+import { Palette, Layers, Image, Save, Loader2, Eye, EyeOff, GripVertical, Plus, Trash2, Upload, RotateCcw, ExternalLink, Moon, Sun, Monitor, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { toast } from 'sonner';
 import { useThemeSettings, useUpdateThemeSettings } from '@/hooks/useThemeSettings';
+import { useThemeModeSettings, useUpdateThemeModeSettings, ThemeMode } from '@/hooks/useThemeMode';
 import { useAllPageSections, useUpdatePageSection, useAddPageSection } from '@/hooks/usePageSections';
 import { useSliderSettings, useUpdateSliderSettings, useSliderItems, useAddSliderItem, useUpdateSliderItem, useDeleteSliderItem } from '@/hooks/useSliderSettings';
 import ColorPicker from '@/components/admin/ColorPicker';
@@ -45,6 +46,10 @@ const AdminDesign = () => {
   const updateTheme = useUpdateThemeSettings();
   const [localColors, setLocalColors] = useState<Record<string, string>>({});
   const [previewEnabled, setPreviewEnabled] = useState(true);
+
+  // Theme Mode
+  const { data: themeModeSettings, isLoading: loadingThemeMode } = useThemeModeSettings();
+  const updateThemeMode = useUpdateThemeModeSettings();
 
   // Apply live preview
   useEffect(() => {
@@ -265,7 +270,33 @@ const AdminDesign = () => {
     }
   };
 
-  const isLoading = loadingTheme || loadingSections || loadingSliderSettings || loadingSliderItems;
+  const handleThemeModeChange = async (mode: ThemeMode) => {
+    try {
+      await updateThemeMode.mutateAsync({ mode, autoSwitch: false });
+      toast.success('تم تغيير وضع الألوان');
+    } catch {
+      toast.error('حدث خطأ');
+    }
+  };
+
+  const handleAutoSwitchChange = async (enabled: boolean) => {
+    try {
+      await updateThemeMode.mutateAsync({ autoSwitch: enabled });
+      toast.success(enabled ? 'تم تفعيل التبديل التلقائي' : 'تم إيقاف التبديل التلقائي');
+    } catch {
+      toast.error('حدث خطأ');
+    }
+  };
+
+  const handleTimeChange = async (field: 'lightStart' | 'darkStart', value: string) => {
+    try {
+      await updateThemeMode.mutateAsync({ [field]: value });
+    } catch {
+      toast.error('حدث خطأ');
+    }
+  };
+
+  const isLoading = loadingTheme || loadingSections || loadingSliderSettings || loadingSliderItems || loadingThemeMode;
 
   return (
     <AdminLayout>
@@ -288,7 +319,11 @@ const AdminDesign = () => {
           </div>
         ) : (
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 max-w-md">
+            <TabsList className="grid w-full grid-cols-4 max-w-xl">
+              <TabsTrigger value="theme-mode" className="gap-2">
+                <Moon className="w-4 h-4" />
+                الوضع
+              </TabsTrigger>
               <TabsTrigger value="colors" className="gap-2">
                 <Palette className="w-4 h-4" />
                 الألوان
@@ -302,6 +337,138 @@ const AdminDesign = () => {
                 السلايدر
               </TabsTrigger>
             </TabsList>
+
+            {/* Theme Mode Tab */}
+            <TabsContent value="theme-mode">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                {/* Mode Selection */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Moon className="w-5 h-5 text-gold" />
+                      وضع الألوان
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      اختر الوضع الافتراضي للموقع أو فعّل التبديل التلقائي
+                    </p>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Mode Options */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <button
+                        onClick={() => handleThemeModeChange('light')}
+                        className={`p-6 rounded-xl border-2 transition-all ${
+                          themeModeSettings?.mode === 'light' && !themeModeSettings?.autoSwitch
+                            ? 'border-gold bg-gold/10'
+                            : 'border-border hover:border-gold/50'
+                        }`}
+                      >
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-200 to-orange-300 flex items-center justify-center">
+                            <Sun className="w-8 h-8 text-yellow-700" />
+                          </div>
+                          <span className="font-semibold">الوضع الفاتح</span>
+                          <span className="text-sm text-muted-foreground">خلفية فاتحة ونصوص داكنة</span>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => handleThemeModeChange('dark')}
+                        className={`p-6 rounded-xl border-2 transition-all ${
+                          themeModeSettings?.mode === 'dark' && !themeModeSettings?.autoSwitch
+                            ? 'border-gold bg-gold/10'
+                            : 'border-border hover:border-gold/50'
+                        }`}
+                      >
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center">
+                            <Moon className="w-8 h-8 text-slate-300" />
+                          </div>
+                          <span className="font-semibold">الوضع الداكن</span>
+                          <span className="text-sm text-muted-foreground">خلفية داكنة ونصوص فاتحة</span>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => handleThemeModeChange('system')}
+                        className={`p-6 rounded-xl border-2 transition-all ${
+                          themeModeSettings?.mode === 'system' && !themeModeSettings?.autoSwitch
+                            ? 'border-gold bg-gold/10'
+                            : 'border-border hover:border-gold/50'
+                        }`}
+                      >
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                            <Monitor className="w-8 h-8 text-white" />
+                          </div>
+                          <span className="font-semibold">تلقائي (حسب النظام)</span>
+                          <span className="text-sm text-muted-foreground">يتبع إعدادات جهاز الزائر</span>
+                        </div>
+                      </button>
+                    </div>
+
+                    {/* Auto Switch by Time */}
+                    <div className="border-t border-border pt-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <Clock className="w-5 h-5 text-gold" />
+                          <div>
+                            <h4 className="font-semibold">التبديل التلقائي حسب الوقت</h4>
+                            <p className="text-sm text-muted-foreground">
+                              تغيير الوضع تلقائياً في أوقات محددة
+                            </p>
+                          </div>
+                        </div>
+                        <Switch
+                          checked={themeModeSettings?.autoSwitch || false}
+                          onCheckedChange={handleAutoSwitchChange}
+                        />
+                      </div>
+
+                      {themeModeSettings?.autoSwitch && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-secondary/30 rounded-lg">
+                          <div className="space-y-2">
+                            <Label className="flex items-center gap-2">
+                              <Sun className="w-4 h-4 text-yellow-500" />
+                              بداية الوضع الفاتح
+                            </Label>
+                            <Input
+                              type="time"
+                              value={themeModeSettings?.lightStart || '06:00'}
+                              onChange={(e) => handleTimeChange('lightStart', e.target.value)}
+                              className="max-w-[150px]"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="flex items-center gap-2">
+                              <Moon className="w-4 h-4 text-blue-400" />
+                              بداية الوضع الداكن
+                            </Label>
+                            <Input
+                              type="time"
+                              value={themeModeSettings?.darkStart || '18:00'}
+                              onChange={(e) => handleTimeChange('darkStart', e.target.value)}
+                              className="max-w-[150px]"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info Box */}
+                    <div className="bg-gold/10 border border-gold/30 rounded-lg p-4">
+                      <p className="text-sm">
+                        <strong>ملاحظة:</strong> يمكن للزوار تغيير الوضع من خلال أيقونة الشمس/القمر في شريط التنقل. الإعداد هنا يحدد الوضع الافتراضي للموقع.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </TabsContent>
 
             {/* Colors Tab */}
             <TabsContent value="colors">
