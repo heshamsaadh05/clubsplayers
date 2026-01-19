@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Star, Trophy, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,15 @@ const HeroSection = ({ backgroundImage }: HeroSectionProps) => {
   const heroImage = backgroundImage || (heroSettings.background_image as string) || heroPlayerDefault;
   const videoInfo = getVideoType(heroVideo);
   const mediaOpacity = (heroSettings.media_opacity as number) ?? 40; // Default 40%
+  const videoSpeed = (heroSettings.video_speed as number) ?? 1; // Default 1x
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // Apply playback speed to video
+  useEffect(() => {
+    if (videoRef.current && videoInfo.type === 'direct') {
+      videoRef.current.playbackRate = videoSpeed;
+    }
+  }, [videoSpeed, videoInfo.type]);
   
   // Dynamic texts from settings
   const isArabic = direction === 'rtl';
@@ -136,6 +146,7 @@ const HeroSection = ({ backgroundImage }: HeroSectionProps) => {
           </div>
         ) : videoInfo.type === 'direct' ? (
           <video
+            ref={videoRef}
             src={heroVideo}
             autoPlay
             loop
