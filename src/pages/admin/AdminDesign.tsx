@@ -38,6 +38,146 @@ const colorLabels: Record<string, string> = {
   muted_foreground: 'النص الخافت',
 };
 
+// Color Templates
+const colorTemplates = [
+  {
+    id: 'gold',
+    name: 'ذهبي كلاسيكي',
+    preview: ['45 90% 55%', '0 0% 9%', '27 95% 60%'],
+    colors: {
+      primary: '27 95% 60%',
+      primary_foreground: '12 81% 14%',
+      secondary: '0 0% 45%',
+      secondary_foreground: '0 0% 98%',
+      background: '0 0% 9%',
+      foreground: '0 0% 98%',
+      accent: '20 91% 14%',
+      accent_foreground: '43 96% 56%',
+      muted: '0 0% 45%',
+      muted_foreground: '0 0% 98%',
+    }
+  },
+  {
+    id: 'ocean',
+    name: 'أزرق محيطي',
+    preview: ['200 80% 50%', '0 0% 9%', '180 70% 45%'],
+    colors: {
+      primary: '200 80% 50%',
+      primary_foreground: '200 100% 10%',
+      secondary: '210 30% 40%',
+      secondary_foreground: '0 0% 98%',
+      background: '210 40% 8%',
+      foreground: '0 0% 98%',
+      accent: '180 70% 20%',
+      accent_foreground: '180 70% 75%',
+      muted: '210 20% 40%',
+      muted_foreground: '0 0% 90%',
+    }
+  },
+  {
+    id: 'emerald',
+    name: 'أخضر زمردي',
+    preview: ['160 84% 39%', '0 0% 9%', '140 70% 35%'],
+    colors: {
+      primary: '160 84% 39%',
+      primary_foreground: '160 100% 10%',
+      secondary: '150 30% 35%',
+      secondary_foreground: '0 0% 98%',
+      background: '160 30% 8%',
+      foreground: '0 0% 98%',
+      accent: '140 70% 20%',
+      accent_foreground: '140 70% 75%',
+      muted: '150 20% 40%',
+      muted_foreground: '0 0% 90%',
+    }
+  },
+  {
+    id: 'royal',
+    name: 'بنفسجي ملكي',
+    preview: ['270 70% 55%', '0 0% 9%', '280 80% 45%'],
+    colors: {
+      primary: '270 70% 55%',
+      primary_foreground: '270 100% 95%',
+      secondary: '280 30% 40%',
+      secondary_foreground: '0 0% 98%',
+      background: '270 30% 8%',
+      foreground: '0 0% 98%',
+      accent: '280 60% 20%',
+      accent_foreground: '280 70% 75%',
+      muted: '270 20% 40%',
+      muted_foreground: '0 0% 90%',
+    }
+  },
+  {
+    id: 'crimson',
+    name: 'أحمر قرمزي',
+    preview: ['0 72% 50%', '0 0% 9%', '350 80% 45%'],
+    colors: {
+      primary: '0 72% 50%',
+      primary_foreground: '0 100% 95%',
+      secondary: '0 30% 40%',
+      secondary_foreground: '0 0% 98%',
+      background: '0 20% 8%',
+      foreground: '0 0% 98%',
+      accent: '350 60% 20%',
+      accent_foreground: '350 70% 75%',
+      muted: '0 20% 40%',
+      muted_foreground: '0 0% 90%',
+    }
+  },
+  {
+    id: 'sunset',
+    name: 'غروب الشمس',
+    preview: ['25 95% 53%', '0 0% 9%', '15 90% 50%'],
+    colors: {
+      primary: '25 95% 53%',
+      primary_foreground: '25 100% 10%',
+      secondary: '35 40% 40%',
+      secondary_foreground: '0 0% 98%',
+      background: '20 30% 8%',
+      foreground: '0 0% 98%',
+      accent: '15 70% 20%',
+      accent_foreground: '30 80% 70%',
+      muted: '25 20% 40%',
+      muted_foreground: '0 0% 90%',
+    }
+  },
+  {
+    id: 'midnight',
+    name: 'منتصف الليل',
+    preview: ['220 60% 50%', '220 40% 6%', '240 50% 45%'],
+    colors: {
+      primary: '220 60% 50%',
+      primary_foreground: '220 100% 95%',
+      secondary: '230 30% 35%',
+      secondary_foreground: '0 0% 98%',
+      background: '220 40% 6%',
+      foreground: '220 20% 95%',
+      accent: '240 50% 20%',
+      accent_foreground: '220 60% 75%',
+      muted: '220 20% 35%',
+      muted_foreground: '220 20% 80%',
+    }
+  },
+  {
+    id: 'light-minimal',
+    name: 'فاتح بسيط',
+    preview: ['220 14% 40%', '0 0% 98%', '220 13% 91%'],
+    colors: {
+      primary: '220 14% 40%',
+      primary_foreground: '0 0% 98%',
+      secondary: '220 13% 91%',
+      secondary_foreground: '220 14% 20%',
+      background: '0 0% 98%',
+      foreground: '220 14% 10%',
+      accent: '220 13% 95%',
+      accent_foreground: '220 14% 30%',
+      muted: '220 13% 91%',
+      muted_foreground: '220 14% 50%',
+    }
+  },
+];
+
 const AdminDesign = () => {
   const [activeTab, setActiveTab] = useState('colors');
   
@@ -117,6 +257,11 @@ const AdminDesign = () => {
   const resetAllColors = () => {
     setLocalColors({});
     toast.success('تم إعادة تعيين جميع الألوان');
+  };
+
+  const applyTemplate = (template: typeof colorTemplates[0]) => {
+    setLocalColors(template.colors);
+    toast.success(`تم تطبيق قالب "${template.name}"`);
   };
 
   const saveColors = async () => {
@@ -536,6 +681,46 @@ const AdminDesign = () => {
                       </Button>
                     </div>
                   </CardHeader>
+                </Card>
+
+                {/* Color Templates */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Palette className="w-5 h-5 text-gold" />
+                      قوالب ألوان جاهزة
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      اختر قالب ألوان جاهز بنقرة واحدة
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
+                      {colorTemplates.map((template) => (
+                        <button
+                          key={template.id}
+                          onClick={() => applyTemplate(template)}
+                          className="group relative p-3 rounded-xl border-2 border-border hover:border-gold/50 transition-all hover:scale-105"
+                        >
+                          <div className="flex flex-col items-center gap-2">
+                            {/* Color Preview Circles */}
+                            <div className="flex gap-1">
+                              {template.preview.map((color, i) => (
+                                <div
+                                  key={i}
+                                  className="w-5 h-5 rounded-full border border-white/20 shadow-sm"
+                                  style={{ backgroundColor: `hsl(${color})` }}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-xs font-medium text-center">{template.name}</span>
+                          </div>
+                          {/* Hover overlay */}
+                          <div className="absolute inset-0 bg-gold/10 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
+                      ))}
+                    </div>
+                  </CardContent>
                 </Card>
 
                 {/* Colors Grid */}
