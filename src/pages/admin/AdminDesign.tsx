@@ -1244,6 +1244,28 @@ const AdminDesign = () => {
                                   </div>
                                 </div>
 
+                                {/* Video Playback Speed */}
+                                <div className="pt-4 border-t border-border">
+                                  <Label className="mb-3 block font-semibold">سرعة تشغيل الفيديو (للفيديو المباشر فقط)</Label>
+                                  <div className="flex items-center gap-3">
+                                    {[0.5, 0.75, 1, 1.25, 1.5, 2].map((speed) => (
+                                      <Button
+                                        key={speed}
+                                        type="button"
+                                        variant={(sectionSettings.video_speed as number) === speed || (!sectionSettings.video_speed && speed === 1) ? 'default' : 'outline'}
+                                        size="sm"
+                                        onClick={() => updateSection.mutateAsync({ 
+                                          id: section.id, 
+                                          settings: { ...sectionSettings, video_speed: speed } 
+                                        })}
+                                      >
+                                        {speed}x
+                                      </Button>
+                                    ))}
+                                  </div>
+                                  <p className="text-xs text-muted-foreground mt-2">ملاحظة: التحكم في السرعة يعمل فقط مع الفيديو المرفوع مباشرة (MP4, WebM, OGG) وليس مع روابط يوتيوب/فيميو</p>
+                                </div>
+
                                 {/* Hero Texts */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <div className="space-y-2">
