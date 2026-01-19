@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { LanguageProvider } from "@/hooks/useLanguage";
+import DynamicThemeProvider from "@/components/DynamicThemeProvider";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -39,41 +40,43 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <LanguageProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/player-registration" element={<PlayerRegistration />} />
-              <Route path="/player-dashboard" element={<PlayerDashboard />} />
-              <Route path="/club-registration" element={<ClubRegistration />} />
-              <Route path="/club-dashboard" element={<ClubDashboard />} />
-              <Route path="/browse-players" element={<BrowsePlayers />} />
-              <Route path="/player/:id" element={<PlayerProfile />} />
-              <Route path="/subscription" element={<Subscription />} />
-              <Route path="/plans" element={<PlansComparison />} />
-              <Route path="/messages" element={<Messages />} />
-              <Route path="/account-settings" element={<AccountSettings />} />
-              <Route path="/page/:slug" element={<PageView />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/players" element={<AdminPlayers />} />
-              <Route path="/admin/clubs" element={<AdminClubs />} />
-              <Route path="/admin/plans" element={<AdminPlans />} />
-              <Route path="/admin/payments" element={<AdminPayments />} />
-              <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
-              <Route path="/admin/pages" element={<AdminPages />} />
-              <Route path="/admin/languages" element={<AdminLanguages />} />
-              <Route path="/admin/menus" element={<AdminMenus />} />
-              <Route path="/admin/settings" element={<AdminSettings />} />
-              <Route path="/admin/design" element={<AdminDesign />} />
-              <Route path="/admin/footer" element={<AdminFooter />} />
-              <Route path="/admin/sections" element={<AdminSections />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+        <DynamicThemeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/player-registration" element={<PlayerRegistration />} />
+                <Route path="/player-dashboard" element={<PlayerDashboard />} />
+                <Route path="/club-registration" element={<ClubRegistration />} />
+                <Route path="/club-dashboard" element={<ClubDashboard />} />
+                <Route path="/browse-players" element={<BrowsePlayers />} />
+                <Route path="/player/:id" element={<PlayerProfile />} />
+                <Route path="/subscription" element={<Subscription />} />
+                <Route path="/plans" element={<PlansComparison />} />
+                <Route path="/messages" element={<Messages />} />
+                <Route path="/account-settings" element={<AccountSettings />} />
+                <Route path="/page/:slug" element={<PageView />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/players" element={<AdminPlayers />} />
+                <Route path="/admin/clubs" element={<AdminClubs />} />
+                <Route path="/admin/plans" element={<AdminPlans />} />
+                <Route path="/admin/payments" element={<AdminPayments />} />
+                <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
+                <Route path="/admin/pages" element={<AdminPages />} />
+                <Route path="/admin/languages" element={<AdminLanguages />} />
+                <Route path="/admin/menus" element={<AdminMenus />} />
+                <Route path="/admin/settings" element={<AdminSettings />} />
+                <Route path="/admin/design" element={<AdminDesign />} />
+                <Route path="/admin/footer" element={<AdminFooter />} />
+                <Route path="/admin/sections" element={<AdminSections />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </DynamicThemeProvider>
       </LanguageProvider>
     </AuthProvider>
   </QueryClientProvider>
