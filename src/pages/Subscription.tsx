@@ -75,6 +75,7 @@ const Subscription = () => {
         supabase
           .from('payment_methods_public')
           .select('*')
+          .eq('is_active', true)
       ]);
 
       if (plansRes.error) throw plansRes.error;
