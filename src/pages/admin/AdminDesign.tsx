@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Palette, Layers, Image, Save, Loader2, Eye, EyeOff, GripVertical, Plus, Trash2, Upload, RotateCcw, ExternalLink, Moon, Sun, Monitor, Clock } from 'lucide-react';
+import { Palette, Layers, Image, Save, Loader2, Eye, EyeOff, GripVertical, Plus, Trash2, Upload, RotateCcw, ExternalLink, Moon, Sun, Monitor, Clock, Bookmark, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -10,9 +10,11 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { useThemeSettings, useUpdateThemeSettings } from '@/hooks/useThemeSettings';
 import { useThemeModeSettings, useUpdateThemeModeSettings, ThemeMode } from '@/hooks/useThemeMode';
+import { useCustomColorTemplates, useAddCustomColorTemplate, useDeleteCustomColorTemplate } from '@/hooks/useCustomColorTemplates';
 import { useAllPageSections, useUpdatePageSection, useAddPageSection } from '@/hooks/usePageSections';
 import { useSliderSettings, useUpdateSliderSettings, useSliderItems, useAddSliderItem, useUpdateSliderItem, useDeleteSliderItem } from '@/hooks/useSliderSettings';
 import ColorPicker from '@/components/admin/ColorPicker';
@@ -191,6 +193,13 @@ const AdminDesign = () => {
   const { data: themeModeSettings, isLoading: loadingThemeMode } = useThemeModeSettings();
   const updateThemeMode = useUpdateThemeModeSettings();
 
+  // Custom Templates
+  const { data: customTemplates, isLoading: loadingCustomTemplates } = useCustomColorTemplates();
+  const addCustomTemplate = useAddCustomColorTemplate();
+  const deleteCustomTemplate = useDeleteCustomColorTemplate();
+  const [saveTemplateDialogOpen, setSaveTemplateDialogOpen] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState('');
+
   // Apply live preview
   useEffect(() => {
     if (!previewEnabled || Object.keys(localColors).length === 0) return;
@@ -259,9 +268,54 @@ const AdminDesign = () => {
     toast.success('تم إعادة تعيين جميع الألوان');
   };
 
-  const applyTemplate = (template: typeof colorTemplates[0]) => {
+  const applyTemplate = (template: { name: string; colors: Record<string, string> }) => {
     setLocalColors(template.colors);
     toast.success(`تم تطبيق قالب "${template.name}"`);
+  };
+
+  const applyCustomTemplate = (template: { name: string; colors: Record<string, string> }) => {
+    setLocalColors(template.colors);
+    toast.success(`تم تطبيق قالب "${template.name}"`);
+  };
+
+  const handleSaveAsTemplate = async () => {
+    if (!newTemplateName.trim()) {
+      toast.error('يرجى إدخال اسم القالب');
+      return;
+    }
+
+    // Get current colors (either local or saved)
+    const colorsToSave = Object.keys(localColors).length > 0 
+      ? { ...themeColors, ...localColors }
+      : themeColors;
+
+    if (!colorsToSave) {
+      toast.error('لا توجد ألوان للحفظ');
+      return;
+    }
+
+    try {
+      await addCustomTemplate.mutateAsync({
+        name: newTemplateName.trim(),
+        colors: colorsToSave as unknown as Record<string, string>,
+      });
+      toast.success('تم حفظ القالب بنجاح');
+      setSaveTemplateDialogOpen(false);
+      setNewTemplateName('');
+    } catch {
+      toast.error('حدث خطأ أثناء حفظ القالب');
+    }
+  };
+
+  const handleDeleteCustomTemplate = async (id: string, name: string) => {
+    if (!confirm(`هل أنت متأكد من حذف قالب "${name}"؟`)) return;
+    
+    try {
+      await deleteCustomTemplate.mutateAsync(id);
+      toast.success('تم حذف القالب');
+    } catch {
+      toast.error('حدث خطأ أثناء الحذف');
+    }
   };
 
   const saveColors = async () => {
@@ -441,10 +495,46 @@ const AdminDesign = () => {
     }
   };
 
-  const isLoading = loadingTheme || loadingSections || loadingSliderSettings || loadingSliderItems || loadingThemeMode;
+  const isLoading = loadingTheme || loadingSections || loadingSliderSettings || loadingSliderItems || loadingThemeMode || loadingCustomTemplates;
 
   return (
     <AdminLayout>
+      {/* Save Template Dialog */}
+      <Dialog open={saveTemplateDialogOpen} onOpenChange={setSaveTemplateDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>حفظ الألوان كقالب جديد</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Label htmlFor="template-name">اسم القالب</Label>
+            <Input
+              id="template-name"
+              value={newTemplateName}
+              onChange={(e) => setNewTemplateName(e.target.value)}
+              placeholder="مثال: قالب الشركة"
+              className="mt-2"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSaveTemplateDialogOpen(false)}>
+              إلغاء
+            </Button>
+            <Button 
+              onClick={handleSaveAsTemplate}
+              disabled={addCustomTemplate.isPending}
+              className="btn-gold"
+            >
+              {addCustomTemplate.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin ml-2" />
+              ) : (
+                <Save className="w-4 h-4 ml-2" />
+              )}
+              حفظ القالب
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -720,6 +810,80 @@ const AdminDesign = () => {
                         </button>
                       ))}
                     </div>
+                  </CardContent>
+                </Card>
+
+                {/* Custom Templates */}
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Bookmark className="w-5 h-5 text-gold" />
+                        قوالبي المخصصة
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        قوالب ألوان قمت بحفظها
+                      </p>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setSaveTemplateDialogOpen(true)}
+                      className="gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      حفظ الألوان الحالية كقالب
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    {customTemplates && customTemplates.length > 0 ? (
+                      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                        {customTemplates.map((template) => {
+                          const colors = template.colors as Record<string, string>;
+                          const previewColors = [
+                            colors.primary || '0 0% 50%',
+                            colors.background || '0 0% 10%',
+                            colors.accent || '0 0% 30%',
+                          ];
+                          return (
+                            <div
+                              key={template.id}
+                              className="group relative p-3 rounded-xl border-2 border-border hover:border-gold/50 transition-all"
+                            >
+                              <button
+                                onClick={() => applyCustomTemplate({ name: template.name, colors })}
+                                className="w-full flex flex-col items-center gap-2"
+                              >
+                                {/* Color Preview Circles */}
+                                <div className="flex gap-1">
+                                  {previewColors.map((color, i) => (
+                                    <div
+                                      key={i}
+                                      className="w-5 h-5 rounded-full border border-white/20 shadow-sm"
+                                      style={{ backgroundColor: `hsl(${color})` }}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="text-xs font-medium text-center">{template.name}</span>
+                              </button>
+                              {/* Delete button */}
+                              <button
+                                onClick={() => handleDeleteCustomTemplate(template.id, template.name)}
+                                className="absolute top-1 left-1 p-1 rounded-full bg-destructive/80 text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Bookmark className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                        <p>لم تقم بحفظ أي قوالب مخصصة بعد</p>
+                        <p className="text-sm mt-1">اضغط على "حفظ الألوان الحالية كقالب" لإنشاء قالب جديد</p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
