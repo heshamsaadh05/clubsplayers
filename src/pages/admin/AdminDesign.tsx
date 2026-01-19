@@ -1216,6 +1216,30 @@ const AdminDesign = () => {
                                   </div>
                                 </div>
 
+                                {/* Media Opacity Control */}
+                                <div className="pt-4 border-t border-border">
+                                  <Label className="mb-3 block font-semibold">شفافية الخلفية (الصورة/الفيديو)</Label>
+                                  <div className="space-y-3">
+                                    <div className="flex items-center gap-4">
+                                      <Slider
+                                        value={[(sectionSettings.media_opacity as number) ?? 40]}
+                                        onValueChange={(value) => updateSection.mutateAsync({ 
+                                          id: section.id, 
+                                          settings: { ...sectionSettings, media_opacity: value[0] } 
+                                        })}
+                                        min={10}
+                                        max={100}
+                                        step={5}
+                                        className="flex-1"
+                                      />
+                                      <span className="text-sm font-medium w-12 text-center">
+                                        {(sectionSettings.media_opacity as number) ?? 40}%
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">قيمة أقل = خلفية أغمق، قيمة أعلى = خلفية أوضح</p>
+                                  </div>
+                                </div>
+
                                 {/* Hero Texts */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <div className="space-y-2">

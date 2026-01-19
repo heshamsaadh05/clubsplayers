@@ -28,6 +28,7 @@ const HeroSection = ({ backgroundImage }: HeroSectionProps) => {
   const heroVideo = (heroSettings.background_video as string) || '';
   const heroImage = backgroundImage || (heroSettings.background_image as string) || heroPlayerDefault;
   const useVideo = heroVideo && isVideoUrl(heroVideo);
+  const mediaOpacity = (heroSettings.media_opacity as number) ?? 40; // Default 40%
   
   // Dynamic texts from settings
   const isArabic = direction === 'rtl';
@@ -73,10 +74,16 @@ const HeroSection = ({ backgroundImage }: HeroSectionProps) => {
             loop
             muted
             playsInline
-            className="w-full h-full object-cover opacity-40"
+            className="w-full h-full object-cover"
+            style={{ opacity: mediaOpacity / 100 }}
           />
         ) : (
-          <img src={heroImage} alt="Football Player" className="w-full h-full object-cover opacity-40" />
+          <img 
+            src={heroImage} 
+            alt="Football Player" 
+            className="w-full h-full object-cover" 
+            style={{ opacity: mediaOpacity / 100 }}
+          />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
       </div>
