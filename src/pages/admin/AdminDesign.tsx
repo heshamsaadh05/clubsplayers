@@ -1201,17 +1201,21 @@ const AdminDesign = () => {
 
                                     {/* Video URL Input */}
                                     <div className="space-y-2">
-                                      <Label className="text-sm">أو أدخل رابط الفيديو مباشرة</Label>
+                                      <Label className="text-sm">أو أدخل رابط الفيديو مباشرة (يوتيوب، فيميو، أو رابط مباشر)</Label>
                                       <Input
                                         value={heroVideo || ''}
                                         onChange={(e) => updateSection.mutateAsync({ 
                                           id: section.id, 
                                           settings: { ...sectionSettings, background_video: e.target.value } 
                                         })}
-                                        placeholder="https://example.com/video.mp4"
+                                        placeholder="https://www.youtube.com/watch?v=... أو https://vimeo.com/..."
                                         dir="ltr"
                                       />
-                                      <p className="text-xs text-muted-foreground">الصيغ المدعومة: MP4, WebM, OGG - الحد الأقصى للرفع: 50 ميجابايت</p>
+                                      <div className="text-xs text-muted-foreground space-y-1">
+                                        <p>✓ روابط يوتيوب: youtube.com/watch?v=... أو youtu.be/...</p>
+                                        <p>✓ روابط فيميو: vimeo.com/...</p>
+                                        <p>✓ فيديو مباشر: MP4, WebM, OGG (الحد الأقصى للرفع: 50 ميجابايت)</p>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
