@@ -16,7 +16,8 @@ import {
   Receipt,
   Languages,
   Palette,
-  Footprints
+  Footprints,
+  Layers
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -51,6 +52,7 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
     { icon: Menu, label: 'القوائم', path: '/admin/menus' },
     { icon: Languages, label: 'اللغات', path: '/admin/languages' },
     { icon: Palette, label: 'التصميم', path: '/admin/design' },
+    { icon: Layers, label: 'السيكشنز', path: '/admin/sections' },
     { icon: Footprints, label: 'الفوتر', path: '/admin/footer' },
     { icon: Settings, label: 'الإعدادات', path: '/admin/settings' },
   ];
