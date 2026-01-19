@@ -14,6 +14,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
+import PrivateImage from '@/components/admin/PrivateImage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -534,19 +535,12 @@ const AdminSubscriptions = () => {
                 {selectedSubscription.proof_url && (
                   <div className="space-y-2 p-4 bg-secondary rounded-xl">
                     <p className="text-sm font-medium text-foreground">إثبات الدفع</p>
-                    <a 
-                      href={selectedSubscription.proof_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="block"
-                    >
-                      <img 
-                        src={selectedSubscription.proof_url} 
-                        alt="إثبات الدفع" 
-                        className="max-w-full max-h-64 rounded-lg border border-border mx-auto cursor-pointer hover:opacity-80 transition-opacity"
-                      />
-                    </a>
-                    <p className="text-xs text-muted-foreground text-center">اضغط على الصورة لفتحها في نافذة جديدة</p>
+                    <PrivateImage
+                      bucket="payment-proofs"
+                      url={selectedSubscription.proof_url}
+                      alt="إثبات الدفع"
+                      className="max-w-full max-h-64 mx-auto"
+                    />
                   </div>
                 )}
 

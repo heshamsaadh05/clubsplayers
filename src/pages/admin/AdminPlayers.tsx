@@ -15,6 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { logError } from '@/lib/errorLogger';
 import AdminEditPlayerForm from '@/components/admin/AdminEditPlayerForm';
 import AdminManageSubscription from '@/components/admin/AdminManageSubscription';
+import PrivateImage from '@/components/admin/PrivateImage';
 
 interface Player {
   id: string;
@@ -520,16 +521,14 @@ const AdminPlayers = () => {
                 </div>
 
                 {selectedPlayer.id_document_url && (
-                  <div>
-                    <p className="text-muted-foreground text-sm mb-2">وثيقة الهوية</p>
-                    <a
-                      href={selectedPlayer.id_document_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-gold hover:underline"
-                    >
-                      عرض الوثيقة
-                    </a>
+                  <div className="space-y-2">
+                    <p className="text-muted-foreground text-sm">وثيقة الهوية</p>
+                    <PrivateImage
+                      bucket="player-documents"
+                      url={selectedPlayer.id_document_url}
+                      alt="وثيقة الهوية"
+                      className="max-w-full max-h-48"
+                    />
                   </div>
                 )}
 
