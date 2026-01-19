@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useThemeSettings } from '@/hooks/useThemeSettings';
+import { useThemeMode } from '@/hooks/useThemeMode';
 
 interface ThemeColors {
   primary: string;
@@ -22,9 +23,13 @@ interface DynamicThemeProviderProps {
 /**
  * Component that dynamically applies theme colors from the database
  * Also supports preview mode for live color changes before saving
+ * And handles light/dark mode switching
  */
 const DynamicThemeProvider = ({ children, previewColors }: DynamicThemeProviderProps) => {
   const { data: themeColors } = useThemeSettings();
+  
+  // Initialize theme mode (this handles applying dark class to document)
+  useThemeMode();
 
   useEffect(() => {
     // Merge database colors with preview colors (preview takes precedence)
