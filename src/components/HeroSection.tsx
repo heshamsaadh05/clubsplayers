@@ -10,12 +10,68 @@ interface HeroSectionProps {
   backgroundImage?: string;
 }
 
-// Helper to detect if URL is a video
-const isVideoUrl = (url: string): boolean => {
+// Helper to detect if URL is a direct video file
+const isDirectVideoUrl = (url: string): boolean => {
   if (!url) return false;
   const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
   const lowerUrl = url.toLowerCase();
   return videoExtensions.some(ext => lowerUrl.includes(ext));
+};
+
+// Helper to detect YouTube URL and extract video ID
+const getYouTubeVideoId = (url: string): string | null => {
+  if (!url) return null;
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/,
+    /youtube\.com\/shorts\/([^&\s?]+)/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+};
+
+// Helper to detect Vimeo URL and extract video ID
+const getVimeoVideoId = (url: string): string | null => {
+  if (!url) return null;
+  const patterns = [
+    /vimeo\.com\/(\d+)/,
+    /player\.vimeo\.com\/video\/(\d+)/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  return null;
+};
+
+// Determine video type
+type VideoType = 'direct' | 'youtube' | 'vimeo' | 'none';
+const getVideoType = (url: string): { type: VideoType; embedUrl?: string } => {
+  if (!url) return { type: 'none' };
+  
+  const youtubeId = getYouTubeVideoId(url);
+  if (youtubeId) {
+    return { 
+      type: 'youtube', 
+      embedUrl: `https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&loop=1&playlist=${youtubeId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`
+    };
+  }
+  
+  const vimeoId = getVimeoVideoId(url);
+  if (vimeoId) {
+    return { 
+      type: 'vimeo', 
+      embedUrl: `https://player.vimeo.com/video/${vimeoId}?autoplay=1&muted=1&loop=1&background=1&controls=0`
+    };
+  }
+  
+  if (isDirectVideoUrl(url)) {
+    return { type: 'direct' };
+  }
+  
+  return { type: 'none' };
 };
 
 const HeroSection = ({ backgroundImage }: HeroSectionProps) => {
@@ -27,7 +83,7 @@ const HeroSection = ({ backgroundImage }: HeroSectionProps) => {
   // Media settings
   const heroVideo = (heroSettings.background_video as string) || '';
   const heroImage = backgroundImage || (heroSettings.background_image as string) || heroPlayerDefault;
-  const useVideo = heroVideo && isVideoUrl(heroVideo);
+  const videoInfo = getVideoType(heroVideo);
   const mediaOpacity = (heroSettings.media_opacity as number) ?? 40; // Default 40%
   
   // Dynamic texts from settings
@@ -65,9 +121,20 @@ const HeroSection = ({ backgroundImage }: HeroSectionProps) => {
   }];
   const ArrowIcon = direction === 'rtl' ? ArrowLeft : ArrowRight;
   return <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-      {/* Background Media (Video or Image) */}
+      {/* Background Media (Video, YouTube/Vimeo embed, or Image) */}
       <div className="absolute inset-0 z-0">
-        {useVideo ? (
+        {videoInfo.type === 'youtube' || videoInfo.type === 'vimeo' ? (
+          <div className="w-full h-full overflow-hidden" style={{ opacity: mediaOpacity / 100 }}>
+            <iframe
+              src={videoInfo.embedUrl}
+              className="absolute top-1/2 left-1/2 w-[200%] h-[200%] -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+              title="Hero background video"
+              style={{ border: 'none' }}
+            />
+          </div>
+        ) : videoInfo.type === 'direct' ? (
           <video
             src={heroVideo}
             autoPlay
