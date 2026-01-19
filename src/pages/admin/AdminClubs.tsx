@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Eye, Trash2, Building2 } from 'lucide-react';
+import { Search, Eye, Trash2, Building2, Edit, Crown } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,9 +12,12 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import AdminEditClubForm from '@/components/admin/AdminEditClubForm';
+import AdminManageSubscription from '@/components/admin/AdminManageSubscription';
 
 interface Club {
   id: string;
+  user_id: string;
   name: string;
   email: string;
   phone: string;
@@ -33,6 +36,8 @@ const AdminClubs = () => {
   const [search, setSearch] = useState('');
   const [selectedClub, setSelectedClub] = useState<Club | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showSubscription, setShowSubscription] = useState(false);
 
   useEffect(() => {
     fetchClubs();
@@ -155,14 +160,34 @@ const AdminClubs = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1"
                     onClick={() => {
                       setSelectedClub(club);
                       setShowDetails(true);
                     }}
                   >
-                    <Eye className="w-4 h-4 ml-1" />
-                    عرض
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-gold hover:text-gold/80"
+                    onClick={() => {
+                      setSelectedClub(club);
+                      setShowEditForm(true);
+                    }}
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-purple-500 hover:text-purple-600"
+                    onClick={() => {
+                      setSelectedClub(club);
+                      setShowSubscription(true);
+                    }}
+                  >
+                    <Crown className="w-4 h-4" />
                   </Button>
                   <Button
                     size="sm"
@@ -248,6 +273,28 @@ const AdminClubs = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Edit Club Form */}
+        {selectedClub && (
+          <AdminEditClubForm
+            club={selectedClub}
+            isOpen={showEditForm}
+            onClose={() => setShowEditForm(false)}
+            onUpdate={fetchClubs}
+          />
+        )}
+
+        {/* Manage Subscription */}
+        {selectedClub && (
+          <AdminManageSubscription
+            userId={selectedClub.user_id}
+            userName={selectedClub.name}
+            userType="club"
+            isOpen={showSubscription}
+            onClose={() => setShowSubscription(false)}
+            onUpdate={fetchClubs}
+          />
+        )}
       </div>
     </AdminLayout>
   );

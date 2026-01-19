@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Eye, Check, X, Trash2, Filter } from 'lucide-react';
+import { Search, Eye, Check, X, Trash2, Filter, Edit, Crown } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,8 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { logError } from '@/lib/errorLogger';
+import AdminEditPlayerForm from '@/components/admin/AdminEditPlayerForm';
+import AdminManageSubscription from '@/components/admin/AdminManageSubscription';
 
 interface Player {
   id: string;
@@ -42,6 +44,8 @@ const AdminPlayers = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showSubscription, setShowSubscription] = useState(false);
 
   useEffect(() => {
     fetchPlayers();
@@ -269,7 +273,7 @@ const AdminPlayers = () => {
                         {new Date(player.created_at).toLocaleDateString('ar-EG')}
                       </td>
                       <td className="p-4">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
                           <Button
                             size="sm"
                             variant="ghost"
@@ -277,8 +281,33 @@ const AdminPlayers = () => {
                               setSelectedPlayer(player);
                               setShowDetails(true);
                             }}
+                            title="عرض"
                           >
                             <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-gold hover:text-gold/80"
+                            onClick={() => {
+                              setSelectedPlayer(player);
+                              setShowEditForm(true);
+                            }}
+                            title="تعديل"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-purple-500 hover:text-purple-600"
+                            onClick={() => {
+                              setSelectedPlayer(player);
+                              setShowSubscription(true);
+                            }}
+                            title="الاشتراك"
+                          >
+                            <Crown className="w-4 h-4" />
                           </Button>
                           {player.status === 'pending' && (
                             <>
@@ -376,6 +405,28 @@ const AdminPlayers = () => {
                       }}
                     >
                       <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-gold"
+                      onClick={() => {
+                        setSelectedPlayer(player);
+                        setShowEditForm(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-purple-500"
+                      onClick={() => {
+                        setSelectedPlayer(player);
+                        setShowSubscription(true);
+                      }}
+                    >
+                      <Crown className="w-4 h-4" />
                     </Button>
                     {player.status === 'pending' && (
                       <>
@@ -505,6 +556,28 @@ const AdminPlayers = () => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Edit Player Form */}
+        {selectedPlayer && (
+          <AdminEditPlayerForm
+            player={selectedPlayer}
+            isOpen={showEditForm}
+            onClose={() => setShowEditForm(false)}
+            onUpdate={fetchPlayers}
+          />
+        )}
+
+        {/* Manage Subscription */}
+        {selectedPlayer && (
+          <AdminManageSubscription
+            userId={selectedPlayer.user_id}
+            userName={selectedPlayer.full_name}
+            userType="player"
+            isOpen={showSubscription}
+            onClose={() => setShowSubscription(false)}
+            onUpdate={fetchPlayers}
+          />
+        )}
       </div>
     </AdminLayout>
   );
