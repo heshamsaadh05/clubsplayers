@@ -92,6 +92,33 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_color_templates: {
+        Row: {
+          colors: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          colors: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          colors?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           club_user_id: string
