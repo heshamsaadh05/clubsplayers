@@ -98,10 +98,10 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 h-screen w-72 bg-card border-l border-border z-50 overflow-y-auto"
+              className="fixed right-0 top-0 h-screen w-72 bg-card border-l border-border z-50 flex flex-col"
             >
               {/* Header */}
-              <div className="h-16 flex items-center justify-between px-4 border-b border-border">
+              <div className="h-16 flex items-center justify-between px-4 border-b border-border flex-shrink-0">
                 <span className="text-lg font-bold text-gradient-gold font-playfair">
                   لوحة التحكم
                 </span>
@@ -116,8 +116,8 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
                 </button>
               </div>
 
-              {/* Navigation */}
-              <nav className="p-3 space-y-1">
+              {/* Navigation - Scrollable */}
+              <nav className="p-3 space-y-1 flex-1 overflow-y-auto">
                 {menuItems.map((item) => {
                   const isActive = location.pathname === item.path;
                   return (
@@ -138,8 +138,8 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
                 })}
               </nav>
 
-              {/* Footer */}
-              <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border bg-card">
+              {/* Footer - Fixed at bottom */}
+              <div className="p-3 border-t border-border bg-card flex-shrink-0">
                 <Link
                   to="/"
                   onClick={handleLinkClick}
@@ -168,12 +168,12 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
     <motion.aside
       initial={{ x: 100 }}
       animate={{ x: 0 }}
-      className={`fixed right-0 top-0 h-screen bg-card border-l border-border z-50 transition-all duration-300 ${
+      className={`fixed right-0 top-0 h-screen bg-card border-l border-border z-50 transition-all duration-300 flex flex-col ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}
     >
       {/* Header */}
-      <div className="h-20 flex items-center justify-between px-4 border-b border-border">
+      <div className="h-20 flex items-center justify-between px-4 border-b border-border flex-shrink-0">
         {!isCollapsed && (
           <span className="text-xl font-bold text-gradient-gold font-playfair">
             لوحة التحكم
@@ -187,8 +187,8 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
         </button>
       </div>
 
-      {/* Navigation */}
-      <nav className="p-4 space-y-2">
+      {/* Navigation - Scrollable */}
+      <nav className="p-4 space-y-2 flex-1 overflow-y-auto">
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -208,8 +208,8 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
+      {/* Footer - Fixed at bottom */}
+      <div className="p-4 border-t border-border flex-shrink-0">
         <Link
           to="/"
           className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground hover:bg-secondary transition-colors mb-2"
