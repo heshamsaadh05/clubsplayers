@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { useThemeSettings, useUpdateThemeSettings, ThemeColors, useUpdateThemeColorsForMode } from '@/hooks/useThemeSettings';
+import { useThemeSettings, useUpdateThemeSettings, ThemeColors, useUpdateThemeColorsForMode, DEFAULT_LIGHT_COLORS, DEFAULT_DARK_COLORS } from '@/hooks/useThemeSettings';
 import { useThemeModeSettings, useUpdateThemeModeSettings, ThemeMode } from '@/hooks/useThemeMode';
 import { useCustomColorTemplates, useAddCustomColorTemplate, useDeleteCustomColorTemplate } from '@/hooks/useCustomColorTemplates';
 import { useAllPageSections, useUpdatePageSection, useAddPageSection } from '@/hooks/usePageSections';
@@ -282,6 +282,21 @@ const AdminDesign = () => {
   const resetAllColors = () => {
     setLocalColors({});
     toast.success('تم إعادة تعيين جميع الألوان');
+  };
+
+  const resetToDefaults = async () => {
+    const defaultColors = editingColorMode === 'dark' ? DEFAULT_DARK_COLORS : DEFAULT_LIGHT_COLORS;
+    const modeName = editingColorMode === 'dark' ? 'الداكن' : 'الفاتح';
+    
+    if (!confirm(`هل أنت متأكد من إعادة ألوان الوضع ${modeName} للقيم الافتراضية؟`)) return;
+    
+    try {
+      await updateThemeForMode.mutateAsync({ mode: editingColorMode, colors: defaultColors });
+      setLocalColors({});
+      toast.success(`تم إعادة ألوان الوضع ${modeName} للقيم الافتراضية`);
+    } catch {
+      toast.error('حدث خطأ أثناء إعادة التعيين');
+    }
   };
 
   const applyTemplate = (template: { name: string; colors: Record<string, string> }) => {
@@ -860,6 +875,17 @@ const AdminDesign = () => {
                         فتح الموقع
                       </a>
                       
+                      {/* Reset to Defaults Button */}
+                      <Button 
+                        variant="outline" 
+                        onClick={resetToDefaults}
+                        disabled={updateThemeForMode.isPending}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <RotateCcw className="w-4 h-4 ml-2" />
+                        إعادة للافتراضي
+                      </Button>
+
                       {/* Reset Button */}
                       {Object.keys(localColors).length > 0 && (
                         <Button variant="outline" onClick={resetAllColors}>

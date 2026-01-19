@@ -21,7 +21,7 @@ export interface DualModeThemeColors {
 }
 
 // Default colors from index.css
-const DEFAULT_LIGHT_COLORS: ThemeColors = {
+export const DEFAULT_LIGHT_COLORS: ThemeColors = {
   primary: '210 40% 96.0784%',
   primary_foreground: '33 100% 96%',
   secondary: '0 0% 32%',
@@ -34,7 +34,7 @@ const DEFAULT_LIGHT_COLORS: ThemeColors = {
   muted_foreground: '0 0% 9%',
 };
 
-const DEFAULT_DARK_COLORS: ThemeColors = {
+export const DEFAULT_DARK_COLORS: ThemeColors = {
   primary: '27 95% 60%',
   primary_foreground: '12 81% 14%',
   secondary: '0 0% 45%',
