@@ -341,6 +341,7 @@ const AdminDesign = () => {
   };
 
   const [uploadingHero, setUploadingHero] = useState(false);
+  const [uploadingHeroVideo, setUploadingHeroVideo] = useState(false);
 
   const handleHeroImageUpload = async (sectionId: string, file: File, currentSettings: Record<string, unknown>) => {
     if (!file.type.startsWith('image/')) {
@@ -378,6 +379,46 @@ const AdminDesign = () => {
       toast.error('حدث خطأ أثناء رفع الصورة');
     } finally {
       setUploadingHero(false);
+    }
+  };
+
+  const handleHeroVideoUpload = async (sectionId: string, file: File, currentSettings: Record<string, unknown>) => {
+    const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('يرجى اختيار ملف فيديو بصيغة MP4, WebM, أو OGG');
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('حجم الفيديو يجب أن يكون أقل من 50 ميجابايت');
+      return;
+    }
+
+    setUploadingHeroVideo(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `hero-video-${Date.now()}.${fileExt}`;
+      const filePath = `hero/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('slider-images')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('slider-images')
+        .getPublicUrl(filePath);
+
+      await updateSection.mutateAsync({ 
+        id: sectionId, 
+        settings: { ...currentSettings, background_video: publicUrl } 
+      });
+      toast.success('تم رفع فيديو الهيرو بنجاح');
+    } catch {
+      toast.error('حدث خطأ أثناء رفع الفيديو');
+    } finally {
+      setUploadingHeroVideo(false);
     }
   };
 
@@ -1019,6 +1060,7 @@ const AdminDesign = () => {
                       {sections?.filter(s => s.page_key === 'home').map((section) => {
                         const sectionSettings = (section.settings || {}) as Record<string, unknown>;
                         const heroImage = sectionSettings.background_image as string | undefined;
+                        const heroVideo = sectionSettings.background_video as string | undefined;
                         
                         return (
                           <div
@@ -1050,12 +1092,12 @@ const AdminDesign = () => {
                               </div>
                             </div>
                             
-                            {/* Hero Background Image Upload */}
+                            {/* Hero Background Image & Video Upload */}
                             {section.section_key === 'hero' && (
                               <div className="pt-4 border-t border-border space-y-4">
                                 {/* Hero Background Image */}
                                 <div>
-                                  <Label className="mb-3 block">صورة خلفية الهيرو</Label>
+                                  <Label className="mb-3 block">صورة خلفية الهيرو (تظهر عند عدم وجود فيديو)</Label>
                                   <div className="flex items-center gap-4">
                                     {heroImage && (
                                       <img 
@@ -1091,6 +1133,86 @@ const AdminDesign = () => {
                                         </span>
                                       </Button>
                                     </label>
+                                  </div>
+                                </div>
+
+                                {/* Hero Background Video */}
+                                <div className="pt-4 border-t border-border">
+                                  <Label className="mb-3 block font-semibold">فيديو خلفية الهيرو (اختياري - يظهر بدل الصورة)</Label>
+                                  <p className="text-sm text-muted-foreground mb-3">يمكنك رفع فيديو أو إدخال رابط مباشر. الفيديو سيعمل تلقائياً بدون صوت.</p>
+                                  
+                                  <div className="space-y-3">
+                                    {/* Video Preview */}
+                                    {heroVideo && (
+                                      <div className="relative">
+                                        <video 
+                                          src={heroVideo} 
+                                          className="w-full max-w-md h-32 object-cover rounded-lg border border-border"
+                                          muted
+                                          loop
+                                          autoPlay
+                                          playsInline
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="destructive"
+                                          size="sm"
+                                          className="absolute top-2 right-2"
+                                          onClick={() => updateSection.mutateAsync({ 
+                                            id: section.id, 
+                                            settings: { ...sectionSettings, background_video: '' } 
+                                          })}
+                                        >
+                                          <X className="w-4 h-4" />
+                                        </Button>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Upload Video */}
+                                    <div className="flex items-center gap-4">
+                                      <label className="cursor-pointer flex-1">
+                                        <input
+                                          type="file"
+                                          accept="video/mp4,video/webm,video/ogg"
+                                          className="hidden"
+                                          onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) handleHeroVideoUpload(section.id, file, sectionSettings);
+                                          }}
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          className="w-full"
+                                          disabled={uploadingHeroVideo}
+                                          asChild
+                                        >
+                                          <span className="flex items-center justify-center gap-2">
+                                            {uploadingHeroVideo ? (
+                                              <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                              <Upload className="w-4 h-4" />
+                                            )}
+                                            {heroVideo ? 'تغيير الفيديو' : 'رفع فيديو'}
+                                          </span>
+                                        </Button>
+                                      </label>
+                                    </div>
+
+                                    {/* Video URL Input */}
+                                    <div className="space-y-2">
+                                      <Label className="text-sm">أو أدخل رابط الفيديو مباشرة</Label>
+                                      <Input
+                                        value={heroVideo || ''}
+                                        onChange={(e) => updateSection.mutateAsync({ 
+                                          id: section.id, 
+                                          settings: { ...sectionSettings, background_video: e.target.value } 
+                                        })}
+                                        placeholder="https://example.com/video.mp4"
+                                        dir="ltr"
+                                      />
+                                      <p className="text-xs text-muted-foreground">الصيغ المدعومة: MP4, WebM, OGG - الحد الأقصى للرفع: 50 ميجابايت</p>
+                                    </div>
                                   </div>
                                 </div>
 
