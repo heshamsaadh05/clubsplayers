@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Palette, Layers, Image, Save, Loader2, Eye, EyeOff, GripVertical, Plus, Trash2, Upload } from 'lucide-react';
+import { Palette, Layers, Image, Save, Loader2, Eye, EyeOff, GripVertical, Plus, Trash2, Upload, RotateCcw, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { useThemeSettings, useUpdateThemeSettings } from '@/hooks/useThemeSettings';
 import { useAllPageSections, useUpdatePageSection, useAddPageSection } from '@/hooks/usePageSections';
 import { useSliderSettings, useUpdateSliderSettings, useSliderItems, useAddSliderItem, useUpdateSliderItem, useDeleteSliderItem } from '@/hooks/useSliderSettings';
+import ColorPicker from '@/components/admin/ColorPicker';
 
 const sectionLabels: Record<string, string> = {
   hero: 'قسم البداية (Hero)',
@@ -43,6 +44,46 @@ const AdminDesign = () => {
   const { data: themeColors, isLoading: loadingTheme } = useThemeSettings();
   const updateTheme = useUpdateThemeSettings();
   const [localColors, setLocalColors] = useState<Record<string, string>>({});
+  const [previewEnabled, setPreviewEnabled] = useState(true);
+
+  // Apply live preview
+  useEffect(() => {
+    if (!previewEnabled || Object.keys(localColors).length === 0) return;
+
+    const root = document.documentElement;
+    const cssVarMap: Record<string, string> = {
+      primary: '--primary',
+      primary_foreground: '--primary-foreground',
+      secondary: '--secondary',
+      secondary_foreground: '--secondary-foreground',
+      background: '--background',
+      foreground: '--foreground',
+      accent: '--accent',
+      accent_foreground: '--accent-foreground',
+      muted: '--muted',
+      muted_foreground: '--muted-foreground',
+    };
+
+    // Apply preview colors
+    Object.entries(localColors).forEach(([key, value]) => {
+      const cssVar = cssVarMap[key];
+      if (cssVar && value) {
+        root.style.setProperty(cssVar, value);
+      }
+    });
+
+    return () => {
+      // Reset to original when preview disabled or colors cleared
+      if (themeColors) {
+        Object.entries(themeColors).forEach(([key, value]) => {
+          const cssVar = cssVarMap[key];
+          if (cssVar && value) {
+            root.style.setProperty(cssVar, value);
+          }
+        });
+      }
+    };
+  }, [localColors, previewEnabled, themeColors]);
 
   // Sections
   const { data: sections, isLoading: loadingSections } = useAllPageSections();
@@ -58,6 +99,19 @@ const AdminDesign = () => {
 
   const handleColorChange = (key: string, value: string) => {
     setLocalColors(prev => ({ ...prev, [key]: value }));
+  };
+
+  const resetColor = (key: string) => {
+    setLocalColors(prev => {
+      const newColors = { ...prev };
+      delete newColors[key];
+      return newColors;
+    });
+  };
+
+  const resetAllColors = () => {
+    setLocalColors({});
+    toast.success('تم إعادة تعيين جميع الألوان');
   };
 
   const saveColors = async () => {
@@ -254,40 +308,180 @@ const AdminDesign = () => {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
               >
+                {/* Action Bar */}
                 <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>نظام الألوان</CardTitle>
-                    <Button onClick={saveColors} disabled={updateTheme.isPending || Object.keys(localColors).length === 0}>
-                      {updateTheme.isPending ? (
-                        <Loader2 className="w-4 h-4 animate-spin ml-2" />
-                      ) : (
-                        <Save className="w-4 h-4 ml-2" />
+                  <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div>
+                      <CardTitle className="flex items-center gap-2">
+                        <Palette className="w-5 h-5 text-gold" />
+                        نظام الألوان
+                      </CardTitle>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        غيّر ألوان الموقع وشاهد المعاينة مباشرة
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      {/* Preview Toggle */}
+                      <div className="flex items-center gap-2 px-3 py-2 bg-secondary/50 rounded-lg">
+                        <Switch
+                          checked={previewEnabled}
+                          onCheckedChange={setPreviewEnabled}
+                          id="preview-toggle"
+                        />
+                        <Label htmlFor="preview-toggle" className="text-sm cursor-pointer">
+                          معاينة حية
+                        </Label>
+                      </div>
+                      
+                      {/* Preview Link */}
+                      <a
+                        href="/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-3 py-2 bg-gold/10 text-gold rounded-lg hover:bg-gold/20 transition-colors text-sm"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        فتح الموقع
+                      </a>
+                      
+                      {/* Reset Button */}
+                      {Object.keys(localColors).length > 0 && (
+                        <Button variant="outline" onClick={resetAllColors}>
+                          <RotateCcw className="w-4 h-4 ml-2" />
+                          إلغاء التغييرات
+                        </Button>
                       )}
-                      حفظ التغييرات
-                    </Button>
+                      
+                      {/* Save Button */}
+                      <Button 
+                        onClick={saveColors} 
+                        disabled={updateTheme.isPending || Object.keys(localColors).length === 0}
+                        className="btn-gold"
+                      >
+                        {updateTheme.isPending ? (
+                          <Loader2 className="w-4 h-4 animate-spin ml-2" />
+                        ) : (
+                          <Save className="w-4 h-4 ml-2" />
+                        )}
+                        حفظ التغييرات
+                      </Button>
+                    </div>
+                  </CardHeader>
+                </Card>
+
+                {/* Colors Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Main Colors */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">الألوان الرئيسية</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {themeColors && ['primary', 'primary_foreground', 'background', 'foreground'].map((key) => (
+                        <ColorPicker
+                          key={key}
+                          label={colorLabels[key] || key}
+                          value={localColors[key] ?? themeColors[key as keyof typeof themeColors]}
+                          originalValue={themeColors[key as keyof typeof themeColors]}
+                          onChange={(value) => handleColorChange(key, value)}
+                          onReset={() => resetColor(key)}
+                        />
+                      ))}
+                    </CardContent>
+                  </Card>
+
+                  {/* Secondary Colors */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">الألوان الثانوية</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {themeColors && ['secondary', 'secondary_foreground', 'accent', 'accent_foreground'].map((key) => (
+                        <ColorPicker
+                          key={key}
+                          label={colorLabels[key] || key}
+                          value={localColors[key] ?? themeColors[key as keyof typeof themeColors]}
+                          originalValue={themeColors[key as keyof typeof themeColors]}
+                          onChange={(value) => handleColorChange(key, value)}
+                          onReset={() => resetColor(key)}
+                        />
+                      ))}
+                    </CardContent>
+                  </Card>
+
+                  {/* Muted Colors */}
+                  <Card className="lg:col-span-2">
+                    <CardHeader>
+                      <CardTitle className="text-lg">الألوان الخافتة</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {themeColors && ['muted', 'muted_foreground'].map((key) => (
+                          <ColorPicker
+                            key={key}
+                            label={colorLabels[key] || key}
+                            value={localColors[key] ?? themeColors[key as keyof typeof themeColors]}
+                            originalValue={themeColors[key as keyof typeof themeColors]}
+                            onChange={(value) => handleColorChange(key, value)}
+                            onReset={() => resetColor(key)}
+                          />
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Live Preview Card */}
+                <Card className="border-gold/30">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Eye className="w-5 h-5 text-gold" />
+                      معاينة المكونات
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {themeColors && Object.entries(themeColors).map(([key, value]) => (
-                        <div key={key} className="space-y-2">
-                          <Label>{colorLabels[key] || key}</Label>
-                          <div className="flex gap-3">
-                            <Input
-                              value={localColors[key] ?? value}
-                              onChange={(e) => handleColorChange(key, e.target.value)}
-                              placeholder="مثال: 45 100% 51%"
-                              dir="ltr"
-                              className="flex-1"
-                            />
-                            <div
-                              className="w-12 h-10 rounded-lg border border-border"
-                              style={{ backgroundColor: `hsl(${localColors[key] ?? value})` }}
-                            />
-                          </div>
-                          <p className="text-xs text-muted-foreground">صيغة HSL: درجة تشبع% إضاءة%</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {/* Primary Button Preview */}
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">زر رئيسي</p>
+                        <button className="w-full px-4 py-2 rounded-lg bg-primary text-primary-foreground font-medium hover:opacity-90 transition-opacity">
+                          زر نموذجي
+                        </button>
+                      </div>
+                      
+                      {/* Secondary Button Preview */}
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">زر ثانوي</p>
+                        <button className="w-full px-4 py-2 rounded-lg bg-secondary text-secondary-foreground font-medium hover:opacity-90 transition-opacity">
+                          زر ثانوي
+                        </button>
+                      </div>
+                      
+                      {/* Accent Preview */}
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">لون التمييز</p>
+                        <div className="w-full px-4 py-2 rounded-lg bg-accent text-accent-foreground font-medium text-center">
+                          نص بارز
                         </div>
-                      ))}
+                      </div>
+                      
+                      {/* Muted Preview */}
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">لون خافت</p>
+                        <div className="w-full px-4 py-2 rounded-lg bg-muted text-muted-foreground font-medium text-center">
+                          نص خافت
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Card Preview */}
+                    <div className="mt-6 p-4 bg-card rounded-xl border border-border">
+                      <h4 className="font-bold text-foreground mb-2">معاينة البطاقة</h4>
+                      <p className="text-muted-foreground text-sm">
+                        هذه معاينة لكيفية ظهور البطاقات والنصوص بالألوان الحالية.
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
