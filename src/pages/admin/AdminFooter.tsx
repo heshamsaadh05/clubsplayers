@@ -1,33 +1,21 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, 
-  Save, Loader2, Image, Upload, X, Palette, MessageCircle
+  Facebook, Mail, Phone, MapPin, 
+  Save, Loader2, Image, Upload, X, Palette, GripVertical
 } from "lucide-react";
-import { FooterContact, FooterSocial, FooterBranding, FooterStyle } from "@/hooks/useFooterSettings";
-
-// Custom TikTok icon
-const TikTokIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-  </svg>
-);
-
-// Custom Snapchat icon
-const SnapchatIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d="M12.206.793c.99 0 4.347.276 5.93 3.821.529 1.193.403 3.219.299 4.847l-.003.06c-.012.18-.022.345-.03.51.075.045.203.09.401.09.3-.016.659-.12 1.033-.301.165-.088.344-.104.464-.104.182 0 .359.029.509.09.45.149.734.479.734.838.015.449-.39.839-1.213 1.168-.089.029-.209.075-.344.119-.45.135-1.139.36-1.333.81-.09.224-.061.524.12.868l.015.015c.06.136 1.526 3.475 4.791 4.014.255.044.435.27.42.509 0 .075-.015.149-.045.225-.24.569-1.273.988-3.146 1.271-.059.091-.12.375-.164.57-.029.179-.074.36-.134.553-.076.271-.27.405-.555.405h-.03c-.135 0-.313-.031-.538-.074-.36-.075-.765-.135-1.273-.135-.3 0-.599.015-.913.074-.6.104-1.123.464-1.723.884-.853.599-1.826 1.288-3.294 1.288-.06 0-.119-.015-.18-.015h-.149c-1.468 0-2.427-.675-3.279-1.288-.599-.42-1.107-.779-1.707-.884-.314-.045-.629-.074-.928-.074-.54 0-.958.089-1.272.149-.211.043-.391.074-.54.074-.374 0-.523-.224-.583-.42-.061-.192-.09-.389-.135-.567-.046-.181-.105-.494-.166-.57-1.918-.222-2.95-.642-3.189-1.226-.031-.063-.052-.15-.055-.225-.015-.243.165-.465.42-.509 3.264-.54 4.73-3.879 4.791-4.02l.016-.029c.18-.345.224-.645.119-.869-.195-.434-.884-.658-1.332-.809-.121-.029-.24-.074-.346-.119-.809-.329-1.224-.72-1.227-1.153-.007-.359.285-.69.735-.838.149-.06.344-.09.509-.09.12 0 .285.015.45.074.36.12.735.269 1.017.299.196.016.389-.045.463-.074-.007-.165-.017-.331-.027-.51l-.004-.06c-.104-1.628-.229-3.654.3-4.847 1.582-3.545 4.939-3.821 5.928-3.821h.012z"/>
-  </svg>
-);
+import { FooterContact, FooterBranding, FooterStyle, SocialPlatform, defaultPlatforms, FooterSocialAdvanced } from "@/hooks/useFooterSettings";
+import { SocialPlatformItem } from "@/components/admin/SocialPlatformItem";
+import { AddCustomPlatformDialog } from "@/components/admin/AddCustomPlatformDialog";
 
 const AdminFooter = () => {
   const queryClient = useQueryClient();
@@ -41,15 +29,8 @@ const AdminFooter = () => {
     location_en: '',
   });
   
-  const [social, setSocial] = useState<FooterSocial>({
-    facebook: '',
-    twitter: '',
-    instagram: '',
-    youtube: '',
-    tiktok: '',
-    whatsapp: '',
-    snapchat: '',
-  });
+  const [platforms, setPlatforms] = useState<SocialPlatform[]>(defaultPlatforms);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   
   const [branding, setBranding] = useState<FooterBranding>({
     logo_url: '',
@@ -71,7 +52,7 @@ const AdminFooter = () => {
       const { data, error } = await supabase
         .from('site_settings')
         .select('*')
-        .in('key', ['footer_contact', 'footer_social', 'footer_branding', 'footer_style']);
+        .in('key', ['footer_contact', 'footer_social_advanced', 'footer_branding', 'footer_style']);
       
       if (error) throw error;
       return data;
@@ -81,22 +62,24 @@ const AdminFooter = () => {
   useEffect(() => {
     if (settings) {
       const contactData = settings.find(s => s.key === 'footer_contact');
-      const socialData = settings.find(s => s.key === 'footer_social');
+      const socialAdvancedData = settings.find(s => s.key === 'footer_social_advanced');
       const brandingData = settings.find(s => s.key === 'footer_branding');
       const styleData = settings.find(s => s.key === 'footer_style');
       
       if (contactData) setContact(contactData.value as unknown as FooterContact);
-      if (socialData) setSocial({ 
-        facebook: '', twitter: '', instagram: '', youtube: '', tiktok: '', whatsapp: '', snapchat: '',
-        ...(socialData.value as unknown as FooterSocial)
-      });
+      if (socialAdvancedData) {
+        const advancedValue = socialAdvancedData.value as unknown as FooterSocialAdvanced;
+        if (advancedValue?.platforms) {
+          setPlatforms(advancedValue.platforms);
+        }
+      }
       if (brandingData) setBranding(brandingData.value as unknown as FooterBranding);
       if (styleData) setStyle(styleData.value as unknown as FooterStyle);
     }
   }, [settings]);
 
   const updateSetting = useMutation({
-    mutationFn: async ({ key, value }: { key: string; value: FooterContact | FooterSocial | FooterBranding | FooterStyle }) => {
+    mutationFn: async ({ key, value }: { key: string; value: FooterContact | FooterSocialAdvanced | FooterBranding | FooterStyle }) => {
       const { error } = await supabase
         .from('site_settings')
         .upsert({ 
@@ -110,6 +93,7 @@ const AdminFooter = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['footer-contact'] });
       queryClient.invalidateQueries({ queryKey: ['footer-social'] });
+      queryClient.invalidateQueries({ queryKey: ['footer-social-advanced'] });
       queryClient.invalidateQueries({ queryKey: ['footer-branding'] });
       queryClient.invalidateQueries({ queryKey: ['footer-style'] });
       queryClient.invalidateQueries({ queryKey: ['footer-all-settings'] });
@@ -158,7 +142,44 @@ const AdminFooter = () => {
   };
 
   const handleSaveSocial = () => {
-    updateSetting.mutate({ key: 'footer_social', value: social });
+    // Update order based on current position
+    const orderedPlatforms = platforms.map((p, index) => ({ ...p, order: index }));
+    updateSetting.mutate({ key: 'footer_social_advanced', value: { platforms: orderedPlatforms } });
+  };
+
+  const handlePlatformUpdate = useCallback((updatedPlatform: SocialPlatform) => {
+    setPlatforms(prev => 
+      prev.map(p => p.id === updatedPlatform.id ? updatedPlatform : p)
+    );
+  }, []);
+
+  const handleDeletePlatform = useCallback((id: string) => {
+    setPlatforms(prev => prev.filter(p => p.id !== id));
+  }, []);
+
+  const handleAddPlatform = useCallback((newPlatform: SocialPlatform) => {
+    setPlatforms(prev => [...prev, newPlatform]);
+  }, []);
+
+  // Drag and drop handlers
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+
+    const newPlatforms = [...platforms];
+    const draggedItem = newPlatforms[draggedIndex];
+    newPlatforms.splice(draggedIndex, 1);
+    newPlatforms.splice(index, 0, draggedItem);
+    setPlatforms(newPlatforms);
+    setDraggedIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
   };
 
   const handleSaveBranding = () => {
@@ -493,110 +514,51 @@ const AdminFooter = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Facebook className="w-5 h-5" />
-                  روابط التواصل الاجتماعي
+                  منصات التواصل الاجتماعي
                 </CardTitle>
+                <CardDescription>
+                  اسحب لإعادة ترتيب الأيقونات • استخدم المفتاح للتفعيل/التعطيل • أضف منصات مخصصة
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Facebook className="w-4 h-4 text-blue-600" />
-                      فيسبوك
-                    </Label>
-                    <Input
-                      value={social.facebook}
-                      onChange={(e) => setSocial({ ...social, facebook: e.target.value })}
-                      placeholder="https://facebook.com/yourpage"
-                      dir="ltr"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Twitter className="w-4 h-4 text-sky-500" />
-                      تويتر / X
-                    </Label>
-                    <Input
-                      value={social.twitter}
-                      onChange={(e) => setSocial({ ...social, twitter: e.target.value })}
-                      placeholder="https://twitter.com/yourhandle"
-                      dir="ltr"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Instagram className="w-4 h-4 text-pink-600" />
-                      إنستغرام
-                    </Label>
-                    <Input
-                      value={social.instagram}
-                      onChange={(e) => setSocial({ ...social, instagram: e.target.value })}
-                      placeholder="https://instagram.com/yourprofile"
-                      dir="ltr"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <Youtube className="w-4 h-4 text-red-600" />
-                      يوتيوب
-                    </Label>
-                    <Input
-                      value={social.youtube}
-                      onChange={(e) => setSocial({ ...social, youtube: e.target.value })}
-                      placeholder="https://youtube.com/yourchannel"
-                      dir="ltr"
-                    />
-                  </div>
+                {/* Platforms List */}
+                <div className="space-y-2">
+                  {platforms.map((platform, index) => (
+                    <div
+                      key={platform.id}
+                      draggable
+                      onDragStart={() => handleDragStart(index)}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SocialPlatformItem
+                        platform={platform}
+                        onUpdate={handlePlatformUpdate}
+                        onDelete={platform.icon_type === 'custom' ? handleDeletePlatform : undefined}
+                        isDragging={draggedIndex === index}
+                        dragHandleProps={{
+                          onMouseDown: (e) => e.stopPropagation(),
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
 
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <TikTokIcon className="w-4 h-4" />
-                      تيك توك
-                    </Label>
-                    <Input
-                      value={social.tiktok}
-                      onChange={(e) => setSocial({ ...social, tiktok: e.target.value })}
-                      placeholder="https://tiktok.com/@yourhandle"
-                      dir="ltr"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <MessageCircle className="w-4 h-4 text-green-500" />
-                      واتساب
-                    </Label>
-                    <Input
-                      value={social.whatsapp}
-                      onChange={(e) => setSocial({ ...social, whatsapp: e.target.value })}
-                      placeholder="https://wa.me/201234567890"
-                      dir="ltr"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="flex items-center gap-2">
-                      <SnapchatIcon className="w-4 h-4 text-yellow-400" />
-                      سناب شات
-                    </Label>
-                    <Input
-                      value={social.snapchat}
-                      onChange={(e) => setSocial({ ...social, snapchat: e.target.value })}
-                      placeholder="https://snapchat.com/add/yourname"
-                      dir="ltr"
-                    />
-                  </div>
+                {/* Add Custom Platform */}
+                <div className="pt-4 border-t">
+                  <AddCustomPlatformDialog
+                    onAdd={handleAddPlatform}
+                    existingPlatformsCount={platforms.length}
+                  />
                 </div>
                 
                 <p className="text-sm text-muted-foreground">
-                  اترك الحقل فارغاً لإخفاء الأيقونة من الفوتر
+                  💡 المنصات المعطلة لن تظهر في الفوتر حتى لو كان لها رابط
                 </p>
                 
-                <Button onClick={handleSaveSocial} disabled={updateSetting.isPending}>
+                <Button onClick={handleSaveSocial} disabled={updateSetting.isPending} className="w-full">
                   {updateSetting.isPending ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Save className="w-4 h-4 ml-2" />}
-                  حفظ
+                  حفظ الإعدادات
                 </Button>
               </CardContent>
             </Card>
