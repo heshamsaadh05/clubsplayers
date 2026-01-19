@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Send, X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,19 +32,21 @@ const MessageComposer = ({
   onMessageSent,
 }: MessageComposerProps) => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const { canSendMessage, recordMessageSent, getRemainingMessages, hasActiveSubscription } = useSubscriptionLimits();
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
   const [sending, setSending] = useState(false);
 
+  // Players can always reply, clubs need subscription
+  const isPlayer = roles.includes('player');
   const remainingMessages = getRemainingMessages();
-  const canSend = canSendMessage();
+  const canSend = isPlayer ? true : canSendMessage();
 
   const handleSend = async () => {
     if (!user || !content.trim()) return;
 
-    if (!canSend) {
+    if (!isPlayer && !canSend) {
       toast({
         title: 'حد الرسائل',
         description: 'لقد وصلت للحد الأقصى من الرسائل هذا الشهر',
@@ -64,8 +66,10 @@ const MessageComposer = ({
 
       if (error) throw error;
 
-      // Record the message for limit tracking
-      await recordMessageSent();
+      // Record the message for limit tracking (only for clubs)
+      if (!isPlayer && hasActiveSubscription) {
+        await recordMessageSent();
+      }
 
       toast({ title: 'تم إرسال الرسالة بنجاح' });
       setSubject('');
@@ -95,8 +99,8 @@ const MessageComposer = ({
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
-          {/* Remaining messages indicator */}
-          {hasActiveSubscription && remainingMessages !== 'unlimited' && (
+          {/* Remaining messages indicator - only for clubs */}
+          {!isPlayer && hasActiveSubscription && remainingMessages !== 'unlimited' && (
             <Alert variant={remainingMessages <= 2 ? 'destructive' : 'default'}>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
@@ -134,7 +138,7 @@ const MessageComposer = ({
             <Button
               className="flex-1 btn-gold"
               onClick={handleSend}
-              disabled={sending || !content.trim()}
+              disabled={sending || !content.trim() || (!isPlayer && !canSend)}
             >
               {sending ? (
                 'جاري الإرسال...'
