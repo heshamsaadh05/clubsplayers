@@ -24,7 +24,8 @@ import {
   Check,
   X,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  Edit
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ import NotificationBell from "@/components/notifications/NotificationBell";
 import FavoritesList from "@/components/favorites/FavoritesList";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { Progress } from "@/components/ui/progress";
+import EditClubForm from "@/components/club/EditClubForm";
 
 type Club = Tables<"clubs">;
 type Subscription = Tables<"subscriptions">;
@@ -366,6 +368,7 @@ const ClubDashboard = () => {
   const [subscription, setSubscription] = useState<SubscriptionWithPlan | null>(null);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editFormOpen, setEditFormOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -688,6 +691,17 @@ const ClubDashboard = () => {
                     <p className="text-sm text-muted-foreground">{club.description}</p>
                   </>
                 )}
+
+                <Separator className="my-4" />
+
+                <Button
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => setEditFormOpen(true)}
+                >
+                  <Edit className="w-4 h-4 ml-2" />
+                  تعديل البيانات
+                </Button>
               </CardContent>
             </Card>
           </motion.div>
@@ -799,6 +813,27 @@ const ClubDashboard = () => {
           </motion.div>
         </div>
       </main>
+
+      {/* Edit Club Form */}
+      {club && (
+        <EditClubForm
+          club={club}
+          isOpen={editFormOpen}
+          onClose={() => setEditFormOpen(false)}
+          onUpdate={() => {
+            // Refetch club data
+            const fetchClub = async () => {
+              const { data } = await supabase
+                .from("clubs")
+                .select("*")
+                .eq("user_id", user?.id)
+                .maybeSingle();
+              if (data) setClub(data);
+            };
+            fetchClub();
+          }}
+        />
+      )}
     </div>
   );
 };
