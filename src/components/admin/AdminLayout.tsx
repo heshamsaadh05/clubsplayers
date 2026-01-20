@@ -4,6 +4,7 @@ import { Loader2, Menu } from 'lucide-react';
 import AdminSidebar from './AdminSidebar';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLanguage } from '@/hooks/useLanguage';
 import { Button } from '@/components/ui/button';
 
 interface AdminLayoutProps {
@@ -14,6 +15,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const { user, loading, isAdmin } = useAuth();
   const isMobile = useIsMobile();
+  const { t, direction } = useLanguage();
+  const isRTL = direction === 'rtl';
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -44,7 +47,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       {isMobile && (
         <header className="fixed top-0 left-0 right-0 h-16 bg-card border-b border-border z-40 flex items-center justify-between px-4">
           <span className="text-lg font-bold text-gradient-gold font-playfair">
-            لوحة التحكم
+            {t('admin.dashboard')}
           </span>
           <Button
             variant="ghost"
@@ -60,7 +63,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       <main className={`min-h-screen transition-all duration-300 ${
         isMobile 
           ? 'pt-20 px-4 pb-6' 
-          : 'mr-64 p-8'
+          : isRTL ? 'mr-64 p-8' : 'ml-64 p-8'
       }`}>
         {children}
       </main>
