@@ -33,26 +33,33 @@ const PlayersSlider = () => {
   // Filter only active items
   const activeItems = items?.filter(item => item.is_active) || [];
 
+  // Adjust items per view based on actual items count
+  const configuredItemsPerView = settings?.items_per_view || 3;
+  const itemsPerView = Math.min(configuredItemsPerView, activeItems.length || 1);
+  
+  // Calculate if we need navigation (only if items exceed items per view)
+  const needsNavigation = activeItems.length > itemsPerView;
+  
+  // Calculate max index for navigation
+  const maxIndex = Math.max(0, activeItems.length - itemsPerView);
+
   // Auto-play functionality
   useEffect(() => {
-    if (!settings?.auto_play || activeItems.length === 0) return;
+    if (!settings?.auto_play || activeItems.length === 0 || !needsNavigation) return;
 
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % activeItems.length);
+      setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
     }, settings.auto_play_interval || 5000);
 
     return () => clearInterval(interval);
-  }, [settings?.auto_play, settings?.auto_play_interval, activeItems.length]);
+  }, [settings?.auto_play, settings?.auto_play_interval, activeItems.length, needsNavigation, maxIndex]);
 
-  const nextSlide = () => {
-    if (activeItems.length === 0) return;
-    setCurrentIndex((prev) => (prev + 1) % activeItems.length);
-  };
-
-  const prevSlide = () => {
-    if (activeItems.length === 0) return;
-    setCurrentIndex((prev) => (prev - 1 + activeItems.length) % activeItems.length);
-  };
+  // Reset current index if it exceeds max
+  useEffect(() => {
+    if (currentIndex > maxIndex) {
+      setCurrentIndex(Math.max(0, maxIndex));
+    }
+  }, [currentIndex, maxIndex]);
 
   const isLoading = loadingSettings || loadingItems || loadingSections;
 
@@ -78,14 +85,35 @@ const PlayersSlider = () => {
   if (activeItems.length === 0) {
     return null; // Don't render section if no items
   }
-
-  const itemsPerView = settings?.items_per_view || 3;
   
   // Get text content with fallbacks
   const badge = sectionSettings.badge_ar || sectionSettings.badge || 'نجومنا';
   const titlePart1 = sectionSettings.title_part1_ar || sectionSettings.title_part1 || 'لاعبون';
   const titlePart2 = sectionSettings.title_part2_ar || sectionSettings.title_part2 || 'مميزون';
   const description = sectionSettings.description_ar || sectionSettings.description || 'تعرف على نخبة من أفضل اللاعبين المسجلين لدينا';
+
+  // Calculate width percentage based on items per view
+  const getItemWidth = () => {
+    switch (itemsPerView) {
+      case 1: return 'w-full';
+      case 2: return 'w-[calc(50%-12px)]';
+      case 3: return 'w-[calc(33.333%-16px)]';
+      case 4: return 'w-[calc(25%-18px)]';
+      case 5: return 'w-[calc(20%-19.2px)]';
+      default: return 'w-[calc(33.333%-16px)]';
+    }
+  };
+
+  // Safe navigation functions
+  const nextSlide = () => {
+    if (!needsNavigation) return;
+    setCurrentIndex((prev) => Math.min(prev + 1, maxIndex));
+  };
+
+  const prevSlide = () => {
+    if (!needsNavigation) return;
+    setCurrentIndex((prev) => Math.max(prev - 1, 0));
+  };
 
   return (
     <section id="players" className="section-padding relative overflow-hidden">
@@ -115,20 +143,30 @@ const PlayersSlider = () => {
 
         {/* Slider */}
         <div className="relative max-w-5xl mx-auto">
-          {/* Navigation Buttons */}
-          {settings?.show_navigation !== false && (
+          {/* Navigation Buttons - Only show if needed */}
+          {settings?.show_navigation !== false && needsNavigation && (
             <>
               <button
                 onClick={prevSlide}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-gold/20 hover:bg-gold/40 flex items-center justify-center transition-colors -mr-6"
+                disabled={currentIndex === 0}
+                className={`absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full flex items-center justify-center transition-colors -mr-6 ${
+                  currentIndex === 0 
+                    ? 'bg-gold/10 cursor-not-allowed' 
+                    : 'bg-gold/20 hover:bg-gold/40'
+                }`}
               >
-                <ChevronRight className="w-6 h-6 text-gold" />
+                <ChevronRight className={`w-6 h-6 ${currentIndex === 0 ? 'text-gold/40' : 'text-gold'}`} />
               </button>
               <button
                 onClick={nextSlide}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-gold/20 hover:bg-gold/40 flex items-center justify-center transition-colors -ml-6"
+                disabled={currentIndex >= maxIndex}
+                className={`absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full flex items-center justify-center transition-colors -ml-6 ${
+                  currentIndex >= maxIndex 
+                    ? 'bg-gold/10 cursor-not-allowed' 
+                    : 'bg-gold/20 hover:bg-gold/40'
+                }`}
               >
-                <ChevronLeft className="w-6 h-6 text-gold" />
+                <ChevronLeft className={`w-6 h-6 ${currentIndex >= maxIndex ? 'text-gold/40' : 'text-gold'}`} />
               </button>
             </>
           )}
@@ -137,17 +175,14 @@ const PlayersSlider = () => {
           <div className="overflow-hidden px-8">
             <motion.div
               className="flex gap-6"
-              animate={{ x: `${currentIndex * -100 / itemsPerView}%` }}
+              animate={{ x: needsNavigation ? `${currentIndex * -100 / itemsPerView}%` : 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              style={{ justifyContent: activeItems.length < configuredItemsPerView ? 'center' : 'flex-start' }}
             >
               {activeItems.map((item) => (
                 <motion.div
                   key={item.id}
-                  className={`flex-shrink-0 ${
-                    itemsPerView === 1 ? 'w-full' :
-                    itemsPerView === 2 ? 'w-[calc(50%-12px)]' :
-                    'w-[calc(33.333%-16px)]'
-                  }`}
+                  className={`flex-shrink-0 ${getItemWidth()}`}
                   whileHover={{ y: -10 }}
                 >
                   <a 
