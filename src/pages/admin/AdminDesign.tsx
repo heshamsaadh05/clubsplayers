@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Palette, Layers, Image, Save, Loader2, Eye, EyeOff, GripVertical, Plus, Trash2, Upload, RotateCcw, ExternalLink, Moon, Sun, Monitor, Clock, Bookmark, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,7 +18,9 @@ import { useCustomColorTemplates, useAddCustomColorTemplate, useDeleteCustomColo
 import { useAllPageSections, useUpdatePageSection, useAddPageSection } from '@/hooks/usePageSections';
 import { useSliderSettings, useUpdateSliderSettings, useSliderItems, useAddSliderItem, useUpdateSliderItem, useDeleteSliderItem } from '@/hooks/useSliderSettings';
 import ColorPicker from '@/components/admin/ColorPicker';
-
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableSliderItem } from '@/components/admin/SortableSliderItem';
 const sectionLabels: Record<string, string> = {
   hero: 'قسم البداية (Hero)',
   features: 'قسم المميزات',
@@ -266,6 +268,43 @@ const AdminDesign = () => {
   const addSliderItem = useAddSliderItem();
   const updateSliderItem = useUpdateSliderItem();
   const deleteSliderItem = useDeleteSliderItem();
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle drag end for slider items reordering
+  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id || !sliderItems) return;
+
+    const oldIndex = sliderItems.findIndex((item) => item.id === active.id);
+    const newIndex = sliderItems.findIndex((item) => item.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reorderedItems = arrayMove(sliderItems, oldIndex, newIndex);
+
+    // Update order_index for each item
+    try {
+      const updatePromises = reorderedItems.map((item, index) =>
+        updateSliderItem.mutateAsync({ id: item.id, order_index: index + 1 })
+      );
+      await Promise.all(updatePromises);
+      toast.success('تم إعادة ترتيب العناصر');
+    } catch {
+      toast.error('حدث خطأ أثناء إعادة الترتيب');
+    }
+  }, [sliderItems, updateSliderItem]);
 
   const handleColorChange = (key: string, value: string) => {
     setLocalColors(prev => ({ ...prev, [key]: value }));
@@ -1669,122 +1708,34 @@ const AdminDesign = () => {
                     </Button>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      {sliderItems?.map((item) => (
-                        <div
-                          key={item.id}
-                          className="p-4 bg-secondary/50 rounded-xl space-y-4"
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-center gap-3">
-                              <GripVertical className="w-5 h-5 text-muted-foreground cursor-grab" />
-                              <Switch
-                                checked={item.is_active}
-                                onCheckedChange={(checked) => handleUpdateSliderItem(item.id, { is_active: checked })}
-                              />
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:bg-destructive/10"
-                              onClick={() => handleDeleteSliderItem(item.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label>العنوان (EN)</Label>
-                              <Input
-                                value={item.title || ''}
-                                onChange={(e) => handleUpdateSliderItem(item.id, { title: e.target.value })}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>العنوان (AR)</Label>
-                              <Input
-                                value={item.title_ar || ''}
-                                onChange={(e) => handleUpdateSliderItem(item.id, { title_ar: e.target.value })}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>العنوان الفرعي (EN)</Label>
-                              <Input
-                                value={item.subtitle || ''}
-                                onChange={(e) => handleUpdateSliderItem(item.id, { subtitle: e.target.value })}
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <Label>العنوان الفرعي (AR)</Label>
-                              <Input
-                                value={item.subtitle_ar || ''}
-                                onChange={(e) => handleUpdateSliderItem(item.id, { subtitle_ar: e.target.value })}
-                              />
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                              <Label>الصورة</Label>
-                              <div className="flex items-center gap-4">
-                                {item.image_url && (
-                                  <img 
-                                    src={item.image_url} 
-                                    alt={item.title || 'Slider image'} 
-                                    className="w-20 h-14 object-cover rounded-lg border border-border"
-                                  />
-                                )}
-                                <div className="flex-1 flex gap-2">
-                                  <Input
-                                    value={item.image_url || ''}
-                                    onChange={(e) => handleUpdateSliderItem(item.id, { image_url: e.target.value })}
-                                    placeholder="أو أدخل رابط الصورة"
-                                    dir="ltr"
-                                    className="flex-1"
-                                  />
-                                  <label className="cursor-pointer">
-                                    <input
-                                      type="file"
-                                      accept="image/*"
-                                      className="hidden"
-                                      onChange={(e) => {
-                                        const file = e.target.files?.[0];
-                                        if (file) handleImageUpload(item.id, file);
-                                      }}
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="icon"
-                                      disabled={uploadingItemId === item.id}
-                                      asChild
-                                    >
-                                      <span>
-                                        {uploadingItemId === item.id ? (
-                                          <Loader2 className="w-4 h-4 animate-spin" />
-                                        ) : (
-                                          <Upload className="w-4 h-4" />
-                                        )}
-                                      </span>
-                                    </Button>
-                                  </label>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <Label>رابط الانتقال</Label>
-                              <Input
-                                value={item.link_url || ''}
-                                onChange={(e) => handleUpdateSliderItem(item.id, { link_url: e.target.value })}
-                                dir="ltr"
-                              />
-                            </div>
-                          </div>
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext
+                        items={sliderItems?.map(item => item.id) || []}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        <div className="space-y-4">
+                          {sliderItems?.map((item) => (
+                            <SortableSliderItem
+                              key={item.id}
+                              item={item}
+                              onUpdate={handleUpdateSliderItem}
+                              onDelete={handleDeleteSliderItem}
+                              onImageUpload={handleImageUpload}
+                              isUploading={uploadingItemId === item.id}
+                            />
+                          ))}
+                          {(!sliderItems || sliderItems.length === 0) && (
+                            <p className="text-center text-muted-foreground py-8">
+                              لا توجد عناصر. أضف عنصراً جديداً للبدء.
+                            </p>
+                          )}
                         </div>
-                      ))}
-                      {(!sliderItems || sliderItems.length === 0) && (
-                        <p className="text-center text-muted-foreground py-8">
-                          لا توجد عناصر. أضف عنصراً جديداً للبدء.
-                        </p>
-                      )}
-                    </div>
+                      </SortableContext>
+                    </DndContext>
                   </CardContent>
                 </Card>
               </motion.div>
