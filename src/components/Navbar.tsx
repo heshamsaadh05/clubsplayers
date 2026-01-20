@@ -31,7 +31,7 @@ const Navbar = () => {
   } = usePublishedPages();
   const { data: headerMenuItems = [] } = useMenuItems('header');
   const { currentLanguage } = useLanguage();
-  const { logo, siteName: siteNameSettings, getLogoForMode } = useSiteLogo();
+  const { logo, siteName: siteNameSettings, getLogoForMode, logoSizeClass } = useSiteLogo();
   const { resolvedTheme } = useThemeMode();
   const isDarkMode = resolvedTheme === 'dark';
   const navigate = useNavigate();
@@ -111,7 +111,7 @@ const Navbar = () => {
                 <img 
                   src={getLogoForMode(isDarkMode)!} 
                   alt={siteNameSettings.ar || siteNameSettings.en || 'Logo'} 
-                  className="h-10 w-auto object-contain"
+                  className={`${logoSizeClass} w-auto object-contain`}
                 />
               ) : (
                 <span className="text-2xl font-bold text-gradient-gold font-playfair">

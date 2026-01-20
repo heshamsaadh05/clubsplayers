@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Save, DollarSign, Globe, Image, Upload, X, Type, Sun, Moon } from 'lucide-react';
+import { Save, DollarSign, Globe, Image, Upload, X, Type, Sun, Moon, Maximize2, Minus, Square } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,11 +16,14 @@ interface SiteSetting {
   value: Record<string, any>;
 }
 
+type LogoSize = 'small' | 'medium' | 'large';
+
 interface SiteLogo {
   type: 'text' | 'image';
   image_url: string | null;
   light_image_url?: string | null;
   dark_image_url?: string | null;
+  size?: LogoSize;
 }
 
 const AdminSettings = () => {
@@ -405,6 +408,43 @@ const AdminSettings = () => {
                 <p className="text-xs text-muted-foreground">
                   PNG, JPG أو SVG - أقصى حجم 2MB لكل صورة
                 </p>
+
+                {/* Logo Size Selector */}
+                <div className="space-y-3 pt-4 border-t border-border">
+                  <Label className="font-medium">حجم اللوجو</Label>
+                  <div className="flex gap-3">
+                    <Button
+                      type="button"
+                      variant={siteLogo.size === 'small' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSiteLogo(prev => ({ ...prev, size: 'small' }))}
+                      className={siteLogo.size === 'small' ? 'bg-gold hover:bg-gold/90' : ''}
+                    >
+                      <Minus className="w-4 h-4 ml-2" />
+                      صغير
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={(!siteLogo.size || siteLogo.size === 'medium') ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSiteLogo(prev => ({ ...prev, size: 'medium' }))}
+                      className={(!siteLogo.size || siteLogo.size === 'medium') ? 'bg-gold hover:bg-gold/90' : ''}
+                    >
+                      <Square className="w-4 h-4 ml-2" />
+                      متوسط
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={siteLogo.size === 'large' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSiteLogo(prev => ({ ...prev, size: 'large' }))}
+                      className={siteLogo.size === 'large' ? 'bg-gold hover:bg-gold/90' : ''}
+                    >
+                      <Maximize2 className="w-4 h-4 ml-2" />
+                      كبير
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
 
