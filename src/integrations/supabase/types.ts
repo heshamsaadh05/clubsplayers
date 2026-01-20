@@ -918,6 +918,30 @@ export type Database = {
       }
     }
     Views: {
+      custom_color_templates_public: {
+        Row: {
+          colors: Json | null
+          created_at: string | null
+          id: string | null
+          name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          colors?: Json | null
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          colors?: Json | null
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       payment_methods_public: {
         Row: {
           config: Json | null

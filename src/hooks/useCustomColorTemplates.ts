@@ -14,8 +14,9 @@ export const useCustomColorTemplates = () => {
   return useQuery({
     queryKey: ['custom_color_templates'],
     queryFn: async () => {
+      // Use the public view that excludes created_by for privacy
       const { data, error } = await supabase
-        .from('custom_color_templates')
+        .from('custom_color_templates_public')
         .select('*')
         .order('created_at', { ascending: false });
       
