@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { LanguageProvider } from "@/hooks/useLanguage";
 import DynamicThemeProvider from "@/components/DynamicThemeProvider";
+import FaviconManager from "@/components/FaviconManager";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -42,6 +43,7 @@ const App = () => (
       <LanguageProvider>
         <DynamicThemeProvider>
           <TooltipProvider>
+            <FaviconManager />
             <Toaster />
             <Sonner />
             <BrowserRouter>

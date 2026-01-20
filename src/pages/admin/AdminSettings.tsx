@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Save, DollarSign, Globe, Image, Upload, X, Type, Sun, Moon, Maximize2, Minus, Square } from 'lucide-react';
+import { Save, DollarSign, Globe, Image, Upload, X, Type, Sun, Moon, Maximize2, Minus, Square, Star } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,19 +26,28 @@ interface SiteLogo {
   size?: LogoSize;
 }
 
+interface FaviconSettings {
+  light_url: string | null;
+  dark_url: string | null;
+}
+
 const AdminSettings = () => {
   const { toast } = useToast();
   const [settings, setSettings] = useState<SiteSetting[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
   const lightLogoInputRef = useRef<HTMLInputElement>(null);
   const darkLogoInputRef = useRef<HTMLInputElement>(null);
+  const lightFaviconInputRef = useRef<HTMLInputElement>(null);
+  const darkFaviconInputRef = useRef<HTMLInputElement>(null);
 
   const [playerFee, setPlayerFee] = useState({ enabled: false, amount: 0, currency: 'USD' });
   const [siteName, setSiteName] = useState({ en: '', ar: '' });
   const [siteDescription, setSiteDescription] = useState({ en: '', ar: '' });
   const [siteLogo, setSiteLogo] = useState<SiteLogo>({ type: 'text', image_url: null });
+  const [siteFavicon, setSiteFavicon] = useState<FaviconSettings>({ light_url: null, dark_url: null });
 
   useEffect(() => {
     fetchSettings();
@@ -72,6 +81,8 @@ const AdminSettings = () => {
           setSiteDescription(setting.value as typeof siteDescription);
         } else if (setting.key === 'site_logo') {
           setSiteLogo(setting.value as SiteLogo);
+        } else if (setting.key === 'site_favicon') {
+          setSiteFavicon(setting.value as FaviconSettings);
         }
       });
     } catch (error) {
@@ -83,14 +94,28 @@ const AdminSettings = () => {
 
   const saveSetting = async (key: string, value: Record<string, any>) => {
     try {
-      const { error } = await supabase
+      // Check if setting exists first
+      const { data: existing } = await supabase
         .from('site_settings')
-        .update({ value })
-        .eq('key', key);
+        .select('id')
+        .eq('key', key)
+        .maybeSingle();
 
-      if (error) throw error;
+      if (existing) {
+        const { error } = await supabase
+          .from('site_settings')
+          .update({ value })
+          .eq('key', key);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('site_settings')
+          .insert({ key, value });
+        if (error) throw error;
+      }
       return true;
     } catch (error) {
+      console.error(`Error saving ${key}:`, error);
       return false;
     }
   };
@@ -104,6 +129,7 @@ const AdminSettings = () => {
         saveSetting('site_name', siteName),
         saveSetting('site_description', siteDescription),
         saveSetting('site_logo', siteLogo),
+        saveSetting('site_favicon', siteFavicon),
       ]);
 
       if (results.every(r => r)) {
@@ -182,6 +208,57 @@ const AdminSettings = () => {
       setSiteLogo(prev => ({ ...prev, light_image_url: null }));
     } else {
       setSiteLogo(prev => ({ ...prev, dark_image_url: null }));
+    }
+  };
+
+  const handleFaviconUpload = async (event: React.ChangeEvent<HTMLInputElement>, mode: 'light' | 'dark') => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'خطأ', description: 'يرجى اختيار ملف صورة', variant: 'destructive' });
+      return;
+    }
+
+    if (file.size > 1 * 1024 * 1024) {
+      toast({ title: 'خطأ', description: 'حجم الصورة يجب أن يكون أقل من 1 ميجابايت', variant: 'destructive' });
+      return;
+    }
+
+    setUploadingFavicon(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `favicon-${mode}-${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('site-assets')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('site-assets')
+        .getPublicUrl(fileName);
+
+      if (mode === 'light') {
+        setSiteFavicon(prev => ({ ...prev, light_url: publicUrl }));
+      } else {
+        setSiteFavicon(prev => ({ ...prev, dark_url: publicUrl }));
+      }
+      toast({ title: `تم رفع favicon الوضع ${mode === 'light' ? 'الفاتح' : 'الداكن'} بنجاح` });
+    } catch (error) {
+      console.error('Error uploading favicon:', error);
+      toast({ title: 'خطأ', description: 'حدث خطأ أثناء رفع الصورة', variant: 'destructive' });
+    } finally {
+      setUploadingFavicon(false);
+    }
+  };
+
+  const handleRemoveFavicon = (mode: 'light' | 'dark') => {
+    if (mode === 'light') {
+      setSiteFavicon(prev => ({ ...prev, light_url: null }));
+    } else {
+      setSiteFavicon(prev => ({ ...prev, dark_url: null }));
     }
   };
 
@@ -456,6 +533,132 @@ const AdminSettings = () => {
               </div>
             )}
           </div>
+        </motion.div>
+
+        {/* Site Favicon */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="card-glass rounded-2xl p-6"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
+              <Star className="w-5 h-5 text-gold" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold">أيقونة الموقع (Favicon)</h2>
+              <p className="text-sm text-muted-foreground">الأيقونة التي تظهر في تبويب المتصفح</p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Light Mode Favicon */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Sun className="w-4 h-4 text-amber-500" />
+                <Label className="font-medium">الوضع الفاتح</Label>
+              </div>
+              {siteFavicon.light_url ? (
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <img
+                      src={siteFavicon.light_url}
+                      alt="Light Favicon"
+                      className="w-12 h-12 object-contain bg-white rounded-lg p-1 border"
+                    />
+                    <button
+                      onClick={() => handleRemoveFavicon('light')}
+                      className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/80"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => lightFaviconInputRef.current?.click()}
+                    disabled={uploadingFavicon}
+                  >
+                    <Upload className="w-4 h-4 ml-2" />
+                    تغيير
+                  </Button>
+                </div>
+              ) : (
+                <div
+                  onClick={() => lightFaviconInputRef.current?.click()}
+                  className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-gold/50 transition-colors bg-white/50"
+                >
+                  <Sun className="w-6 h-6 mx-auto mb-2 text-amber-500" />
+                  <p className="text-muted-foreground text-sm">
+                    {uploadingFavicon ? 'جاري الرفع...' : 'رفع أيقونة'}
+                  </p>
+                </div>
+              )}
+              <input
+                ref={lightFaviconInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFaviconUpload(e, 'light')}
+                className="hidden"
+              />
+            </div>
+
+            {/* Dark Mode Favicon */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Moon className="w-4 h-4 text-blue-400" />
+                <Label className="font-medium">الوضع الداكن</Label>
+              </div>
+              {siteFavicon.dark_url ? (
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <img
+                      src={siteFavicon.dark_url}
+                      alt="Dark Favicon"
+                      className="w-12 h-12 object-contain bg-zinc-800 rounded-lg p-1 border border-zinc-700"
+                    />
+                    <button
+                      onClick={() => handleRemoveFavicon('dark')}
+                      className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/80"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => darkFaviconInputRef.current?.click()}
+                    disabled={uploadingFavicon}
+                  >
+                    <Upload className="w-4 h-4 ml-2" />
+                    تغيير
+                  </Button>
+                </div>
+              ) : (
+                <div
+                  onClick={() => darkFaviconInputRef.current?.click()}
+                  className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-gold/50 transition-colors bg-zinc-900/50"
+                >
+                  <Moon className="w-6 h-6 mx-auto mb-2 text-blue-400" />
+                  <p className="text-muted-foreground text-sm">
+                    {uploadingFavicon ? 'جاري الرفع...' : 'رفع أيقونة'}
+                  </p>
+                </div>
+              )}
+              <input
+                ref={darkFaviconInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFaviconUpload(e, 'dark')}
+                className="hidden"
+              />
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground mt-4">
+            PNG أو ICO - الحجم الموصى به 32×32 أو 64×64 بكسل - أقصى حجم 1MB
+          </p>
         </motion.div>
 
         {/* Player Registration Fee */}
