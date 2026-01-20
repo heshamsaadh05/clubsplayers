@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/hooks/useLanguage";
 import { usePublishedPages } from "@/hooks/usePublishedPages";
 import { useMenuItems } from "@/hooks/useMenuItems";
+import { useSiteLogo } from "@/hooks/useSiteLogo";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeModeToggle from "@/components/ThemeModeToggle";
@@ -29,6 +30,7 @@ const Navbar = () => {
   } = usePublishedPages();
   const { data: headerMenuItems = [] } = useMenuItems('header');
   const { currentLanguage } = useLanguage();
+  const { logo, siteName: siteNameSettings } = useSiteLogo();
   const navigate = useNavigate();
   const [userType, setUserType] = useState<'player' | 'club' | 'admin' | null>(null);
   useEffect(() => {
@@ -101,8 +103,20 @@ const Navbar = () => {
           <motion.div whileHover={{
           scale: 1.05
         }}>
-            <Link to="/" className="text-2xl font-bold text-gradient-gold font-playfair">
-              Stars Agency
+            <Link to="/" className="flex items-center">
+              {logo.type === 'image' && logo.image_url ? (
+                <img 
+                  src={logo.image_url} 
+                  alt={siteNameSettings.ar || siteNameSettings.en || 'Logo'} 
+                  className="h-10 w-auto object-contain"
+                />
+              ) : (
+                <span className="text-2xl font-bold text-gradient-gold font-playfair">
+                  {currentLanguage?.code === 'en' 
+                    ? (siteNameSettings.en || 'Stars Agency')
+                    : (siteNameSettings.ar || siteNameSettings.en || 'Stars Agency')}
+                </span>
+              )}
             </Link>
           </motion.div>
 
