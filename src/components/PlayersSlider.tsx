@@ -43,16 +43,16 @@ const PlayersSlider = () => {
   // Calculate max index for navigation
   const maxIndex = Math.max(0, activeItems.length - itemsPerView);
 
-  // Auto-play functionality
+  // Auto-play functionality - infinite loop
   useEffect(() => {
-    if (!settings?.auto_play || activeItems.length === 0 || !needsNavigation) return;
+    if (!settings?.auto_play || activeItems.length === 0) return;
 
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
+      setCurrentIndex((prev) => (prev >= activeItems.length - 1 ? 0 : prev + 1));
     }, settings.auto_play_interval || 5000);
 
     return () => clearInterval(interval);
-  }, [settings?.auto_play, settings?.auto_play_interval, activeItems.length, needsNavigation, maxIndex]);
+  }, [settings?.auto_play, settings?.auto_play_interval, activeItems.length]);
 
   // Reset current index if it exceeds max
   useEffect(() => {
@@ -104,15 +104,13 @@ const PlayersSlider = () => {
     }
   };
 
-  // Safe navigation functions
+  // Infinite loop navigation functions
   const nextSlide = () => {
-    if (!needsNavigation) return;
-    setCurrentIndex((prev) => Math.min(prev + 1, maxIndex));
+    setCurrentIndex((prev) => (prev >= activeItems.length - 1 ? 0 : prev + 1));
   };
 
   const prevSlide = () => {
-    if (!needsNavigation) return;
-    setCurrentIndex((prev) => Math.max(prev - 1, 0));
+    setCurrentIndex((prev) => (prev <= 0 ? activeItems.length - 1 : prev - 1));
   };
 
   return (
@@ -143,30 +141,20 @@ const PlayersSlider = () => {
 
         {/* Slider */}
         <div className="relative max-w-5xl mx-auto">
-          {/* Navigation Buttons - Only show if needed */}
-          {settings?.show_navigation !== false && needsNavigation && (
+          {/* Navigation Buttons - Always show if more than 1 item */}
+          {settings?.show_navigation !== false && activeItems.length > 1 && (
             <>
               <button
                 onClick={prevSlide}
-                disabled={currentIndex === 0}
-                className={`absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full flex items-center justify-center transition-colors -mr-6 ${
-                  currentIndex === 0 
-                    ? 'bg-gold/10 cursor-not-allowed' 
-                    : 'bg-gold/20 hover:bg-gold/40'
-                }`}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full flex items-center justify-center transition-colors -mr-6 bg-gold/20 hover:bg-gold/40"
               >
-                <ChevronRight className={`w-6 h-6 ${currentIndex === 0 ? 'text-gold/40' : 'text-gold'}`} />
+                <ChevronRight className="w-6 h-6 text-gold" />
               </button>
               <button
                 onClick={nextSlide}
-                disabled={currentIndex >= maxIndex}
-                className={`absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full flex items-center justify-center transition-colors -ml-6 ${
-                  currentIndex >= maxIndex 
-                    ? 'bg-gold/10 cursor-not-allowed' 
-                    : 'bg-gold/20 hover:bg-gold/40'
-                }`}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full flex items-center justify-center transition-colors -ml-6 bg-gold/20 hover:bg-gold/40"
               >
-                <ChevronLeft className={`w-6 h-6 ${currentIndex >= maxIndex ? 'text-gold/40' : 'text-gold'}`} />
+                <ChevronLeft className="w-6 h-6 text-gold" />
               </button>
             </>
           )}
@@ -175,7 +163,7 @@ const PlayersSlider = () => {
           <div className="overflow-hidden px-8">
             <motion.div
               className="flex gap-6"
-              animate={{ x: needsNavigation ? `${currentIndex * -100 / itemsPerView}%` : 0 }}
+              animate={{ x: `${currentIndex * -100 / itemsPerView}%` }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
               style={{ justifyContent: activeItems.length < configuredItemsPerView ? 'center' : 'flex-start' }}
             >
