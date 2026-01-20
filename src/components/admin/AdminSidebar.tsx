@@ -20,12 +20,20 @@ import {
   Footprints,
   Layers,
   Share2,
-  Search
+  Search,
+  Globe
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLanguage } from '@/hooks/useLanguage';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface AdminSidebarProps {
   isOpen?: boolean;
@@ -36,7 +44,7 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
   const location = useLocation();
   const { signOut } = useAuth();
   const isMobile = useIsMobile();
-  const { t, direction } = useLanguage();
+  const { t, direction, languages, currentLanguage, setLanguage } = useLanguage();
   const isRTL = direction === 'rtl';
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -91,6 +99,36 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
     }
   };
 
+  // Language Switcher Component
+  const LanguageSwitcher = ({ collapsed = false }: { collapsed?: boolean }) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size={collapsed ? "icon" : "sm"}
+          className={`${collapsed ? 'w-10 h-10' : 'gap-2'} hover:bg-secondary`}
+        >
+          <Globe className="w-4 h-4" />
+          {!collapsed && (
+            <span className="text-sm">{currentLanguage?.native_name || 'العربية'}</span>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align={isRTL ? "start" : "end"} className="min-w-[120px]">
+        {languages.map((lang) => (
+          <DropdownMenuItem
+            key={lang.code}
+            onClick={() => setLanguage(lang.code)}
+            className={`cursor-pointer ${currentLanguage?.code === lang.code ? 'bg-secondary' : ''}`}
+          >
+            <span className={lang.direction === 'rtl' ? 'font-arabic' : ''}>
+              {lang.native_name}
+            </span>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
   // Mobile Sidebar
   if (isMobile) {
     return (
@@ -124,15 +162,18 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
                 <span className="text-lg font-bold text-gradient-gold font-playfair">
                   {t('admin.dashboard')}
                 </span>
-                <button
-                  onClick={() => {
-                    setMobileOpen(false);
-                    onClose?.();
-                  }}
-                  className="p-2 hover:bg-secondary rounded-lg transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center gap-1">
+                  <LanguageSwitcher />
+                  <button
+                    onClick={() => {
+                      setMobileOpen(false);
+                      onClose?.();
+                    }}
+                    className="p-2 hover:bg-secondary rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               {/* Search */}
@@ -218,12 +259,15 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
             {t('admin.dashboard')}
           </span>
         )}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-2 hover:bg-secondary rounded-lg transition-colors"
-        >
-          {isCollapsed ? <Menu className="w-5 h-5" /> : (isRTL ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />)}
-        </button>
+        <div className="flex items-center gap-1">
+          <LanguageSwitcher collapsed={isCollapsed} />
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-2 hover:bg-secondary rounded-lg transition-colors"
+          >
+            {isCollapsed ? <Menu className="w-5 h-5" /> : (isRTL ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />)}
+          </button>
+        </div>
       </div>
 
       {/* Search - Only when not collapsed */}
