@@ -8,6 +8,7 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { usePublishedPages } from "@/hooks/usePublishedPages";
 import { useMenuItems } from "@/hooks/useMenuItems";
 import { useSiteLogo } from "@/hooks/useSiteLogo";
+import { useThemeMode } from "@/hooks/useThemeMode";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeModeToggle from "@/components/ThemeModeToggle";
@@ -30,7 +31,9 @@ const Navbar = () => {
   } = usePublishedPages();
   const { data: headerMenuItems = [] } = useMenuItems('header');
   const { currentLanguage } = useLanguage();
-  const { logo, siteName: siteNameSettings } = useSiteLogo();
+  const { logo, siteName: siteNameSettings, getLogoForMode } = useSiteLogo();
+  const { resolvedTheme } = useThemeMode();
+  const isDarkMode = resolvedTheme === 'dark';
   const navigate = useNavigate();
   const [userType, setUserType] = useState<'player' | 'club' | 'admin' | null>(null);
   useEffect(() => {
@@ -104,9 +107,9 @@ const Navbar = () => {
           scale: 1.05
         }}>
             <Link to="/" className="flex items-center">
-              {logo.type === 'image' && logo.image_url ? (
+              {logo.type === 'image' && getLogoForMode(isDarkMode) ? (
                 <img 
-                  src={logo.image_url} 
+                  src={getLogoForMode(isDarkMode)!} 
                   alt={siteNameSettings.ar || siteNameSettings.en || 'Logo'} 
                   className="h-10 w-auto object-contain"
                 />

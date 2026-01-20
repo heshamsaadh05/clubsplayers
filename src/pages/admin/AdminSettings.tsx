@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Save, DollarSign, Globe, Image, Upload, X, Type } from 'lucide-react';
+import { Save, DollarSign, Globe, Image, Upload, X, Type, Sun, Moon } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,8 @@ interface SiteSetting {
 interface SiteLogo {
   type: 'text' | 'image';
   image_url: string | null;
+  light_image_url?: string | null;
+  dark_image_url?: string | null;
 }
 
 const AdminSettings = () => {
@@ -27,7 +29,8 @@ const AdminSettings = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
-  const logoInputRef = useRef<HTMLInputElement>(null);
+  const lightLogoInputRef = useRef<HTMLInputElement>(null);
+  const darkLogoInputRef = useRef<HTMLInputElement>(null);
 
   const [playerFee, setPlayerFee] = useState({ enabled: false, amount: 0, currency: 'USD' });
   const [siteName, setSiteName] = useState({ en: '', ar: '' });
@@ -116,7 +119,7 @@ const AdminSettings = () => {
     }
   };
 
-  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>, mode: 'light' | 'dark') => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -135,7 +138,7 @@ const AdminSettings = () => {
     setUploadingLogo(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `logo-${Date.now()}.${fileExt}`;
+      const fileName = `logo-${mode}-${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('site-assets')
@@ -147,19 +150,36 @@ const AdminSettings = () => {
         .from('site-assets')
         .getPublicUrl(fileName);
 
-      setSiteLogo({ type: 'image', image_url: publicUrl });
-      toast({ title: 'تم رفع اللوجو بنجاح' });
+      if (mode === 'light') {
+        setSiteLogo(prev => ({ 
+          ...prev, 
+          type: 'image', 
+          light_image_url: publicUrl,
+          image_url: prev.image_url || publicUrl // Keep backwards compatibility
+        }));
+      } else {
+        setSiteLogo(prev => ({ 
+          ...prev, 
+          type: 'image', 
+          dark_image_url: publicUrl,
+          image_url: prev.image_url || publicUrl
+        }));
+      }
+      toast({ title: `تم رفع لوجو الوضع ${mode === 'light' ? 'الفاتح' : 'الداكن'} بنجاح` });
     } catch (error) {
       console.error('Error uploading logo:', error);
       toast({ title: 'خطأ', description: 'حدث خطأ أثناء رفع الصورة', variant: 'destructive' });
     } finally {
       setUploadingLogo(false);
-      if (logoInputRef.current) logoInputRef.current.value = '';
     }
   };
 
-  const handleRemoveLogo = () => {
-    setSiteLogo({ type: 'text', image_url: null });
+  const handleRemoveLogo = (mode: 'light' | 'dark') => {
+    if (mode === 'light') {
+      setSiteLogo(prev => ({ ...prev, light_image_url: null }));
+    } else {
+      setSiteLogo(prev => ({ ...prev, dark_image_url: null }));
+    }
   };
 
   if (loading) {
@@ -279,53 +299,112 @@ const AdminSettings = () => {
             </RadioGroup>
 
             {siteLogo.type === 'image' && (
-              <div className="space-y-4 pt-4 border-t border-border">
-                {siteLogo.image_url ? (
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <img
-                        src={siteLogo.image_url}
-                        alt="Site Logo"
-                        className="h-16 w-auto object-contain bg-secondary rounded-lg p-2"
-                      />
-                      <button
-                        onClick={handleRemoveLogo}
-                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/80"
+              <div className="space-y-6 pt-4 border-t border-border">
+                {/* Light Mode Logo */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Sun className="w-4 h-4 text-amber-500" />
+                    <Label className="font-medium">لوجو الوضع الفاتح</Label>
+                  </div>
+                  {siteLogo.light_image_url ? (
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        <img
+                          src={siteLogo.light_image_url}
+                          alt="Light Mode Logo"
+                          className="h-16 w-auto object-contain bg-white rounded-lg p-2 border"
+                        />
+                        <button
+                          onClick={() => handleRemoveLogo('light')}
+                          className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/80"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => lightLogoInputRef.current?.click()}
+                        disabled={uploadingLogo}
                       >
-                        <X className="w-3 h-3" />
-                      </button>
+                        <Upload className="w-4 h-4 ml-2" />
+                        تغيير
+                      </Button>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => logoInputRef.current?.click()}
-                      disabled={uploadingLogo}
+                  ) : (
+                    <div
+                      onClick={() => lightLogoInputRef.current?.click()}
+                      className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-gold/50 transition-colors bg-white/50"
                     >
-                      <Upload className="w-4 h-4 ml-2" />
-                      تغيير الصورة
-                    </Button>
+                      <Sun className="w-6 h-6 mx-auto mb-2 text-amber-500" />
+                      <p className="text-muted-foreground text-sm">
+                        {uploadingLogo ? 'جاري الرفع...' : 'رفع لوجو للوضع الفاتح'}
+                      </p>
+                    </div>
+                  )}
+                  <input
+                    ref={lightLogoInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleLogoUpload(e, 'light')}
+                    className="hidden"
+                  />
+                </div>
+
+                {/* Dark Mode Logo */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Moon className="w-4 h-4 text-blue-400" />
+                    <Label className="font-medium">لوجو الوضع الداكن</Label>
                   </div>
-                ) : (
-                  <div
-                    onClick={() => logoInputRef.current?.click()}
-                    className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-gold/50 transition-colors"
-                  >
-                    <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-muted-foreground">
-                      {uploadingLogo ? 'جاري الرفع...' : 'اضغط لرفع صورة اللوجو'}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      PNG, JPG أو SVG - أقصى حجم 2MB
-                    </p>
-                  </div>
-                )}
-                <input
-                  ref={logoInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoUpload}
-                  className="hidden"
-                />
+                  {siteLogo.dark_image_url ? (
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        <img
+                          src={siteLogo.dark_image_url}
+                          alt="Dark Mode Logo"
+                          className="h-16 w-auto object-contain bg-zinc-800 rounded-lg p-2 border border-zinc-700"
+                        />
+                        <button
+                          onClick={() => handleRemoveLogo('dark')}
+                          className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/80"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => darkLogoInputRef.current?.click()}
+                        disabled={uploadingLogo}
+                      >
+                        <Upload className="w-4 h-4 ml-2" />
+                        تغيير
+                      </Button>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => darkLogoInputRef.current?.click()}
+                      className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-gold/50 transition-colors bg-zinc-900/50"
+                    >
+                      <Moon className="w-6 h-6 mx-auto mb-2 text-blue-400" />
+                      <p className="text-muted-foreground text-sm">
+                        {uploadingLogo ? 'جاري الرفع...' : 'رفع لوجو للوضع الداكن'}
+                      </p>
+                    </div>
+                  )}
+                  <input
+                    ref={darkLogoInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleLogoUpload(e, 'dark')}
+                    className="hidden"
+                  />
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  PNG, JPG أو SVG - أقصى حجم 2MB لكل صورة
+                </p>
               </div>
             )}
 
