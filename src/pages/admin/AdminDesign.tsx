@@ -1618,6 +1618,104 @@ const AdminDesign = () => {
                                 </div>
                               </div>
                             )}
+
+                            {/* Players Slider Section Settings */}
+                            {section.section_key === 'players_slider' && (
+                              <div className="pt-4 border-t border-border space-y-4">
+                                <Label className="mb-3 block font-semibold text-gold">نصوص سيكشن سلايدر اللاعبين</Label>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label>الشارة (EN)</Label>
+                                    <Input
+                                      value={(sectionSettings.badge as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, badge: e.target.value } 
+                                      })}
+                                      placeholder="Our Stars"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>الشارة (AR)</Label>
+                                    <Input
+                                      value={(sectionSettings.badge_ar as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, badge_ar: e.target.value } 
+                                      })}
+                                      placeholder="نجومنا"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>العنوان - الجزء الأول (EN)</Label>
+                                    <Input
+                                      value={(sectionSettings.title_part1 as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, title_part1: e.target.value } 
+                                      })}
+                                      placeholder="Featured"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>العنوان - الجزء الأول (AR)</Label>
+                                    <Input
+                                      value={(sectionSettings.title_part1_ar as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, title_part1_ar: e.target.value } 
+                                      })}
+                                      placeholder="لاعبون"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>العنوان - الجزء الثاني (EN)</Label>
+                                    <Input
+                                      value={(sectionSettings.title_part2 as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, title_part2: e.target.value } 
+                                      })}
+                                      placeholder="Players"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>العنوان - الجزء الثاني (AR)</Label>
+                                    <Input
+                                      value={(sectionSettings.title_part2_ar as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, title_part2_ar: e.target.value } 
+                                      })}
+                                      placeholder="مميزون"
+                                    />
+                                  </div>
+                                  <div className="space-y-2 md:col-span-2">
+                                    <Label>الوصف (EN)</Label>
+                                    <Input
+                                      value={(sectionSettings.description as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, description: e.target.value } 
+                                      })}
+                                      placeholder="Meet the best registered players"
+                                    />
+                                  </div>
+                                  <div className="space-y-2 md:col-span-2">
+                                    <Label>الوصف (AR)</Label>
+                                    <Input
+                                      value={(sectionSettings.description_ar as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, description_ar: e.target.value } 
+                                      })}
+                                      placeholder="تعرف على نخبة من أفضل اللاعبين المسجلين لدينا"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       })}

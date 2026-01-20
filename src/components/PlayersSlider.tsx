@@ -2,7 +2,19 @@ import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useSliderSettings, useSliderItems } from "@/hooks/useSliderSettings";
+import { usePageSections } from "@/hooks/usePageSections";
 import { Skeleton } from "@/components/ui/skeleton";
+
+interface SectionSettings {
+  badge?: string;
+  badge_ar?: string;
+  title_part1?: string;
+  title_part1_ar?: string;
+  title_part2?: string;
+  title_part2_ar?: string;
+  description?: string;
+  description_ar?: string;
+}
 
 const PlayersSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -10,6 +22,13 @@ const PlayersSlider = () => {
   // Fetch slider settings and items from database
   const { data: settings, isLoading: loadingSettings } = useSliderSettings('players');
   const { data: items, isLoading: loadingItems } = useSliderItems('players');
+  
+  // Fetch section settings for text content
+  const { data: pageSections, isLoading: loadingSections } = usePageSections('home');
+  
+  // Get players_slider section settings
+  const sliderSection = pageSections?.find(s => s.section_key === 'players_slider');
+  const sectionSettings = (sliderSection?.settings || {}) as SectionSettings;
   
   // Filter only active items
   const activeItems = items?.filter(item => item.is_active) || [];
@@ -35,7 +54,7 @@ const PlayersSlider = () => {
     setCurrentIndex((prev) => (prev - 1 + activeItems.length) % activeItems.length);
   };
 
-  const isLoading = loadingSettings || loadingItems;
+  const isLoading = loadingSettings || loadingItems || loadingSections;
 
   if (isLoading) {
     return (
@@ -61,6 +80,12 @@ const PlayersSlider = () => {
   }
 
   const itemsPerView = settings?.items_per_view || 3;
+  
+  // Get text content with fallbacks
+  const badge = sectionSettings.badge_ar || sectionSettings.badge || 'نجومنا';
+  const titlePart1 = sectionSettings.title_part1_ar || sectionSettings.title_part1 || 'لاعبون';
+  const titlePart2 = sectionSettings.title_part2_ar || sectionSettings.title_part2 || 'مميزون';
+  const description = sectionSettings.description_ar || sectionSettings.description || 'تعرف على نخبة من أفضل اللاعبين المسجلين لدينا';
 
   return (
     <section id="players" className="section-padding relative overflow-hidden">
@@ -77,14 +102,14 @@ const PlayersSlider = () => {
           className="text-center mb-16"
         >
           <span className="text-gold text-sm font-medium tracking-wider uppercase mb-4 block">
-            نجومنا
+            {badge}
           </span>
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            <span className="text-foreground">لاعبون </span>
-            <span className="text-gradient-gold">مميزون</span>
+            <span className="text-foreground">{titlePart1} </span>
+            <span className="text-gradient-gold">{titlePart2}</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            تعرف على نخبة من أفضل اللاعبين المسجلين لدينا
+            {description}
           </p>
         </motion.div>
 
