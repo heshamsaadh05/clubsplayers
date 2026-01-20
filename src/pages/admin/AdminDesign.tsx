@@ -269,6 +269,18 @@ const AdminDesign = () => {
   const updateSliderItem = useUpdateSliderItem();
   const deleteSliderItem = useDeleteSliderItem();
 
+  // Local state for slider settings (for immediate UI feedback)
+  const [localItemsPerView, setLocalItemsPerView] = useState<number | null>(null);
+  const [localAutoPlayInterval, setLocalAutoPlayInterval] = useState<number | null>(null);
+
+  // Sync local state with fetched settings
+  useEffect(() => {
+    if (sliderSettings) {
+      setLocalItemsPerView(sliderSettings.items_per_view);
+      setLocalAutoPlayInterval(sliderSettings.auto_play_interval);
+    }
+  }, [sliderSettings]);
+
   // DnD sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -1960,15 +1972,16 @@ const AdminDesign = () => {
                         <Label>سرعة التمرير (ثانية)</Label>
                         <div className="flex items-center gap-4">
                           <Slider
-                            value={[sliderSettings?.auto_play_interval ? sliderSettings.auto_play_interval / 1000 : 5]}
+                            value={[localAutoPlayInterval ? localAutoPlayInterval / 1000 : 5]}
                             min={2}
                             max={10}
                             step={1}
+                            onValueChange={(value) => setLocalAutoPlayInterval(value[0] * 1000)}
                             onValueCommit={(value) => handleSliderSettingChange('auto_play_interval', value[0] * 1000)}
                             className="flex-1"
                           />
                           <span className="text-sm font-medium w-8">
-                            {sliderSettings?.auto_play_interval ? sliderSettings.auto_play_interval / 1000 : 5}s
+                            {localAutoPlayInterval ? localAutoPlayInterval / 1000 : 5}s
                           </span>
                         </div>
                       </div>
@@ -1976,15 +1989,16 @@ const AdminDesign = () => {
                         <Label>عدد العناصر الظاهرة</Label>
                         <div className="flex items-center gap-4">
                           <Slider
-                            value={[sliderSettings?.items_per_view ?? 3]}
+                            value={[localItemsPerView ?? 3]}
                             min={1}
                             max={5}
                             step={1}
+                            onValueChange={(value) => setLocalItemsPerView(value[0])}
                             onValueCommit={(value) => handleSliderSettingChange('items_per_view', value[0])}
                             className="flex-1"
                           />
                           <span className="text-sm font-medium w-8">
-                            {sliderSettings?.items_per_view ?? 3}
+                            {localItemsPerView ?? 3}
                           </span>
                         </div>
                       </div>
