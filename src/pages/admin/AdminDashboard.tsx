@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Building2, DollarSign, TrendingUp, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Building2, DollarSign, TrendingUp, Clock, CheckCircle } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
+import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Stats {
@@ -14,6 +15,7 @@ interface Stats {
 }
 
 const AdminDashboard = () => {
+  const { t } = useLanguage();
   const [stats, setStats] = useState<Stats>({
     totalPlayers: 0,
     pendingPlayers: 0,
@@ -74,42 +76,42 @@ const AdminDashboard = () => {
   const statCards = [
     {
       icon: Users,
-      label: 'إجمالي اللاعبين',
+      labelKey: 'admin.totalPlayers',
       value: stats.totalPlayers,
       color: 'text-blue-500',
       bgColor: 'bg-blue-500/10',
     },
     {
       icon: Clock,
-      label: 'في انتظار الموافقة',
+      labelKey: 'admin.pendingApproval',
       value: stats.pendingPlayers,
       color: 'text-yellow-500',
       bgColor: 'bg-yellow-500/10',
     },
     {
       icon: CheckCircle,
-      label: 'لاعبون معتمدون',
+      labelKey: 'admin.approvedPlayers',
       value: stats.approvedPlayers,
       color: 'text-green-500',
       bgColor: 'bg-green-500/10',
     },
     {
       icon: Building2,
-      label: 'الأندية المسجلة',
+      labelKey: 'admin.registeredClubs',
       value: stats.totalClubs,
       color: 'text-purple-500',
       bgColor: 'bg-purple-500/10',
     },
     {
       icon: TrendingUp,
-      label: 'اشتراكات نشطة',
+      labelKey: 'admin.activeSubscriptions',
       value: stats.activeSubscriptions,
       color: 'text-gold',
       bgColor: 'bg-gold/10',
     },
     {
       icon: DollarSign,
-      label: 'إجمالي الإيرادات',
+      labelKey: 'admin.totalRevenue',
       value: `$${stats.totalRevenue}`,
       color: 'text-emerald-500',
       bgColor: 'bg-emerald-500/10',
@@ -121,15 +123,15 @@ const AdminDashboard = () => {
       <div className="space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-foreground">لوحة التحكم</h1>
-          <p className="text-muted-foreground mt-1">نظرة عامة على إحصائيات الموقع</p>
+          <h1 className="text-3xl font-bold text-foreground">{t('admin.dashboard')}</h1>
+          <p className="text-muted-foreground mt-1">{t('admin.overview')}</p>
         </div>
 
         {/* Stats Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {statCards.map((stat, index) => (
             <motion.div
-              key={stat.label}
+              key={stat.labelKey}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
@@ -140,7 +142,7 @@ const AdminDashboard = () => {
                   <stat.icon className={`w-7 h-7 ${stat.color}`} />
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-sm">{stat.label}</p>
+                  <p className="text-muted-foreground text-sm">{t(stat.labelKey)}</p>
                   <p className="text-2xl font-bold text-foreground">
                     {loading ? '...' : stat.value}
                   </p>
@@ -152,28 +154,28 @@ const AdminDashboard = () => {
 
         {/* Quick Actions */}
         <div className="card-glass rounded-2xl p-6">
-          <h2 className="text-xl font-bold text-foreground mb-4">إجراءات سريعة</h2>
+          <h2 className="text-xl font-bold text-foreground mb-4">{t('admin.quickActions')}</h2>
           <div className="grid md:grid-cols-3 gap-4">
             <a
               href="/admin/players"
               className="flex items-center gap-3 p-4 bg-secondary rounded-xl hover:bg-secondary/80 transition-colors"
             >
               <Users className="w-5 h-5 text-gold" />
-              <span>مراجعة اللاعبين الجدد</span>
+              <span>{t('admin.reviewNewPlayers')}</span>
             </a>
             <a
               href="/admin/plans"
               className="flex items-center gap-3 p-4 bg-secondary rounded-xl hover:bg-secondary/80 transition-colors"
             >
               <DollarSign className="w-5 h-5 text-gold" />
-              <span>إدارة الباقات</span>
+              <span>{t('admin.managePlans')}</span>
             </a>
             <a
               href="/admin/settings"
               className="flex items-center gap-3 p-4 bg-secondary rounded-xl hover:bg-secondary/80 transition-colors"
             >
               <Building2 className="w-5 h-5 text-gold" />
-              <span>إعدادات الموقع</span>
+              <span>{t('admin.siteSettings')}</span>
             </a>
           </div>
         </div>

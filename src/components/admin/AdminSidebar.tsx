@@ -13,6 +13,7 @@ import {
   X,
   LogOut,
   ChevronLeft,
+  ChevronRight,
   Receipt,
   Languages,
   Palette,
@@ -23,6 +24,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLanguage } from '@/hooks/useLanguage';
 import { Input } from '@/components/ui/input';
 
 interface AdminSidebarProps {
@@ -34,6 +36,8 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
   const location = useLocation();
   const { signOut } = useAuth();
   const isMobile = useIsMobile();
+  const { t, direction } = useLanguage();
+  const isRTL = direction === 'rtl';
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -46,20 +50,20 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
   }, [externalIsOpen]);
 
   const menuItems = [
-    { icon: LayoutDashboard, label: 'لوحة التحكم', path: '/admin', keywords: ['dashboard', 'الرئيسية', 'home'] },
-    { icon: Users, label: 'اللاعبون', path: '/admin/players', keywords: ['players', 'لاعب'] },
-    { icon: Building2, label: 'الأندية', path: '/admin/clubs', keywords: ['clubs', 'نادي', 'فريق'] },
-    { icon: Receipt, label: 'الاشتراكات', path: '/admin/subscriptions', keywords: ['subscriptions', 'اشتراك'] },
-    { icon: Package, label: 'باقات الاشتراك', path: '/admin/plans', keywords: ['plans', 'باقة', 'خطة'] },
-    { icon: CreditCard, label: 'وسائل الدفع', path: '/admin/payments', keywords: ['payments', 'دفع', 'فلوس'] },
-    { icon: FileText, label: 'الصفحات', path: '/admin/pages', keywords: ['pages', 'صفحة'] },
-    { icon: Menu, label: 'القوائم', path: '/admin/menus', keywords: ['menus', 'قائمة', 'navigation'] },
-    { icon: Languages, label: 'اللغات', path: '/admin/languages', keywords: ['languages', 'لغة', 'ترجمة'] },
-    { icon: Palette, label: 'التصميم', path: '/admin/design', keywords: ['design', 'ألوان', 'تصميم', 'ثيم'] },
-    { icon: Layers, label: 'السيكشنز', path: '/admin/sections', keywords: ['sections', 'قسم', 'أقسام'] },
-    { icon: Footprints, label: 'الفوتر', path: '/admin/footer', keywords: ['footer', 'تذييل'] },
-    { icon: Share2, label: 'التواصل الاجتماعي', path: '/admin/footer?tab=social', keywords: ['social', 'تواصل', 'فيسبوك', 'تويتر'] },
-    { icon: Settings, label: 'الإعدادات', path: '/admin/settings', keywords: ['settings', 'إعداد', 'ضبط'] },
+    { icon: LayoutDashboard, labelKey: 'admin.dashboard', path: '/admin', keywords: ['dashboard', 'الرئيسية', 'home'] },
+    { icon: Users, labelKey: 'admin.players', path: '/admin/players', keywords: ['players', 'لاعب'] },
+    { icon: Building2, labelKey: 'admin.clubs', path: '/admin/clubs', keywords: ['clubs', 'نادي', 'فريق'] },
+    { icon: Receipt, labelKey: 'admin.subscriptions', path: '/admin/subscriptions', keywords: ['subscriptions', 'اشتراك'] },
+    { icon: Package, labelKey: 'admin.plans', path: '/admin/plans', keywords: ['plans', 'باقة', 'خطة'] },
+    { icon: CreditCard, labelKey: 'admin.payments', path: '/admin/payments', keywords: ['payments', 'دفع', 'فلوس'] },
+    { icon: FileText, labelKey: 'admin.pages', path: '/admin/pages', keywords: ['pages', 'صفحة'] },
+    { icon: Menu, labelKey: 'admin.menus', path: '/admin/menus', keywords: ['menus', 'قائمة', 'navigation'] },
+    { icon: Languages, labelKey: 'admin.languages', path: '/admin/languages', keywords: ['languages', 'لغة', 'ترجمة'] },
+    { icon: Palette, labelKey: 'admin.design', path: '/admin/design', keywords: ['design', 'ألوان', 'تصميم', 'ثيم'] },
+    { icon: Layers, labelKey: 'admin.sections', path: '/admin/sections', keywords: ['sections', 'قسم', 'أقسام'] },
+    { icon: Footprints, labelKey: 'admin.footer', path: '/admin/footer', keywords: ['footer', 'تذييل'] },
+    { icon: Share2, labelKey: 'admin.social', path: '/admin/footer?tab=social', keywords: ['social', 'تواصل', 'فيسبوك', 'تويتر'] },
+    { icon: Settings, labelKey: 'admin.settings', path: '/admin/settings', keywords: ['settings', 'إعداد', 'ضبط'] },
   ];
 
   // Filter menu items based on search query
@@ -67,10 +71,10 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
     if (!searchQuery.trim()) return menuItems;
     const query = searchQuery.toLowerCase().trim();
     return menuItems.filter(item => 
-      item.label.toLowerCase().includes(query) ||
+      t(item.labelKey).toLowerCase().includes(query) ||
       item.keywords.some(keyword => keyword.toLowerCase().includes(query))
     );
-  }, [searchQuery]);
+  }, [searchQuery, t]);
 
   const handleLinkClick = () => {
     if (isMobile) {
@@ -107,16 +111,18 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
             
             {/* Sidebar */}
             <motion.aside
-              initial={{ x: '100%' }}
+              initial={{ x: isRTL ? '100%' : '-100%' }}
               animate={{ x: 0 }}
-              exit={{ x: '100%' }}
+              exit={{ x: isRTL ? '100%' : '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 h-screen w-72 bg-card border-l border-border z-50 flex flex-col"
+              className={`fixed top-0 h-screen w-72 bg-card border-border z-50 flex flex-col ${
+                isRTL ? 'right-0 border-l' : 'left-0 border-r'
+              }`}
             >
               {/* Header */}
               <div className="h-16 flex items-center justify-between px-4 border-b border-border flex-shrink-0">
                 <span className="text-lg font-bold text-gradient-gold font-playfair">
-                  لوحة التحكم
+                  {t('admin.dashboard')}
                 </span>
                 <button
                   onClick={() => {
@@ -132,13 +138,13 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
               {/* Search */}
               <div className="px-3 py-2 border-b border-border flex-shrink-0">
                 <div className="relative">
-                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
                   <Input
                     type="text"
-                    placeholder="بحث سريع..."
+                    placeholder={t('admin.quickSearch')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pr-9 h-9 text-sm bg-secondary/50"
+                    className={`h-9 text-sm bg-secondary/50 ${isRTL ? 'pr-9' : 'pl-9'}`}
                   />
                 </div>
               </div>
@@ -160,13 +166,13 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
                         }`}
                       >
                         <item.icon className="w-5 h-5 flex-shrink-0" />
-                        <span>{item.label}</span>
+                        <span>{t(item.labelKey)}</span>
                       </Link>
                     );
                   })
                 ) : (
                   <p className="text-center text-muted-foreground text-sm py-4">
-                    لا توجد نتائج
+                    {t('common.noResults')}
                   </p>
                 )}
               </nav>
@@ -178,15 +184,15 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
                   onClick={handleLinkClick}
                   className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground hover:bg-secondary transition-colors mb-2"
                 >
-                  <ChevronLeft className="w-5 h-5" />
-                  <span>العودة للموقع</span>
+                  {isRTL ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                  <span>{t('admin.backToSite')}</span>
                 </Link>
                 <button
                   onClick={handleSignOut}
                   className="flex items-center gap-3 px-4 py-3 rounded-xl text-destructive hover:bg-destructive/10 transition-colors w-full"
                 >
                   <LogOut className="w-5 h-5" />
-                  <span>تسجيل الخروج</span>
+                  <span>{t('admin.logout')}</span>
                 </button>
               </div>
             </motion.aside>
@@ -199,24 +205,24 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
   // Desktop Sidebar
   return (
     <motion.aside
-      initial={{ x: 100 }}
+      initial={{ x: isRTL ? 100 : -100 }}
       animate={{ x: 0 }}
-      className={`fixed right-0 top-0 h-screen bg-card border-l border-border z-50 transition-all duration-300 flex flex-col ${
+      className={`fixed top-0 h-screen bg-card border-border z-50 transition-all duration-300 flex flex-col ${
         isCollapsed ? 'w-20' : 'w-64'
-      }`}
+      } ${isRTL ? 'right-0 border-l' : 'left-0 border-r'}`}
     >
       {/* Header */}
       <div className="h-20 flex items-center justify-between px-4 border-b border-border flex-shrink-0">
         {!isCollapsed && (
           <span className="text-xl font-bold text-gradient-gold font-playfair">
-            لوحة التحكم
+            {t('admin.dashboard')}
           </span>
         )}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="p-2 hover:bg-secondary rounded-lg transition-colors"
         >
-          {isCollapsed ? <Menu className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+          {isCollapsed ? <Menu className="w-5 h-5" /> : (isRTL ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />)}
         </button>
       </div>
 
@@ -224,13 +230,13 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
       {!isCollapsed && (
         <div className="px-4 py-2 border-b border-border flex-shrink-0">
           <div className="relative">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground ${isRTL ? 'right-3' : 'left-3'}`} />
             <Input
               type="text"
-              placeholder="بحث سريع..."
+              placeholder={t('admin.quickSearch')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pr-9 h-9 text-sm bg-secondary/50"
+              className={`h-9 text-sm bg-secondary/50 ${isRTL ? 'pr-9' : 'pl-9'}`}
             />
           </div>
         </div>
@@ -252,13 +258,13 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
                 }`}
               >
                 <item.icon className="w-5 h-5 flex-shrink-0" />
-                {!isCollapsed && <span>{item.label}</span>}
+                {!isCollapsed && <span>{t(item.labelKey)}</span>}
               </Link>
             );
           })
         ) : (
           <p className="text-center text-muted-foreground text-sm py-4">
-            لا توجد نتائج
+            {t('common.noResults')}
           </p>
         )}
       </nav>
@@ -269,15 +275,15 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
           to="/"
           className="flex items-center gap-3 px-4 py-3 rounded-xl text-foreground hover:bg-secondary transition-colors mb-2"
         >
-          <ChevronLeft className="w-5 h-5" />
-          {!isCollapsed && <span>العودة للموقع</span>}
+          {isRTL ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+          {!isCollapsed && <span>{t('admin.backToSite')}</span>}
         </Link>
         <button
           onClick={signOut}
           className="flex items-center gap-3 px-4 py-3 rounded-xl text-destructive hover:bg-destructive/10 transition-colors w-full"
         >
           <LogOut className="w-5 h-5" />
-          {!isCollapsed && <span>تسجيل الخروج</span>}
+          {!isCollapsed && <span>{t('admin.logout')}</span>}
         </button>
       </div>
     </motion.aside>
