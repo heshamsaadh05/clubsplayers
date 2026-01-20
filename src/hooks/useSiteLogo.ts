@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 interface SiteLogo {
   type: 'text' | 'image';
   image_url: string | null;
+  light_image_url?: string | null;
+  dark_image_url?: string | null;
 }
 
 interface SiteName {
@@ -43,5 +45,21 @@ export const useSiteLogo = () => {
     fetchSettings();
   }, []);
 
-  return { logo, siteName, loading };
+  // Get the appropriate logo URL based on theme mode
+  const getLogoForMode = (isDarkMode: boolean): string | null => {
+    if (logo.type !== 'image') return null;
+    
+    // If mode-specific logos exist, use them
+    if (isDarkMode && logo.dark_image_url) {
+      return logo.dark_image_url;
+    }
+    if (!isDarkMode && logo.light_image_url) {
+      return logo.light_image_url;
+    }
+    
+    // Fallback to the main image_url for backwards compatibility
+    return logo.image_url;
+  };
+
+  return { logo, siteName, loading, getLogoForMode };
 };
