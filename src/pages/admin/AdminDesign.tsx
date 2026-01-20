@@ -1716,6 +1716,202 @@ const AdminDesign = () => {
                                 </div>
                               </div>
                             )}
+
+                            {/* Features Section Settings */}
+                            {section.section_key === 'features' && (
+                              <div className="pt-4 border-t border-border space-y-4">
+                                <Label className="mb-3 block font-semibold text-gold">نصوص قسم المميزات</Label>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label>الشارة (EN)</Label>
+                                    <Input
+                                      value={(sectionSettings.badge_en as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, badge_en: e.target.value } 
+                                      })}
+                                      placeholder="Why Us?"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>الشارة (AR)</Label>
+                                    <Input
+                                      value={(sectionSettings.badge as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, badge: e.target.value } 
+                                      })}
+                                      placeholder="لماذا نحن؟"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>العنوان - الجزء الأول (EN)</Label>
+                                    <Input
+                                      value={(sectionSettings.title_part1_en as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, title_part1_en: e.target.value } 
+                                      })}
+                                      placeholder="Professional"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>العنوان - الجزء الأول (AR)</Label>
+                                    <Input
+                                      value={(sectionSettings.title_part1 as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, title_part1: e.target.value } 
+                                      })}
+                                      placeholder="خدمات"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>العنوان - الجزء الثاني (EN)</Label>
+                                    <Input
+                                      value={(sectionSettings.title_part2_en as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, title_part2_en: e.target.value } 
+                                      })}
+                                      placeholder="Integrated Services"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>العنوان - الجزء الثاني (AR)</Label>
+                                    <Input
+                                      value={(sectionSettings.title_part2 as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, title_part2: e.target.value } 
+                                      })}
+                                      placeholder="احترافية متكاملة"
+                                    />
+                                  </div>
+                                  <div className="space-y-2 md:col-span-2">
+                                    <Label>الوصف (EN)</Label>
+                                    <Input
+                                      value={(sectionSettings.subtitle_en as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, subtitle_en: e.target.value } 
+                                      })}
+                                      placeholder="We offer you a comprehensive range of services..."
+                                    />
+                                  </div>
+                                  <div className="space-y-2 md:col-span-2">
+                                    <Label>الوصف (AR)</Label>
+                                    <Input
+                                      value={(sectionSettings.subtitle as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, subtitle: e.target.value } 
+                                      })}
+                                      placeholder="نقدم لك مجموعة شاملة من الخدمات..."
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* How It Works Section Settings */}
+                            {section.section_key === 'how_it_works' && (
+                              <div className="pt-4 border-t border-border space-y-4">
+                                <Label className="mb-3 block font-semibold text-gold">نصوص قسم كيف يعمل</Label>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label>الشارة (EN)</Label>
+                                    <Input
+                                      value={(sectionSettings.badge_en as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, badge_en: e.target.value } 
+                                      })}
+                                      placeholder="How It Works?"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>الشارة (AR)</Label>
+                                    <Input
+                                      value={(sectionSettings.badge as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, badge: e.target.value } 
+                                      })}
+                                      placeholder="كيف تعمل؟"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>العنوان - الجزء الأول (EN)</Label>
+                                    <Input
+                                      value={(sectionSettings.title_part1_en as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, title_part1_en: e.target.value } 
+                                      })}
+                                      placeholder="Simple Steps"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>العنوان - الجزء الأول (AR)</Label>
+                                    <Input
+                                      value={(sectionSettings.title_part1 as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, title_part1: e.target.value } 
+                                      })}
+                                      placeholder="خطوات بسيطة"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>العنوان - الجزء الثاني (EN)</Label>
+                                    <Input
+                                      value={(sectionSettings.title_part2_en as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, title_part2_en: e.target.value } 
+                                      })}
+                                      placeholder="To Get Started"
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label>العنوان - الجزء الثاني (AR)</Label>
+                                    <Input
+                                      value={(sectionSettings.title_part2 as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, title_part2: e.target.value } 
+                                      })}
+                                      placeholder="للانطلاق"
+                                    />
+                                  </div>
+                                  <div className="space-y-2 md:col-span-2">
+                                    <Label>الوصف (EN)</Label>
+                                    <Input
+                                      value={(sectionSettings.subtitle_en as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, subtitle_en: e.target.value } 
+                                      })}
+                                      placeholder="Start your journey towards professionalism..."
+                                    />
+                                  </div>
+                                  <div className="space-y-2 md:col-span-2">
+                                    <Label>الوصف (AR)</Label>
+                                    <Input
+                                      value={(sectionSettings.subtitle as string) || ''}
+                                      onChange={(e) => updateSection.mutateAsync({ 
+                                        id: section.id, 
+                                        settings: { ...sectionSettings, subtitle: e.target.value } 
+                                      })}
+                                      placeholder="ابدأ رحلتك نحو الاحتراف..."
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
