@@ -1,50 +1,66 @@
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, MapPin, Star } from "lucide-react";
-import { useState } from "react";
-import player1 from "@/assets/player-1.jpg";
-import player2 from "@/assets/player-2.jpg";
-import player3 from "@/assets/player-3.jpg";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useSliderSettings, useSliderItems } from "@/hooks/useSliderSettings";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const PlayersSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  
+  // Fetch slider settings and items from database
+  const { data: settings, isLoading: loadingSettings } = useSliderSettings('players');
+  const { data: items, isLoading: loadingItems } = useSliderItems('players');
+  
+  // Filter only active items
+  const activeItems = items?.filter(item => item.is_active) || [];
 
-  const players = [
-    {
-      id: 1,
-      name: "أحمد محمود",
-      position: "مهاجم",
-      age: 22,
-      club: "الأهلي المصري",
-      rating: 4.8,
-      image: player1,
-    },
-    {
-      id: 2,
-      name: "محمد السعيد",
-      position: "وسط ميدان",
-      age: 24,
-      club: "الزمالك",
-      rating: 4.6,
-      image: player2,
-    },
-    {
-      id: 3,
-      name: "يوسف خالد",
-      position: "حارس مرمى",
-      age: 21,
-      club: "بيراميدز",
-      rating: 4.9,
-      image: player3,
-    },
-  ];
+  // Auto-play functionality
+  useEffect(() => {
+    if (!settings?.auto_play || activeItems.length === 0) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % activeItems.length);
+    }, settings.auto_play_interval || 5000);
+
+    return () => clearInterval(interval);
+  }, [settings?.auto_play, settings?.auto_play_interval, activeItems.length]);
 
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % players.length);
+    if (activeItems.length === 0) return;
+    setCurrentIndex((prev) => (prev + 1) % activeItems.length);
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + players.length) % players.length);
+    if (activeItems.length === 0) return;
+    setCurrentIndex((prev) => (prev - 1 + activeItems.length) % activeItems.length);
   };
+
+  const isLoading = loadingSettings || loadingItems;
+
+  if (isLoading) {
+    return (
+      <section id="players" className="section-padding relative overflow-hidden">
+        <div className="container mx-auto">
+          <div className="text-center mb-16">
+            <Skeleton className="h-4 w-20 mx-auto mb-4" />
+            <Skeleton className="h-10 w-64 mx-auto mb-6" />
+            <Skeleton className="h-6 w-96 mx-auto" />
+          </div>
+          <div className="flex gap-6 justify-center">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="w-80 h-96 rounded-2xl" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (activeItems.length === 0) {
+    return null; // Don't render section if no items
+  }
+
+  const itemsPerView = settings?.items_per_view || 3;
 
   return (
     <section id="players" className="section-padding relative overflow-hidden">
@@ -75,81 +91,94 @@ const PlayersSlider = () => {
         {/* Slider */}
         <div className="relative max-w-5xl mx-auto">
           {/* Navigation Buttons */}
-          <button
-            onClick={prevSlide}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-gold/20 hover:bg-gold/40 flex items-center justify-center transition-colors -mr-6"
-          >
-            <ChevronRight className="w-6 h-6 text-gold" />
-          </button>
-          <button
-            onClick={nextSlide}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-gold/20 hover:bg-gold/40 flex items-center justify-center transition-colors -ml-6"
-          >
-            <ChevronLeft className="w-6 h-6 text-gold" />
-          </button>
+          {settings?.show_navigation !== false && (
+            <>
+              <button
+                onClick={prevSlide}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-gold/20 hover:bg-gold/40 flex items-center justify-center transition-colors -mr-6"
+              >
+                <ChevronRight className="w-6 h-6 text-gold" />
+              </button>
+              <button
+                onClick={nextSlide}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-12 h-12 rounded-full bg-gold/20 hover:bg-gold/40 flex items-center justify-center transition-colors -ml-6"
+              >
+                <ChevronLeft className="w-6 h-6 text-gold" />
+              </button>
+            </>
+          )}
 
           {/* Cards Container */}
           <div className="overflow-hidden px-8">
             <motion.div
               className="flex gap-6"
-              animate={{ x: `${currentIndex * -100}%` }}
+              animate={{ x: `${currentIndex * -100 / itemsPerView}%` }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
-              {players.map((player) => (
+              {activeItems.map((item) => (
                 <motion.div
-                  key={player.id}
-                  className="min-w-full md:min-w-[calc(50%-12px)] lg:min-w-[calc(33.333%-16px)]"
+                  key={item.id}
+                  className={`flex-shrink-0 ${
+                    itemsPerView === 1 ? 'w-full' :
+                    itemsPerView === 2 ? 'w-[calc(50%-12px)]' :
+                    'w-[calc(33.333%-16px)]'
+                  }`}
                   whileHover={{ y: -10 }}
                 >
-                  <div className="card-glass rounded-2xl overflow-hidden group">
-                    {/* Image */}
-                    <div className="relative h-80 overflow-hidden">
-                      <img
-                        src={player.image}
-                        alt={player.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
-                      
-                      {/* Rating Badge */}
-                      <div className="absolute top-4 left-4 flex items-center gap-1 bg-gold/90 text-primary-foreground px-3 py-1 rounded-full text-sm font-bold">
-                        <Star className="w-4 h-4 fill-current" />
-                        {player.rating}
+                  <a 
+                    href={item.link_url || '#'} 
+                    className="block"
+                    onClick={(e) => !item.link_url && e.preventDefault()}
+                  >
+                    <div className="card-glass rounded-2xl overflow-hidden group h-full">
+                      {/* Image */}
+                      <div className="relative h-80 overflow-hidden bg-muted">
+                        {item.image_url ? (
+                          <img
+                            src={item.image_url}
+                            alt={item.title || item.title_ar || ''}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                            لا توجد صورة
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
                       </div>
-                    </div>
 
-                    {/* Info */}
-                    <div className="p-6">
-                      <h3 className="text-xl font-bold text-foreground mb-1">
-                        {player.name}
-                      </h3>
-                      <p className="text-gold font-medium mb-3">{player.position}</p>
-                      <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
-                          {player.club}
-                        </div>
-                        <span>{player.age} سنة</span>
+                      {/* Info */}
+                      <div className="p-6">
+                        <h3 className="text-xl font-bold text-foreground mb-1">
+                          {item.title_ar || item.title || 'عنوان'}
+                        </h3>
+                        {(item.subtitle_ar || item.subtitle) && (
+                          <p className="text-gold font-medium">
+                            {item.subtitle_ar || item.subtitle}
+                          </p>
+                        )}
                       </div>
                     </div>
-                  </div>
+                  </a>
                 </motion.div>
               ))}
             </motion.div>
           </div>
 
           {/* Dots */}
-          <div className="flex justify-center gap-2 mt-8">
-            {players.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`w-3 h-3 rounded-full transition-colors ${
-                  index === currentIndex ? "bg-gold" : "bg-gold/30"
-                }`}
-              />
-            ))}
-          </div>
+          {settings?.show_dots !== false && activeItems.length > 1 && (
+            <div className="flex justify-center gap-2 mt-8">
+              {activeItems.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentIndex(index)}
+                  className={`w-3 h-3 rounded-full transition-colors ${
+                    index === currentIndex ? "bg-gold" : "bg-gold/30"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>
