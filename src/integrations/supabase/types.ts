@@ -956,7 +956,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          config?: Json | null
+          config?: never
           created_at?: string | null
           id?: string | null
           instructions?: string | null
@@ -968,7 +968,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          config?: Json | null
+          config?: never
           created_at?: string | null
           id?: string | null
           instructions?: string | null
