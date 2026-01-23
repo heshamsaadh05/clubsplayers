@@ -385,6 +385,48 @@ export type Database = {
         }
         Relationships: []
       }
+      player_interests: {
+        Row: {
+          admin_notes: string | null
+          club_user_id: string
+          created_at: string
+          id: string
+          interest_type: string
+          message: string | null
+          player_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          club_user_id: string
+          created_at?: string
+          id?: string
+          interest_type?: string
+          message?: string | null
+          player_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          club_user_id?: string
+          created_at?: string
+          id?: string
+          interest_type?: string
+          message?: string | null
+          player_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       player_private: {
         Row: {
           created_at: string
@@ -985,53 +1027,18 @@ export type Database = {
         Row: {
           bio: string | null
           created_at: string | null
-          current_club: string | null
+          date_of_birth: string | null
           full_name: string | null
           height_cm: number | null
           id: string | null
           nationality: string | null
           position: string | null
-          previous_clubs: string[] | null
           profile_image_url: string | null
           status: Database["public"]["Enums"]["player_status"] | null
           updated_at: string | null
           user_id: string | null
           video_urls: string[] | null
           weight_kg: number | null
-        }
-        Insert: {
-          bio?: string | null
-          created_at?: string | null
-          current_club?: string | null
-          full_name?: string | null
-          height_cm?: number | null
-          id?: string | null
-          nationality?: string | null
-          position?: string | null
-          previous_clubs?: string[] | null
-          profile_image_url?: string | null
-          status?: Database["public"]["Enums"]["player_status"] | null
-          updated_at?: string | null
-          user_id?: string | null
-          video_urls?: string[] | null
-          weight_kg?: number | null
-        }
-        Update: {
-          bio?: string | null
-          created_at?: string | null
-          current_club?: string | null
-          full_name?: string | null
-          height_cm?: number | null
-          id?: string | null
-          nationality?: string | null
-          position?: string | null
-          previous_clubs?: string[] | null
-          profile_image_url?: string | null
-          status?: Database["public"]["Enums"]["player_status"] | null
-          updated_at?: string | null
-          user_id?: string | null
-          video_urls?: string[] | null
-          weight_kg?: number | null
         }
         Relationships: []
       }
