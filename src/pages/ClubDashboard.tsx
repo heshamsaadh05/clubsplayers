@@ -43,6 +43,7 @@ import FavoritesList from "@/components/favorites/FavoritesList";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { Progress } from "@/components/ui/progress";
 import EditClubForm from "@/components/club/EditClubForm";
+import ClubInterestsList from "@/components/club/ClubInterestsList";
 
 type Club = Tables<"clubs">;
 type Subscription = Tables<"subscriptions">;
@@ -723,6 +724,9 @@ const ClubDashboard = () => {
           >
             {/* Favorites List */}
             <FavoritesList />
+
+            {/* Club Interests */}
+            <ClubInterestsList />
             {/* Quick Actions */}
             <Card>
               <CardHeader>
