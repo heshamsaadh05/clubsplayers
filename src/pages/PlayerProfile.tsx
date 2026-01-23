@@ -6,22 +6,20 @@ import {
   MapPin,
   Ruler,
   Weight,
-  Trophy,
   ArrowRight,
   LogOut,
   Lock,
   Play,
   FileText,
-  MessageCircle,
   Share2,
   Heart,
   ChevronLeft,
   Video,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -31,23 +29,20 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
-import MessageComposer from "@/components/messages/MessageComposer";
 import { useFavorites } from "@/hooks/useFavorites";
 import PlayerRating from "@/components/player/PlayerRating";
+import PlayerInterestButton from "@/components/player/PlayerInterestButton";
 import { useSubscriptionLimits } from "@/hooks/useSubscriptionLimits";
 import { logError } from "@/lib/errorLogger";
 
-// Public player type excludes PII fields (email, phone, date_of_birth, id_document_url, rejection_reason)
+// Public player type - now includes date_of_birth for age, excludes contact info and club history
 type PublicPlayer = {
   id: string;
   user_id: string;
   full_name: string;
   position: string | null;
   nationality: string | null;
-  current_club: string | null;
-  previous_clubs: string[] | null;
   bio: string | null;
   profile_image_url: string | null;
   video_urls: string[] | null;
@@ -56,6 +51,7 @@ type PublicPlayer = {
   status: "pending" | "approved" | "rejected";
   created_at: string;
   updated_at: string;
+  date_of_birth: string | null;
 };
 
 const PlayerProfile = () => {
@@ -74,7 +70,6 @@ const PlayerProfile = () => {
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
   const [isClub, setIsClub] = useState(false);
-  const [messageOpen, setMessageOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [viewRecorded, setViewRecorded] = useState(false);
 
@@ -108,7 +103,7 @@ const PlayerProfile = () => {
 
         setHasAccess(!!subData);
 
-        // Fetch player data from public view (excludes PII like email, phone, DOB)
+        // Fetch player data from public view (excludes PII like email, phone, current/previous clubs)
         const { data: playerData, error } = await supabase
           .from("players_public")
           .select("*")
@@ -138,7 +133,17 @@ const PlayerProfile = () => {
     }
   }, [user, id, viewRecorded, recordPlayerView]);
 
-  // calculateAge removed - date_of_birth is now private PII
+  const calculateAge = (dateOfBirth: string | null): number | null => {
+    if (!dateOfBirth) return null;
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -244,6 +249,8 @@ const PlayerProfile = () => {
     );
   }
 
+  const playerAge = calculateAge(player.date_of_birth);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -304,10 +311,10 @@ const PlayerProfile = () => {
               </div>
               <CardContent className="p-6">
                 <h1 className="text-2xl font-bold mb-2">{player.full_name}</h1>
-                {player.current_club && (
+                {playerAge && (
                   <p className="text-muted-foreground flex items-center gap-2">
-                    <Trophy className="w-4 h-4 text-gold" />
-                    {player.current_club}
+                    <Calendar className="w-4 h-4 text-gold" />
+                    {playerAge} سنة
                   </p>
                 )}
               </CardContent>
@@ -333,7 +340,7 @@ const PlayerProfile = () => {
                   </p>
                   <p className="text-sm text-muted-foreground">كجم</p>
                 </div>
-                <div className="text-center p-4 bg-muted/50 rounded-lg">
+                <div className="text-center p-4 bg-muted/50 rounded-lg col-span-2">
                   <MapPin className="w-6 h-6 text-gold mx-auto mb-2" />
                   <p className="text-lg font-bold truncate">
                     {player.nationality || "—"}
@@ -366,39 +373,6 @@ const PlayerProfile = () => {
                 </CardContent>
               </Card>
             )}
-
-            {/* Career History */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Trophy className="w-5 h-5 text-gold" />
-                  المسيرة الكروية
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {player.current_club && (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">النادي الحالي</p>
-                    <p className="font-medium text-lg">{player.current_club}</p>
-                  </div>
-                )}
-                {player.previous_clubs && player.previous_clubs.length > 0 && (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">الأندية السابقة</p>
-                    <div className="flex flex-wrap gap-2">
-                      {player.previous_clubs.map((club, index) => (
-                        <Badge key={index} variant="secondary" className="text-sm">
-                          {club}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {!player.current_club && (!player.previous_clubs || player.previous_clubs.length === 0) && (
-                  <p className="text-muted-foreground">لا توجد معلومات عن المسيرة الكروية</p>
-                )}
-              </CardContent>
-            </Card>
 
             {/* Videos */}
             <Card>
@@ -453,29 +427,22 @@ const PlayerProfile = () => {
               </CardContent>
             </Card>
 
-            {/* Contact Section */}
+            {/* Interest Section - New system replacing messaging */}
             <Card className="border-gold/30">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <MessageCircle className="w-5 h-5 text-gold" />
-                  تواصل مع اللاعب
+                  <Heart className="w-5 h-5 text-gold" />
+                  مهتم بهذا اللاعب؟
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Contact info removed for privacy - clubs can send messages directly */}
-                <div>
-                  <p className="font-medium mb-3">إرسال رسالة مباشرة</p>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    يمكنك التواصل مع اللاعب مباشرة عبر نظام الرسائل
-                  </p>
-                  <Button
-                    className="w-full btn-gold"
-                    onClick={() => setMessageOpen(true)}
-                  >
-                    <MessageCircle className="w-4 h-4 ml-2" />
-                    إرسال رسالة
-                  </Button>
-                </div>
+                <p className="text-sm text-muted-foreground">
+                  سجل اهتمامك بهذا اللاعب وسيقوم فريق الإدارة بالتواصل معك لتزويدك ببيانات التواصل
+                </p>
+                <PlayerInterestButton
+                  playerId={id || ''}
+                  playerName={player.full_name}
+                />
               </CardContent>
             </Card>
 
@@ -488,14 +455,6 @@ const PlayerProfile = () => {
           </motion.div>
         </div>
       </main>
-
-      {/* Message Composer Dialog */}
-      <MessageComposer
-        isOpen={messageOpen}
-        onClose={() => setMessageOpen(false)}
-        recipientId={player.user_id}
-        recipientName={player.full_name}
-      />
     </div>
   );
 };

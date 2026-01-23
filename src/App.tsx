@@ -22,6 +22,7 @@ import AdminMenus from "./pages/admin/AdminMenus";
 import AdminDesign from "./pages/admin/AdminDesign";
 import AdminFooter from "./pages/admin/AdminFooter";
 import AdminSections from "./pages/admin/AdminSections";
+import AdminPlayerInterests from "./pages/admin/AdminPlayerInterests";
 import PlayerRegistration from "./pages/PlayerRegistration";
 import PlayerDashboard from "./pages/PlayerDashboard";
 import ClubRegistration from "./pages/ClubRegistration";
@@ -30,7 +31,6 @@ import BrowsePlayers from "./pages/BrowsePlayers";
 import PlayerProfile from "./pages/PlayerProfile";
 import Subscription from "./pages/Subscription";
 import PlansComparison from "./pages/PlansComparison";
-import Messages from "./pages/Messages";
 import AccountSettings from "./pages/AccountSettings";
 import PageView from "./pages/PageView";
 import NotFound from "./pages/NotFound";
@@ -58,12 +58,12 @@ const App = () => (
                 <Route path="/player/:id" element={<PlayerProfile />} />
                 <Route path="/subscription" element={<Subscription />} />
                 <Route path="/plans" element={<PlansComparison />} />
-                <Route path="/messages" element={<Messages />} />
                 <Route path="/account-settings" element={<AccountSettings />} />
                 <Route path="/page/:slug" element={<PageView />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/players" element={<AdminPlayers />} />
                 <Route path="/admin/clubs" element={<AdminClubs />} />
+                <Route path="/admin/interests" element={<AdminPlayerInterests />} />
                 <Route path="/admin/plans" element={<AdminPlans />} />
                 <Route path="/admin/payments" element={<AdminPayments />} />
                 <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />

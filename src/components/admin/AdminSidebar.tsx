@@ -21,7 +21,8 @@ import {
   Layers,
   Share2,
   Search,
-  Globe
+  Globe,
+  Heart
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -61,6 +62,7 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
     { icon: LayoutDashboard, labelKey: 'admin.dashboard', path: '/admin', keywords: ['dashboard', 'الرئيسية', 'home'] },
     { icon: Users, labelKey: 'admin.players', path: '/admin/players', keywords: ['players', 'لاعب'] },
     { icon: Building2, labelKey: 'admin.clubs', path: '/admin/clubs', keywords: ['clubs', 'نادي', 'فريق'] },
+    { icon: Heart, label: 'اهتمامات الأندية', path: '/admin/interests', keywords: ['interests', 'اهتمام', 'عرض', 'طلب'] },
     { icon: Receipt, labelKey: 'admin.subscriptions', path: '/admin/subscriptions', keywords: ['subscriptions', 'اشتراك'] },
     { icon: Package, labelKey: 'admin.plans', path: '/admin/plans', keywords: ['plans', 'باقة', 'خطة'] },
     { icon: CreditCard, labelKey: 'admin.payments', path: '/admin/payments', keywords: ['payments', 'دفع', 'فلوس'] },
@@ -78,10 +80,11 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
   const filteredMenuItems = useMemo(() => {
     if (!searchQuery.trim()) return menuItems;
     const query = searchQuery.toLowerCase().trim();
-    return menuItems.filter(item => 
-      t(item.labelKey).toLowerCase().includes(query) ||
-      item.keywords.some(keyword => keyword.toLowerCase().includes(query))
-    );
+    return menuItems.filter(item => {
+      const label = item.labelKey ? t(item.labelKey) : (item as any).label || '';
+      return label.toLowerCase().includes(query) ||
+        item.keywords.some(keyword => keyword.toLowerCase().includes(query));
+    });
   }, [searchQuery, t]);
 
   const handleLinkClick = () => {
@@ -207,7 +210,7 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
                         }`}
                       >
                         <item.icon className="w-5 h-5 flex-shrink-0" />
-                        <span>{t(item.labelKey)}</span>
+                        <span>{item.labelKey ? t(item.labelKey) : (item as any).label}</span>
                       </Link>
                     );
                   })
@@ -302,7 +305,7 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
                 }`}
               >
                 <item.icon className="w-5 h-5 flex-shrink-0" />
-                {!isCollapsed && <span>{t(item.labelKey)}</span>}
+                {!isCollapsed && <span>{item.labelKey ? t(item.labelKey) : (item as any).label}</span>}
               </Link>
             );
           })
