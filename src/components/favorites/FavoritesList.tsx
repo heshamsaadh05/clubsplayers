@@ -8,15 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useFavorites } from '@/hooks/useFavorites';
 
-// Public player type excludes PII fields (email, phone, date_of_birth, id_document_url, rejection_reason)
+// Public player type - now includes date_of_birth for age, excludes contact info and club history
 type PublicPlayer = {
   id: string;
   user_id: string;
   full_name: string;
   position: string | null;
   nationality: string | null;
-  current_club: string | null;
-  previous_clubs: string[] | null;
   bio: string | null;
   profile_image_url: string | null;
   video_urls: string[] | null;
@@ -25,6 +23,7 @@ type PublicPlayer = {
   status: "pending" | "approved" | "rejected";
   created_at: string;
   updated_at: string;
+  date_of_birth: string | null;
 };
 
 interface FavoriteWithPlayer {

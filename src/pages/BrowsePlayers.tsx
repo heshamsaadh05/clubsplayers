@@ -51,15 +51,13 @@ import { toast } from "sonner";
 import { useFavorites } from "@/hooks/useFavorites";
 import { logError } from "@/lib/errorLogger";
 
-// Public player type excludes PII fields (email, phone, date_of_birth, id_document_url, rejection_reason)
+// Public player type - now includes date_of_birth for age, excludes contact info and club history
 type PublicPlayer = {
   id: string;
   user_id: string;
   full_name: string;
   position: string | null;
   nationality: string | null;
-  current_club: string | null;
-  previous_clubs: string[] | null;
   bio: string | null;
   profile_image_url: string | null;
   video_urls: string[] | null;
@@ -68,6 +66,7 @@ type PublicPlayer = {
   status: "pending" | "approved" | "rejected";
   created_at: string;
   updated_at: string;
+  date_of_birth: string | null;
 };
 
 const positions = [
@@ -186,12 +185,11 @@ const BrowsePlayers = () => {
   useEffect(() => {
     let result = [...players];
 
-    // Search filter
+    // Search filter - search by name and position only (no club info)
     if (searchQuery) {
       result = result.filter(
         (player) =>
           player.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          player.current_club?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           player.position?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
@@ -877,13 +875,6 @@ const BrowsePlayers = () => {
                               </div>
                             )}
                           </div>
-
-                          {player.current_club && (
-                            <div className="flex items-center gap-2 text-sm mb-4">
-                              <Trophy className="w-4 h-4 text-gold" />
-                              <span>{player.current_club}</span>
-                            </div>
-                          )}
 
                           <div className="flex gap-2">
                             <Button 
