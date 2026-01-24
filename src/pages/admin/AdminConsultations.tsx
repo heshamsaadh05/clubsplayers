@@ -142,6 +142,8 @@ const AdminConsultations = () => {
   const [selectedBooking, setSelectedBooking] = useState<ConsultationBooking | null>(null);
   const [meetLink, setMeetLink] = useState('');
   const [adminNotes, setAdminNotes] = useState('');
+  const [creatingMeet, setCreatingMeet] = useState(false);
+  const [googleApiConfigured, setGoogleApiConfigured] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -154,9 +156,23 @@ const AdminConsultations = () => {
         fetchSettings(),
         fetchSlots(),
         fetchBookings(),
+        checkGoogleApiConfig(),
       ]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkGoogleApiConfig = async () => {
+    const { data } = await supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'google_api_settings')
+      .single();
+    
+    if (data?.value) {
+      const settings = data.value as { serviceAccountKey?: string };
+      setGoogleApiConfigured(!!settings.serviceAccountKey);
     }
   };
 
@@ -350,12 +366,54 @@ const AdminConsultations = () => {
   };
 
   const handleConfirmBooking = async (booking: ConsultationBooking) => {
-    await handleUpdateBooking(booking.id, {
-      status: 'confirmed',
-      payment_status: 'paid',
-      meet_link: meetLink || booking.meet_link,
-      admin_notes: adminNotes || booking.admin_notes,
-    });
+    // If Google API is configured, create Meet link automatically
+    if (googleApiConfigured) {
+      await handleCreateMeetAndConfirm(booking);
+    } else {
+      // Manual confirmation with provided meet link
+      await handleUpdateBooking(booking.id, {
+        status: 'confirmed',
+        payment_status: 'completed',
+        meet_link: meetLink || booking.meet_link,
+        admin_notes: adminNotes || booking.admin_notes,
+      });
+    }
+  };
+
+  const handleCreateMeetAndConfirm = async (booking: ConsultationBooking) => {
+    setCreatingMeet(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-google-meet', {
+        body: { bookingId: booking.id },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        // Update local state
+        setBookings(bookings.map(b => 
+          b.id === booking.id 
+            ? { ...b, status: 'confirmed', payment_status: 'completed', meet_link: data.meetLink }
+            : b
+        ));
+        setSelectedBooking(null);
+        toast({
+          title: 'تم تأكيد الحجز',
+          description: 'تم إنشاء رابط Google Meet تلقائياً',
+        });
+      } else {
+        throw new Error(data.error || 'فشل في إنشاء رابط الاجتماع');
+      }
+    } catch (error) {
+      console.error('Error creating Meet:', error);
+      toast({
+        title: 'خطأ',
+        description: error instanceof Error ? error.message : 'حدث خطأ أثناء إنشاء رابط الاجتماع',
+        variant: 'destructive',
+      });
+    } finally {
+      setCreatingMeet(false);
+    }
   };
 
   const handleCancelBooking = async (bookingId: string) => {
@@ -820,16 +878,29 @@ const AdminConsultations = () => {
                                     </div>
                                   )}
 
-                                  <div className="space-y-2">
-                                    <Label>رابط Google Meet</Label>
-                                    <Input
-                                      value={meetLink}
-                                      onChange={(e) => setMeetLink(e.target.value)}
-                                      placeholder="https://meet.google.com/xxx-xxxx-xxx"
-                                      className="bg-secondary"
-                                      dir="ltr"
-                                    />
-                                  </div>
+                                  {!googleApiConfigured && (
+                                    <div className="space-y-2">
+                                      <Label>رابط Google Meet</Label>
+                                      <Input
+                                        value={meetLink}
+                                        onChange={(e) => setMeetLink(e.target.value)}
+                                        placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                                        className="bg-secondary"
+                                        dir="ltr"
+                                      />
+                                    </div>
+                                  )}
+
+                                  {googleApiConfigured && booking.status === 'pending' && (
+                                    <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/30">
+                                      <div className="flex items-center gap-2 text-green-600">
+                                        <Video className="w-4 h-4" />
+                                        <span className="text-sm font-medium">
+                                          سيتم إنشاء رابط Google Meet تلقائياً عند التأكيد
+                                        </span>
+                                      </div>
+                                    </div>
+                                  )}
 
                                   <div className="space-y-2">
                                     <Label>ملاحظات المدير</Label>
@@ -846,14 +917,25 @@ const AdminConsultations = () => {
                                       <Button
                                         onClick={() => handleConfirmBooking(booking)}
                                         className="flex-1 btn-gold"
+                                        disabled={creatingMeet}
                                       >
-                                        <CheckCircle2 className="w-4 h-4 ml-2" />
-                                        تأكيد الحجز
+                                        {creatingMeet ? (
+                                          <>
+                                            <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                                            جاري الإنشاء...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <CheckCircle2 className="w-4 h-4 ml-2" />
+                                            {googleApiConfigured ? 'تأكيد وإنشاء Meet' : 'تأكيد الحجز'}
+                                          </>
+                                        )}
                                       </Button>
                                       <Button
                                         variant="destructive"
                                         onClick={() => handleCancelBooking(booking.id)}
                                         className="flex-1"
+                                        disabled={creatingMeet}
                                       >
                                         <XCircle className="w-4 h-4 ml-2" />
                                         رفض
