@@ -6,13 +6,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useThemeMode, useUpdateThemeModeSettings, ThemeMode, getResolvedTheme } from '@/hooks/useThemeMode';
+import { useThemeMode, useUpdateThemeModeSettings, ThemeMode } from '@/hooks/useThemeMode';
 import { useLanguage } from '@/hooks/useLanguage';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
 
 const ThemeModeToggle = () => {
-  const { mode, resolvedTheme } = useThemeMode();
+  const { mode, resolvedTheme, setLocalMode } = useThemeMode();
   const { t } = useLanguage();
   const updateSettings = useUpdateThemeModeSettings();
 
@@ -27,19 +27,15 @@ const ThemeModeToggle = () => {
   }, [resolvedTheme]);
 
   const handleModeChange = async (newMode: ThemeMode) => {
+    // Apply theme immediately via localStorage (works for all users)
+    setLocalMode(newMode);
+    
+    // Also save to database for authenticated users
     try {
-      // Apply theme immediately before the async call
-      const newResolvedTheme = getResolvedTheme(newMode);
-      const root = document.documentElement;
-      if (newResolvedTheme === 'dark') {
-        root.classList.add('dark');
-      } else {
-        root.classList.remove('dark');
-      }
-      
       await updateSettings.mutateAsync({ mode: newMode, autoSwitch: false });
     } catch {
-      toast.error(t('common.error', 'حدث خطأ'));
+      // Silent fail for database - localStorage already applied
+      console.log('Theme saved locally');
     }
   };
 

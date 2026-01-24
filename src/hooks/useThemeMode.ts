@@ -18,6 +18,30 @@ const DEFAULT_SETTINGS: ThemeModeSettings = {
   darkStart: '18:00',
 };
 
+const LOCAL_STORAGE_KEY = 'theme-mode-preference';
+
+// Get theme from localStorage for non-authenticated users
+const getLocalStorageTheme = (): ThemeMode | null => {
+  try {
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (stored && ['light', 'dark', 'system'].includes(stored)) {
+      return stored as ThemeMode;
+    }
+  } catch {
+    // localStorage not available
+  }
+  return null;
+};
+
+// Save theme to localStorage
+const setLocalStorageTheme = (mode: ThemeMode) => {
+  try {
+    localStorage.setItem(LOCAL_STORAGE_KEY, mode);
+  } catch {
+    // localStorage not available
+  }
+};
+
 // Get resolved theme based on mode and system preference
 export const getResolvedTheme = (mode: ThemeMode): 'light' | 'dark' => {
   if (mode === 'system') {
@@ -98,46 +122,68 @@ export const useUpdateThemeModeSettings = () => {
 };
 
 export const useThemeMode = () => {
-  const { data: settings } = useThemeModeSettings();
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
+  const { data: settings, isLoading } = useThemeModeSettings();
   
-  const updateTheme = useCallback(() => {
-    if (!settings) return;
-    
-    let newTheme: 'light' | 'dark';
-    
-    if (settings.autoSwitch) {
-      newTheme = getThemeByTime(settings.lightStart, settings.darkStart);
-    } else {
-      newTheme = getResolvedTheme(settings.mode);
-    }
-    
-    setResolvedTheme(newTheme);
-    
-    // Apply theme to document
+  // Initialize from localStorage first, then use database settings
+  const [localMode, setLocalMode] = useState<ThemeMode>(() => {
+    return getLocalStorageTheme() || 'dark';
+  });
+  
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => {
+    const initialMode = getLocalStorageTheme() || 'dark';
+    return getResolvedTheme(initialMode);
+  });
+
+  // Get effective mode (localStorage takes priority for quick loading, then database)
+  const effectiveMode = settings?.mode || localMode;
+  
+  const applyTheme = useCallback((theme: 'light' | 'dark') => {
+    setResolvedTheme(theme);
     const root = document.documentElement;
-    if (newTheme === 'dark') {
+    if (theme === 'dark') {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
     }
-  }, [settings]);
-  
+  }, []);
+
+  const updateTheme = useCallback(() => {
+    let newTheme: 'light' | 'dark';
+    
+    if (settings?.autoSwitch) {
+      newTheme = getThemeByTime(settings.lightStart, settings.darkStart);
+    } else {
+      newTheme = getResolvedTheme(effectiveMode);
+    }
+    
+    applyTheme(newTheme);
+  }, [settings, effectiveMode, applyTheme]);
+
+  // Apply theme immediately on mount from localStorage
+  useEffect(() => {
+    const storedMode = getLocalStorageTheme();
+    if (storedMode) {
+      applyTheme(getResolvedTheme(storedMode));
+    }
+  }, [applyTheme]);
+
   // Update theme when settings change
   useEffect(() => {
-    updateTheme();
-  }, [updateTheme]);
+    if (!isLoading) {
+      updateTheme();
+    }
+  }, [updateTheme, isLoading]);
   
   // Listen for system theme changes
   useEffect(() => {
-    if (settings?.mode !== 'system') return;
+    if (effectiveMode !== 'system') return;
     
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handler = () => updateTheme();
     
     mediaQuery.addEventListener('change', handler);
     return () => mediaQuery.removeEventListener('change', handler);
-  }, [settings?.mode, updateTheme]);
+  }, [effectiveMode, updateTheme]);
   
   // Auto-switch based on time
   useEffect(() => {
@@ -149,9 +195,14 @@ export const useThemeMode = () => {
   }, [settings?.autoSwitch, updateTheme]);
   
   return {
-    mode: settings?.mode || 'dark',
+    mode: effectiveMode,
     resolvedTheme,
     autoSwitch: settings?.autoSwitch || false,
     settings: settings || DEFAULT_SETTINGS,
+    setLocalMode: (mode: ThemeMode) => {
+      setLocalMode(mode);
+      setLocalStorageTheme(mode);
+      applyTheme(getResolvedTheme(mode));
+    },
   };
 };
