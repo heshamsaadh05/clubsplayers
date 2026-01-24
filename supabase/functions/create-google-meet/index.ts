@@ -232,7 +232,7 @@ Deno.serve(async (req) => {
 
     // Get request body
     const body = await req.json();
-    const { bookingId }: { bookingId: string } = body;
+    const { bookingId, updateStatus = true }: { bookingId: string; updateStatus?: boolean } = body;
 
     if (!bookingId) {
       return new Response(
@@ -331,14 +331,20 @@ Deno.serve(async (req) => {
     console.log('Created Meet link:', meetLink);
 
     // Update booking with meet link
+    const updateData: Record<string, unknown> = {
+      meet_link: meetLink,
+    };
+
+    // Only update status if updateStatus is true
+    if (updateStatus) {
+      updateData.status = 'confirmed';
+      updateData.payment_status = 'completed';
+      updateData.confirmed_at = new Date().toISOString();
+    }
+
     const { error: updateError } = await supabase
       .from('consultation_bookings')
-      .update({
-        meet_link: meetLink,
-        status: 'confirmed',
-        payment_status: 'completed',
-        confirmed_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', bookingId);
 
     if (updateError) {
