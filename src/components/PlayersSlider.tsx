@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSliderSettings, useSliderItems } from "@/hooks/useSliderSettings";
 import { usePageSections } from "@/hooks/usePageSections";
 import { Skeleton } from "@/components/ui/skeleton";
-
+import { useLanguage } from "@/hooks/useLanguage";
 interface SectionSettings {
   badge?: string;
   badge_ar?: string;
@@ -26,45 +26,57 @@ interface SliderItem {
   link_url: string | null;
 }
 
-const SliderCard = ({ item }: { item: SliderItem }) => (
-  <a 
-    href={item.link_url || '#'} 
-    className="block h-full"
-    onClick={(e) => !item.link_url && e.preventDefault()}
-  >
-    <div className="card-glass rounded-2xl overflow-hidden group h-full transition-transform duration-300 hover:-translate-y-2">
-      <div className="relative h-80 overflow-hidden bg-muted">
-        {item.image_url ? (
-          <img
-            src={item.image_url}
-            alt={item.title || item.title_ar || ''}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-            لا توجد صورة
-          </div>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+const SliderCard = ({ item, isArabic }: { item: SliderItem; isArabic: boolean }) => {
+  const title = isArabic 
+    ? (item.title_ar || item.title || 'عنوان')
+    : (item.title || item.title_ar || 'Title');
+  const subtitle = isArabic 
+    ? (item.subtitle_ar || item.subtitle)
+    : (item.subtitle || item.subtitle_ar);
+  const noImageText = isArabic ? 'لا توجد صورة' : 'No image';
+
+  return (
+    <a 
+      href={item.link_url || '#'} 
+      className="block h-full"
+      onClick={(e) => !item.link_url && e.preventDefault()}
+    >
+      <div className="card-glass rounded-2xl overflow-hidden group h-full transition-transform duration-300 hover:-translate-y-2">
+        <div className="relative h-80 overflow-hidden bg-muted">
+          {item.image_url ? (
+            <img
+              src={item.image_url}
+              alt={title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+              {noImageText}
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+        </div>
+        <div className="p-6">
+          <h3 className="text-xl font-bold text-foreground mb-1">
+            {title}
+          </h3>
+          {subtitle && (
+            <p className="text-gold font-medium">
+              {subtitle}
+            </p>
+          )}
+        </div>
       </div>
-      <div className="p-6">
-        <h3 className="text-xl font-bold text-foreground mb-1">
-          {item.title_ar || item.title || 'عنوان'}
-        </h3>
-        {(item.subtitle_ar || item.subtitle) && (
-          <p className="text-gold font-medium">
-            {item.subtitle_ar || item.subtitle}
-          </p>
-        )}
-      </div>
-    </div>
-  </a>
-);
+    </a>
+  );
+};
 
 const PlayersSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isResetting, setIsResetting] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { currentLanguage } = useLanguage();
+  const isArabic = currentLanguage?.code === 'ar';
   
   const { data: settings, isLoading: loadingSettings } = useSliderSettings('players');
   const { data: items, isLoading: loadingItems } = useSliderItems('players');
@@ -130,10 +142,19 @@ const PlayersSlider = () => {
 
   if (itemCount === 0) return null;
   
-  const badge = sectionSettings.badge_ar || sectionSettings.badge || 'نجومنا';
-  const titlePart1 = sectionSettings.title_part1_ar || sectionSettings.title_part1 || 'لاعبون';
-  const titlePart2 = sectionSettings.title_part2_ar || sectionSettings.title_part2 || 'مميزون';
-  const description = sectionSettings.description_ar || sectionSettings.description || 'تعرف على نخبة من أفضل اللاعبين المسجلين لدينا';
+  // Get text based on current language
+  const badge = isArabic 
+    ? (sectionSettings.badge_ar || sectionSettings.badge || 'نجومنا')
+    : (sectionSettings.badge || sectionSettings.badge_ar || 'Our Stars');
+  const titlePart1 = isArabic 
+    ? (sectionSettings.title_part1_ar || sectionSettings.title_part1 || 'لاعبون')
+    : (sectionSettings.title_part1 || sectionSettings.title_part1_ar || 'Featured');
+  const titlePart2 = isArabic 
+    ? (sectionSettings.title_part2_ar || sectionSettings.title_part2 || 'مميزون')
+    : (sectionSettings.title_part2 || sectionSettings.title_part2_ar || 'Players');
+  const description = isArabic 
+    ? (sectionSettings.description_ar || sectionSettings.description || 'تعرف على نخبة من أفضل اللاعبين المسجلين لدينا')
+    : (sectionSettings.description || sectionSettings.description_ar || 'Meet the best registered players');
 
   const nextSlide = () => setCurrentIndex(prev => prev + 1);
   const prevSlide = () => setCurrentIndex(prev => prev - 1);
@@ -215,7 +236,7 @@ const PlayersSlider = () => {
                             : 'calc(20% - 19.2px)'
                   }}
                 >
-                  <SliderCard item={item} />
+                  <SliderCard item={item} isArabic={isArabic} />
                 </div>
               ))}
             </div>
