@@ -352,6 +352,55 @@ Deno.serve(async (req) => {
       throw updateError;
     }
 
+    // Check if a log entry already exists for this booking
+    const { data: existingLog } = await supabase
+      .from('google_meet_logs')
+      .select('id, regenerated_count')
+      .eq('booking_id', bookingId)
+      .single();
+
+    if (existingLog) {
+      // Update existing log (regeneration case)
+      const { error: logUpdateError } = await supabase
+        .from('google_meet_logs')
+        .update({
+          meet_link: meetLink,
+          calendar_event_id: eventId,
+          status: 'created',
+          error_message: null,
+          regenerated_count: (existingLog.regenerated_count || 0) + 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', existingLog.id);
+
+      if (logUpdateError) {
+        console.error('Error updating meet log:', logUpdateError);
+      } else {
+        console.log('Updated existing meet log for booking:', bookingId);
+      }
+    } else {
+      // Create new log entry
+      const { error: logError } = await supabase
+        .from('google_meet_logs')
+        .insert({
+          booking_id: bookingId,
+          meet_link: meetLink,
+          calendar_event_id: eventId,
+          status: 'created',
+          player_user_id: booking.player_user_id,
+          player_name: playerData?.full_name || null,
+          booking_date: booking.booking_date,
+          start_time: booking.start_time,
+          end_time: booking.end_time,
+        });
+
+      if (logError) {
+        console.error('Error creating meet log:', logError);
+      } else {
+        console.log('Created meet log for booking:', bookingId);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -364,6 +413,37 @@ Deno.serve(async (req) => {
   } catch (error: unknown) {
     console.error('Error creating Google Meet:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to create Google Meet link';
+
+    // Log error if we have booking info
+    try {
+      const body = await req.clone().json().catch(() => ({}));
+      if (body.bookingId) {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+        // Check if log exists
+        const { data: existingLog } = await supabase
+          .from('google_meet_logs')
+          .select('id')
+          .eq('booking_id', body.bookingId)
+          .single();
+
+        if (existingLog) {
+          await supabase
+            .from('google_meet_logs')
+            .update({
+              status: 'error',
+              error_message: errorMessage,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', existingLog.id);
+        }
+      }
+    } catch (logErr) {
+      console.error('Error logging meet creation failure:', logErr);
+    }
+
     return new Response(
       JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

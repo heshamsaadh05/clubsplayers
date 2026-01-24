@@ -299,6 +299,65 @@ export type Database = {
           },
         ]
       }
+      google_meet_logs: {
+        Row: {
+          booking_date: string
+          booking_id: string
+          calendar_event_id: string | null
+          created_at: string
+          end_time: string
+          error_message: string | null
+          id: string
+          meet_link: string
+          player_name: string | null
+          player_user_id: string
+          regenerated_count: number
+          start_time: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          booking_date: string
+          booking_id: string
+          calendar_event_id?: string | null
+          created_at?: string
+          end_time: string
+          error_message?: string | null
+          id?: string
+          meet_link: string
+          player_name?: string | null
+          player_user_id: string
+          regenerated_count?: number
+          start_time: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          booking_date?: string
+          booking_id?: string
+          calendar_event_id?: string | null
+          created_at?: string
+          end_time?: string
+          error_message?: string | null
+          id?: string
+          meet_link?: string
+          player_name?: string | null
+          player_user_id?: string
+          regenerated_count?: number
+          start_time?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_meet_logs_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "consultation_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       languages: {
         Row: {
           code: string
