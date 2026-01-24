@@ -390,6 +390,52 @@ const AdminConsultations = () => {
     }
   };
 
+  // Create Meet link only (without changing status)
+  const handleCreateMeetLinkOnly = async (booking: ConsultationBooking) => {
+    if (!googleApiConfigured) {
+      toast({
+        title: 'خطأ',
+        description: 'Google API غير مفعّل. يرجى إضافة مفتاح حساب الخدمة في الإعدادات.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setCreatingMeet(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-google-meet', {
+        body: { bookingId: booking.id, updateStatus: false },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        // Update local state with new meet link
+        setBookings(bookings.map(b => 
+          b.id === booking.id 
+            ? { ...b, meet_link: data.meetLink }
+            : b
+        ));
+        setMeetLink(data.meetLink);
+        toast({
+          title: 'تم إنشاء الرابط',
+          description: 'تم إنشاء رابط Google Meet بنجاح',
+        });
+      } else {
+        throw new Error(data.error || 'فشل في إنشاء رابط الاجتماع');
+      }
+    } catch (error) {
+      console.error('Error creating Meet link:', error);
+      toast({
+        title: 'خطأ',
+        description: error instanceof Error ? error.message : 'حدث خطأ أثناء إنشاء رابط الاجتماع',
+        variant: 'destructive',
+      });
+    } finally {
+      setCreatingMeet(false);
+    }
+  };
+
   const handleCancelBooking = async (bookingId: string) => {
     await handleUpdateBooking(bookingId, { status: 'cancelled' });
   };
@@ -850,18 +896,37 @@ const AdminConsultations = () => {
                                     </div>
                                   )}
 
-                                  {!googleApiConfigured && (
-                                    <div className="space-y-2">
-                                      <Label>رابط Google Meet</Label>
-                                      <Input
-                                        value={meetLink}
-                                        onChange={(e) => setMeetLink(e.target.value)}
-                                        placeholder="https://meet.google.com/xxx-xxxx-xxx"
-                                        className="bg-secondary"
-                                        dir="ltr"
-                                      />
-                                    </div>
-                                  )}
+                                  <div className="space-y-2">
+                                    <Label>رابط Google Meet</Label>
+                                    <Input
+                                      value={meetLink}
+                                      onChange={(e) => setMeetLink(e.target.value)}
+                                      placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                                      className="bg-secondary"
+                                      dir="ltr"
+                                    />
+                                    {googleApiConfigured && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleCreateMeetLinkOnly(booking)}
+                                        disabled={creatingMeet}
+                                        className="w-full mt-2"
+                                      >
+                                        {creatingMeet ? (
+                                          <>
+                                            <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                                            جاري إنشاء الرابط...
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Video className="w-4 h-4 ml-2" />
+                                            إنشاء رابط تلقائياً عبر API
+                                          </>
+                                        )}
+                                      </Button>
+                                    )}
+                                  </div>
 
                                   {googleApiConfigured && booking.status === 'pending' && (
                                     <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/30">
