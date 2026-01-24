@@ -44,7 +44,7 @@ interface ConsultationBooking {
 const MyConsultations = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, loading: authLoading, roles } = useAuth();
+  const { user, loading: authLoading, rolesLoading, roles } = useAuth();
   const { t, direction, currentLanguage } = useLanguage();
   
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
@@ -56,12 +56,16 @@ const MyConsultations = () => {
     if (authLoading) return;
     
     if (!user) {
+      setLoading(false);
       navigate('/auth?redirect=/my-consultations');
       return;
     }
+
+    // Wait for roles to finish loading before deciding if the user is a player.
+    if (rolesLoading) return;
     
-    // Check if user is a player - if no roles loaded yet, still check
     if (!isPlayer) {
+      setLoading(false);
       toast({
         title: t('common.error', 'خطأ'),
         description: t('consultation.playersOnly', 'هذه الخدمة متاحة للاعبين فقط'),
@@ -72,7 +76,7 @@ const MyConsultations = () => {
     }
     
     fetchBookings();
-  }, [user, authLoading, isPlayer]);
+  }, [user, authLoading, rolesLoading, isPlayer]);
 
   const fetchBookings = async () => {
     try {
@@ -166,7 +170,7 @@ const MyConsultations = () => {
     return bookingDateTime > new Date() && booking.status !== 'cancelled';
   };
 
-  if (authLoading || loading) {
+  if (authLoading || rolesLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
