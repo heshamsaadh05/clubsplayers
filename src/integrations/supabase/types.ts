@@ -92,6 +92,132 @@ export type Database = {
         }
         Relationships: []
       }
+      consultation_bookings: {
+        Row: {
+          admin_notes: string | null
+          booking_date: string
+          confirmed_at: string | null
+          created_at: string
+          end_time: string
+          fee_amount: number
+          fee_currency: string
+          id: string
+          meet_link: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          payment_status: string
+          player_notes: string | null
+          player_user_id: string
+          proof_url: string | null
+          start_time: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          booking_date: string
+          confirmed_at?: string | null
+          created_at?: string
+          end_time: string
+          fee_amount: number
+          fee_currency?: string
+          id?: string
+          meet_link?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          player_notes?: string | null
+          player_user_id: string
+          proof_url?: string | null
+          start_time: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          booking_date?: string
+          confirmed_at?: string | null
+          created_at?: string
+          end_time?: string
+          fee_amount?: number
+          fee_currency?: string
+          id?: string
+          meet_link?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          player_notes?: string | null
+          player_user_id?: string
+          proof_url?: string | null
+          start_time?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      consultation_settings: {
+        Row: {
+          currency: string
+          description: string | null
+          description_ar: string | null
+          duration_minutes: number
+          fee: number
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          currency?: string
+          description?: string | null
+          description_ar?: string | null
+          duration_minutes?: number
+          fee?: number
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          currency?: string
+          description?: string | null
+          description_ar?: string | null
+          duration_minutes?: number
+          fee?: number
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      consultation_slots: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          is_active: boolean
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_active?: boolean
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       custom_color_templates: {
         Row: {
           colors: Json
