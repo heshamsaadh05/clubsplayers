@@ -42,145 +42,290 @@ const colorLabels: Record<string, string> = {
   muted_foreground: 'النص الخافت',
 };
 
-// Color Templates
-const colorTemplates = [
+// Dark Mode Color Templates
+const darkModeTemplates = [
   {
-    id: 'gold',
-    name: 'ذهبي كلاسيكي',
-    preview: ['45 90% 55%', '0 0% 9%', '27 95% 60%'],
+    id: 'gold-dark',
+    name: 'ذهبي فاخر',
+    preview: ['43 96% 56%', '0 0% 7%', '35 90% 12%'],
     colors: {
-      primary: '27 95% 60%',
-      primary_foreground: '12 81% 14%',
-      secondary: '0 0% 45%',
-      secondary_foreground: '0 0% 98%',
-      background: '0 0% 9%',
+      primary: '43 96% 56%',
+      primary_foreground: '0 0% 7%',
+      secondary: '0 0% 18%',
+      secondary_foreground: '0 0% 95%',
+      background: '0 0% 7%',
       foreground: '0 0% 98%',
-      accent: '20 91% 14%',
-      accent_foreground: '43 96% 56%',
-      muted: '0 0% 45%',
-      muted_foreground: '0 0% 98%',
+      accent: '35 90% 12%',
+      accent_foreground: '45 90% 60%',
+      muted: '0 0% 15%',
+      muted_foreground: '0 0% 65%',
     }
   },
   {
-    id: 'ocean',
+    id: 'ocean-dark',
     name: 'أزرق محيطي',
-    preview: ['200 80% 50%', '0 0% 9%', '180 70% 45%'],
+    preview: ['200 80% 50%', '210 40% 8%', '180 70% 20%'],
     colors: {
       primary: '200 80% 50%',
       primary_foreground: '200 100% 10%',
-      secondary: '210 30% 40%',
+      secondary: '210 30% 20%',
       secondary_foreground: '0 0% 98%',
       background: '210 40% 8%',
       foreground: '0 0% 98%',
       accent: '180 70% 20%',
       accent_foreground: '180 70% 75%',
-      muted: '210 20% 40%',
-      muted_foreground: '0 0% 90%',
+      muted: '210 20% 18%',
+      muted_foreground: '0 0% 70%',
     }
   },
   {
-    id: 'emerald',
-    name: 'أخضر زمردي',
-    preview: ['160 84% 39%', '0 0% 9%', '140 70% 35%'],
+    id: 'emerald-dark',
+    name: 'زمردي أنيق',
+    preview: ['160 84% 39%', '160 30% 8%', '140 70% 20%'],
     colors: {
       primary: '160 84% 39%',
       primary_foreground: '160 100% 10%',
-      secondary: '150 30% 35%',
+      secondary: '150 30% 18%',
       secondary_foreground: '0 0% 98%',
       background: '160 30% 8%',
       foreground: '0 0% 98%',
       accent: '140 70% 20%',
       accent_foreground: '140 70% 75%',
-      muted: '150 20% 40%',
-      muted_foreground: '0 0% 90%',
+      muted: '150 20% 18%',
+      muted_foreground: '0 0% 70%',
     }
   },
   {
-    id: 'royal',
+    id: 'royal-dark',
     name: 'بنفسجي ملكي',
-    preview: ['270 70% 55%', '0 0% 9%', '280 80% 45%'],
+    preview: ['270 70% 55%', '270 30% 8%', '280 60% 20%'],
     colors: {
       primary: '270 70% 55%',
       primary_foreground: '270 100% 95%',
-      secondary: '280 30% 40%',
+      secondary: '280 30% 20%',
       secondary_foreground: '0 0% 98%',
       background: '270 30% 8%',
       foreground: '0 0% 98%',
       accent: '280 60% 20%',
       accent_foreground: '280 70% 75%',
-      muted: '270 20% 40%',
-      muted_foreground: '0 0% 90%',
+      muted: '270 20% 18%',
+      muted_foreground: '0 0% 70%',
     }
   },
   {
-    id: 'crimson',
-    name: 'أحمر قرمزي',
-    preview: ['0 72% 50%', '0 0% 9%', '350 80% 45%'],
+    id: 'crimson-dark',
+    name: 'أحمر جريء',
+    preview: ['0 72% 50%', '0 20% 8%', '350 60% 20%'],
     colors: {
       primary: '0 72% 50%',
       primary_foreground: '0 100% 95%',
-      secondary: '0 30% 40%',
+      secondary: '0 30% 20%',
       secondary_foreground: '0 0% 98%',
       background: '0 20% 8%',
       foreground: '0 0% 98%',
       accent: '350 60% 20%',
       accent_foreground: '350 70% 75%',
-      muted: '0 20% 40%',
-      muted_foreground: '0 0% 90%',
+      muted: '0 20% 18%',
+      muted_foreground: '0 0% 70%',
     }
   },
   {
-    id: 'sunset',
-    name: 'غروب الشمس',
-    preview: ['25 95% 53%', '0 0% 9%', '15 90% 50%'],
+    id: 'sunset-dark',
+    name: 'غروب دافئ',
+    preview: ['25 95% 53%', '20 30% 8%', '15 70% 20%'],
     colors: {
       primary: '25 95% 53%',
       primary_foreground: '25 100% 10%',
-      secondary: '35 40% 40%',
+      secondary: '35 40% 20%',
       secondary_foreground: '0 0% 98%',
       background: '20 30% 8%',
       foreground: '0 0% 98%',
       accent: '15 70% 20%',
       accent_foreground: '30 80% 70%',
-      muted: '25 20% 40%',
-      muted_foreground: '0 0% 90%',
+      muted: '25 20% 18%',
+      muted_foreground: '0 0% 70%',
     }
   },
   {
-    id: 'midnight',
+    id: 'midnight-dark',
     name: 'منتصف الليل',
-    preview: ['220 60% 50%', '220 40% 6%', '240 50% 45%'],
+    preview: ['220 60% 50%', '220 40% 6%', '240 50% 20%'],
     colors: {
       primary: '220 60% 50%',
       primary_foreground: '220 100% 95%',
-      secondary: '230 30% 35%',
+      secondary: '230 30% 18%',
       secondary_foreground: '0 0% 98%',
       background: '220 40% 6%',
       foreground: '220 20% 95%',
       accent: '240 50% 20%',
       accent_foreground: '220 60% 75%',
-      muted: '220 20% 35%',
-      muted_foreground: '220 20% 80%',
+      muted: '220 20% 18%',
+      muted_foreground: '220 20% 65%',
     }
   },
   {
-    id: 'light-minimal',
-    name: 'فاتح بسيط',
-    preview: ['220 14% 40%', '0 0% 98%', '220 13% 91%'],
+    id: 'carbon-dark',
+    name: 'كربوني عصري',
+    preview: ['0 0% 60%', '0 0% 5%', '0 0% 12%'],
     colors: {
-      primary: '220 14% 40%',
-      primary_foreground: '0 0% 98%',
-      secondary: '220 13% 91%',
-      secondary_foreground: '220 14% 20%',
-      background: '0 0% 98%',
-      foreground: '220 14% 10%',
-      accent: '220 13% 95%',
-      accent_foreground: '220 14% 30%',
-      muted: '220 13% 91%',
-      muted_foreground: '220 14% 50%',
+      primary: '0 0% 75%',
+      primary_foreground: '0 0% 5%',
+      secondary: '0 0% 15%',
+      secondary_foreground: '0 0% 95%',
+      background: '0 0% 5%',
+      foreground: '0 0% 95%',
+      accent: '0 0% 12%',
+      accent_foreground: '0 0% 80%',
+      muted: '0 0% 12%',
+      muted_foreground: '0 0% 55%',
     }
   },
 ];
+
+// Light Mode Color Templates
+const lightModeTemplates = [
+  {
+    id: 'gold-light',
+    name: 'ذهبي دافئ',
+    preview: ['38 85% 45%', '40 30% 97%', '40 50% 94%'],
+    colors: {
+      primary: '38 85% 45%',
+      primary_foreground: '40 30% 97%',
+      secondary: '35 25% 90%',
+      secondary_foreground: '35 50% 25%',
+      background: '40 30% 97%',
+      foreground: '0 0% 12%',
+      accent: '40 50% 94%',
+      accent_foreground: '35 80% 35%',
+      muted: '35 20% 92%',
+      muted_foreground: '35 15% 45%',
+    }
+  },
+  {
+    id: 'ocean-light',
+    name: 'أزرق سماوي',
+    preview: ['200 80% 45%', '200 30% 98%', '200 40% 94%'],
+    colors: {
+      primary: '200 80% 45%',
+      primary_foreground: '0 0% 100%',
+      secondary: '200 25% 92%',
+      secondary_foreground: '200 60% 25%',
+      background: '200 30% 98%',
+      foreground: '200 50% 12%',
+      accent: '200 40% 94%',
+      accent_foreground: '200 70% 35%',
+      muted: '200 20% 94%',
+      muted_foreground: '200 20% 45%',
+    }
+  },
+  {
+    id: 'emerald-light',
+    name: 'أخضر طبيعي',
+    preview: ['160 70% 38%', '150 30% 98%', '150 35% 94%'],
+    colors: {
+      primary: '160 70% 38%',
+      primary_foreground: '0 0% 100%',
+      secondary: '150 25% 92%',
+      secondary_foreground: '150 50% 20%',
+      background: '150 30% 98%',
+      foreground: '150 40% 12%',
+      accent: '150 35% 94%',
+      accent_foreground: '160 60% 30%',
+      muted: '150 20% 93%',
+      muted_foreground: '150 20% 45%',
+    }
+  },
+  {
+    id: 'royal-light',
+    name: 'بنفسجي راقي',
+    preview: ['270 60% 50%', '270 20% 98%', '270 30% 94%'],
+    colors: {
+      primary: '270 60% 50%',
+      primary_foreground: '0 0% 100%',
+      secondary: '270 25% 92%',
+      secondary_foreground: '270 50% 25%',
+      background: '270 20% 98%',
+      foreground: '270 40% 12%',
+      accent: '270 30% 94%',
+      accent_foreground: '270 55% 40%',
+      muted: '270 20% 93%',
+      muted_foreground: '270 20% 45%',
+    }
+  },
+  {
+    id: 'rose-light',
+    name: 'وردي ناعم',
+    preview: ['350 70% 55%', '350 30% 98%', '350 40% 95%'],
+    colors: {
+      primary: '350 70% 55%',
+      primary_foreground: '0 0% 100%',
+      secondary: '350 30% 93%',
+      secondary_foreground: '350 50% 25%',
+      background: '350 30% 98%',
+      foreground: '350 40% 12%',
+      accent: '350 40% 95%',
+      accent_foreground: '350 60% 40%',
+      muted: '350 25% 94%',
+      muted_foreground: '350 20% 45%',
+    }
+  },
+  {
+    id: 'sunset-light',
+    name: 'برتقالي مشرق',
+    preview: ['25 90% 48%', '30 40% 97%', '30 50% 94%'],
+    colors: {
+      primary: '25 90% 48%',
+      primary_foreground: '0 0% 100%',
+      secondary: '30 30% 92%',
+      secondary_foreground: '25 60% 25%',
+      background: '30 40% 97%',
+      foreground: '25 40% 12%',
+      accent: '30 50% 94%',
+      accent_foreground: '25 75% 40%',
+      muted: '30 25% 93%',
+      muted_foreground: '30 20% 45%',
+    }
+  },
+  {
+    id: 'minimal-light',
+    name: 'بسيط كلاسيكي',
+    preview: ['220 14% 40%', '0 0% 100%', '220 13% 96%'],
+    colors: {
+      primary: '220 14% 40%',
+      primary_foreground: '0 0% 100%',
+      secondary: '220 13% 94%',
+      secondary_foreground: '220 14% 20%',
+      background: '0 0% 100%',
+      foreground: '220 14% 10%',
+      accent: '220 13% 96%',
+      accent_foreground: '220 14% 30%',
+      muted: '220 13% 94%',
+      muted_foreground: '220 14% 50%',
+    }
+  },
+  {
+    id: 'cream-light',
+    name: 'كريمي هادئ',
+    preview: ['35 50% 45%', '40 40% 98%', '40 30% 95%'],
+    colors: {
+      primary: '35 50% 45%',
+      primary_foreground: '0 0% 100%',
+      secondary: '40 25% 93%',
+      secondary_foreground: '35 40% 25%',
+      background: '40 40% 98%',
+      foreground: '35 30% 15%',
+      accent: '40 30% 95%',
+      accent_foreground: '35 45% 35%',
+      muted: '40 20% 94%',
+      muted_foreground: '40 15% 45%',
+    }
+  },
+];
+
+// Get templates based on editing mode
+const getTemplatesForMode = (mode: 'light' | 'dark') => {
+  return mode === 'dark' ? darkModeTemplates : lightModeTemplates;
+};
 
 const AdminDesign = () => {
   const [activeTab, setActiveTab] = useState('colors');
@@ -962,20 +1107,30 @@ const AdminDesign = () => {
                   </CardHeader>
                 </Card>
 
-                {/* Color Templates */}
+                {/* Color Templates for Current Mode */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Palette className="w-5 h-5 text-gold" />
-                      قوالب ألوان جاهزة
+                      {editingColorMode === 'dark' ? (
+                        <>
+                          <Moon className="w-4 h-4" />
+                          قوالب الوضع الداكن
+                        </>
+                      ) : (
+                        <>
+                          <Sun className="w-4 h-4" />
+                          قوالب الوضع الفاتح
+                        </>
+                      )}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      اختر قالب ألوان جاهز بنقرة واحدة
+                      اختر قالب ألوان جاهز مناسب للوضع {editingColorMode === 'dark' ? 'الداكن' : 'الفاتح'}
                     </p>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-                      {colorTemplates.map((template) => (
+                      {getTemplatesForMode(editingColorMode).map((template) => (
                         <button
                           key={template.id}
                           onClick={() => applyTemplate(template)}
