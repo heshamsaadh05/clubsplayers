@@ -10,13 +10,24 @@ import {
   AlertCircle,
   ExternalLink,
   ArrowLeft,
-  RefreshCw
+  RefreshCw,
+  Ban
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -49,6 +60,9 @@ const MyConsultations = () => {
   
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [bookingToCancel, setBookingToCancel] = useState<ConsultationBooking | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
   const isPlayer = roles.includes('player');
 
@@ -98,6 +112,78 @@ const MyConsultations = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Check if a booking can be cancelled (more than 24 hours before)
+  const canCancelBooking = (booking: ConsultationBooking): boolean => {
+    if (booking.status === 'cancelled' || booking.status === 'completed') {
+      return false;
+    }
+    const bookingDateTime = new Date(`${booking.booking_date}T${booking.start_time}`);
+    const now = new Date();
+    const hoursUntilBooking = (bookingDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+    return hoursUntilBooking > 24;
+  };
+
+  const handleCancelClick = (booking: ConsultationBooking) => {
+    setBookingToCancel(booking);
+    setCancelDialogOpen(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!bookingToCancel || !user) return;
+    
+    setCancelling(true);
+    try {
+      // Update booking status to cancelled
+      const { error: updateError } = await supabase
+        .from('consultation_bookings')
+        .update({ status: 'cancelled' })
+        .eq('id', bookingToCancel.id)
+        .eq('player_user_id', user.id);
+
+      if (updateError) throw updateError;
+
+      // Create notification for the player
+      const { error: notifError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: user.id,
+          type: 'reminder',
+          title: 'Booking Cancelled',
+          title_ar: 'تم إلغاء الحجز',
+          message: `Your consultation booking for ${format(new Date(bookingToCancel.booking_date), 'd MMMM yyyy', { locale: enUS })} has been cancelled.`,
+          message_ar: `تم إلغاء حجز الاستشارة الخاص بك في ${format(new Date(bookingToCancel.booking_date), 'd MMMM yyyy', { locale: ar })} بنجاح.`,
+          metadata: { booking_id: bookingToCancel.id }
+        });
+
+      if (notifError) {
+        console.warn('Failed to create cancellation notification:', notifError);
+      }
+
+      toast({
+        title: currentLanguage?.code === 'ar' ? 'تم الإلغاء' : 'Cancelled',
+        description: currentLanguage?.code === 'ar' 
+          ? 'تم إلغاء الحجز بنجاح' 
+          : 'Your booking has been cancelled successfully',
+      });
+
+      // Refresh bookings
+      fetchBookings();
+    } catch (error) {
+      logError(error, 'MyConsultations:cancelBooking');
+      toast({
+        title: t('common.error', 'خطأ'),
+        description: currentLanguage?.code === 'ar' 
+          ? 'حدث خطأ أثناء إلغاء الحجز' 
+          : 'An error occurred while cancelling the booking',
+        variant: 'destructive',
+      });
+    } finally {
+      setCancelling(false);
+      setCancelDialogOpen(false);
+      setBookingToCancel(null);
     }
   };
 
@@ -260,6 +346,7 @@ const MyConsultations = () => {
                       const statusConfig = getStatusConfig(booking.status);
                       const StatusIcon = statusConfig.icon;
                       const paymentConfig = getPaymentStatusConfig(booking.payment_status);
+                      const canCancel = canCancelBooking(booking);
 
                       return (
                         <motion.div
@@ -302,16 +389,35 @@ const MyConsultations = () => {
                                   </div>
                                 </div>
 
-                                {booking.status === 'confirmed' && booking.meet_link && (
-                                  <Button
-                                    className="btn-gold"
-                                    onClick={() => window.open(booking.meet_link!, '_blank')}
-                                  >
-                                    <Video className="w-4 h-4 ml-2" />
-                                    {t('consultation.joinMeeting', 'انضم للاجتماع')}
-                                    <ExternalLink className="w-4 h-4 mr-2" />
-                                  </Button>
-                                )}
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  {booking.status === 'confirmed' && booking.meet_link && (
+                                    <Button
+                                      className="btn-gold"
+                                      onClick={() => window.open(booking.meet_link!, '_blank')}
+                                    >
+                                      <Video className="w-4 h-4 ml-2" />
+                                      {t('consultation.joinMeeting', 'انضم للاجتماع')}
+                                      <ExternalLink className="w-4 h-4 mr-2" />
+                                    </Button>
+                                  )}
+                                  
+                                  {canCancel ? (
+                                    <Button
+                                      variant="outline"
+                                      className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                                      onClick={() => handleCancelClick(booking)}
+                                    >
+                                      <Ban className="w-4 h-4 ml-2" />
+                                      {currentLanguage?.code === 'ar' ? 'إلغاء الحجز' : 'Cancel'}
+                                    </Button>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground">
+                                      {currentLanguage?.code === 'ar' 
+                                        ? 'لا يمكن الإلغاء قبل 24 ساعة من الموعد' 
+                                        : 'Cannot cancel within 24 hours'}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
 
                               {booking.admin_notes && (
@@ -393,6 +499,39 @@ const MyConsultations = () => {
       </main>
       
       <Footer />
+
+      {/* Cancel Confirmation Dialog */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent dir={direction}>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Ban className="w-5 h-5 text-destructive" />
+              {currentLanguage?.code === 'ar' ? 'تأكيد إلغاء الحجز' : 'Confirm Cancellation'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {currentLanguage?.code === 'ar' 
+                ? `هل أنت متأكد من إلغاء حجز الاستشارة في ${bookingToCancel ? format(new Date(bookingToCancel.booking_date), 'd MMMM yyyy', { locale: ar }) : ''}؟ لا يمكن التراجع عن هذا الإجراء.`
+                : `Are you sure you want to cancel your consultation booking on ${bookingToCancel ? format(new Date(bookingToCancel.booking_date), 'd MMMM yyyy', { locale: enUS }) : ''}? This action cannot be undone.`
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel disabled={cancelling}>
+              {currentLanguage?.code === 'ar' ? 'تراجع' : 'Go Back'}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmCancel}
+              disabled={cancelling}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelling 
+                ? (currentLanguage?.code === 'ar' ? 'جاري الإلغاء...' : 'Cancelling...') 
+                : (currentLanguage?.code === 'ar' ? 'نعم، إلغاء الحجز' : 'Yes, Cancel Booking')
+              }
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
