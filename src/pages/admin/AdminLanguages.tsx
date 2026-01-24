@@ -64,6 +64,11 @@ const TRANSLATION_CATEGORIES = [
   { id: 'club', label: 'الأندية' },
   { id: 'subscription', label: 'الاشتراكات' },
   { id: 'common', label: 'مشترك' },
+  { id: 'admin', label: 'لوحة التحكم' },
+  { id: 'consultation', label: 'الاستشارات' },
+  { id: 'meet', label: 'اجتماعات Meet' },
+  { id: 'messages', label: 'الرسائل' },
+  { id: 'notifications', label: 'الإشعارات' },
 ];
 
 const AdminLanguages = () => {
