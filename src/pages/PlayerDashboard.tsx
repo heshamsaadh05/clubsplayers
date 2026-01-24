@@ -20,7 +20,8 @@ import {
   LogOut,
   MessageSquare,
   Edit,
-  Settings
+  Settings,
+  Plus
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,8 @@ import { Tables } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import EditPlayerForm from "@/components/player/EditPlayerForm";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
 
 type Player = Tables<"players"> & {
   email?: string;
@@ -41,12 +44,22 @@ type Player = Tables<"players"> & {
   rejection_reason?: string;
 };
 
+interface ConsultationBooking {
+  id: string;
+  booking_date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  meet_link: string | null;
+}
+
 const PlayerDashboard = () => {
   const { user, signOut, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [player, setPlayer] = useState<Player | null>(null);
   const [loading, setLoading] = useState(true);
   const [editFormOpen, setEditFormOpen] = useState(false);
+  const [upcomingConsultations, setUpcomingConsultations] = useState<ConsultationBooking[]>([]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -97,9 +110,32 @@ const PlayerDashboard = () => {
     }
   };
 
+  const fetchUpcomingConsultations = async () => {
+    if (!user) return;
+    
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from('consultation_bookings')
+        .select('id, booking_date, start_time, end_time, status, meet_link')
+        .eq('player_user_id', user.id)
+        .gte('booking_date', today)
+        .neq('status', 'cancelled')
+        .order('booking_date', { ascending: true })
+        .order('start_time', { ascending: true })
+        .limit(3);
+
+      if (error) throw error;
+      setUpcomingConsultations(data || []);
+    } catch (error) {
+      console.error('Error fetching consultations:', error);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       fetchPlayerData();
+      fetchUpcomingConsultations();
     }
   }, [user]);
 
@@ -430,6 +466,107 @@ const PlayerDashboard = () => {
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Consultations Section */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Video className="w-5 h-5 text-gold" />
+                  استشاراتي
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate("/my-consultations")}
+                  >
+                    عرض الكل
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="btn-gold"
+                    onClick={() => navigate("/consultation-booking")}
+                  >
+                    <Plus className="w-4 h-4 ml-1" />
+                    طلب استشارة
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {upcomingConsultations.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Video className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-muted-foreground mb-4">لا توجد استشارات قادمة</p>
+                    <Button
+                      className="btn-gold"
+                      onClick={() => navigate("/consultation-booking")}
+                    >
+                      <Plus className="w-4 h-4 ml-2" />
+                      احجز استشارة الآن
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {upcomingConsultations.map((booking) => {
+                      const formatTime = (time: string) => {
+                        const [hours, minutes] = time.split(':');
+                        const hour = parseInt(hours);
+                        const ampm = hour >= 12 ? 'م' : 'ص';
+                        const hour12 = hour % 12 || 12;
+                        return `${hour12}:${minutes} ${ampm}`;
+                      };
+
+                      return (
+                        <div
+                          key={booking.id}
+                          className="flex items-center justify-between p-4 bg-muted/50 rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                              booking.status === 'confirmed' 
+                                ? 'bg-green-500/20 text-green-500' 
+                                : 'bg-yellow-500/20 text-yellow-500'
+                            }`}>
+                              {booking.status === 'confirmed' ? (
+                                <CheckCircle className="w-5 h-5" />
+                              ) : (
+                                <Clock className="w-5 h-5" />
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">
+                                {format(new Date(booking.booking_date), 'EEEE, d MMMM', { locale: ar })}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {formatTime(booking.start_time)} - {formatTime(booking.end_time)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className={
+                              booking.status === 'confirmed' 
+                                ? 'bg-green-500/10 text-green-500 border-green-500/30' 
+                                : 'bg-yellow-500/10 text-yellow-500 border-yellow-500/30'
+                            }>
+                              {booking.status === 'confirmed' ? 'مؤكد' : 'قيد المراجعة'}
+                            </Badge>
+                            {booking.status === 'confirmed' && booking.meet_link && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => window.open(booking.meet_link!, '_blank')}
+                              >
+                                انضم
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
