@@ -9,14 +9,27 @@ import {
   XCircle, 
   User,
   Calendar,
-  ExternalLink
+  ExternalLink,
+  Trash2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface PlayerInterest {
   id: string;
@@ -40,6 +53,28 @@ const ClubInterestsList = () => {
   const navigate = useNavigate();
   const [interests, setInterests] = useState<PlayerInterest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+
+  const handleWithdraw = async (interestId: string) => {
+    setWithdrawingId(interestId);
+    try {
+      const { error } = await supabase
+        .from("player_interests")
+        .delete()
+        .eq("id", interestId)
+        .eq("status", "pending");
+
+      if (error) throw error;
+
+      setInterests(prev => prev.filter(i => i.id !== interestId));
+      toast.success("تم سحب الطلب بنجاح");
+    } catch (error) {
+      console.error("Error withdrawing interest:", error);
+      toast.error("حدث خطأ أثناء سحب الطلب");
+    } finally {
+      setWithdrawingId(null);
+    }
+  };
 
   useEffect(() => {
     const fetchInterests = async () => {
@@ -272,13 +307,47 @@ const ClubInterestsList = () => {
                       <StatusIcon className="w-3 h-3 ml-1" />
                       {statusConfig.label}
                     </Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate(`/player/${interest.player_id}`)}
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      {interest.status === "pending" && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              disabled={withdrawingId === interest.id}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>سحب الطلب</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                هل أنت متأكد من سحب طلب الاهتمام بـ {interest.player?.full_name || "هذا اللاعب"}؟
+                                لا يمكن التراجع عن هذا الإجراء.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleWithdraw(interest.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                سحب الطلب
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/player/${interest.player_id}`)}
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </motion.div>
               );
