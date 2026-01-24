@@ -918,6 +918,11 @@ const AdminConsultations = () => {
                                             <Loader2 className="w-4 h-4 ml-2 animate-spin" />
                                             جاري إنشاء الرابط...
                                           </>
+                                        ) : meetLink ? (
+                                          <>
+                                            <Video className="w-4 h-4 ml-2" />
+                                            إعادة إنشاء رابط جديد
+                                          </>
                                         ) : (
                                           <>
                                             <Video className="w-4 h-4 ml-2" />
@@ -925,6 +930,11 @@ const AdminConsultations = () => {
                                           </>
                                         )}
                                       </Button>
+                                    )}
+                                    {meetLink && (
+                                      <p className="text-xs text-muted-foreground">
+                                        💡 يمكنك إعادة إنشاء رابط جديد إذا انتهت صلاحية الرابط الحالي
+                                      </p>
                                     )}
                                   </div>
 
