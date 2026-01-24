@@ -825,26 +825,123 @@ const AdminSettings = () => {
             )}
           </div>
 
-          <div className="space-y-4">
-            <div className="p-4 bg-secondary/50 rounded-xl">
-              <h3 className="font-medium mb-2">كيفية الحصول على مفتاح الخدمة:</h3>
-              <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                <li>انتقل إلى <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="text-gold hover:underline">Google Cloud Console</a></li>
-                <li>أنشئ مشروعاً جديداً أو اختر مشروعاً موجوداً</li>
-                <li>فعّل Google Calendar API</li>
-                <li>أنشئ Service Account وحمّل مفتاح JSON</li>
-                <li>الصق محتوى ملف JSON أدناه</li>
-              </ol>
+          <div className="space-y-6">
+            {/* Detailed Setup Instructions */}
+            <div className="p-5 bg-gradient-to-br from-secondary/80 to-secondary/40 rounded-xl border border-border/50">
+              <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
+                <span className="w-7 h-7 rounded-full bg-gold/20 flex items-center justify-center text-gold text-sm">📋</span>
+                خطوات إعداد Google Meet API
+              </h3>
+              
+              <div className="space-y-4">
+                {/* Step 1 */}
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gold text-primary-foreground flex items-center justify-center font-bold text-sm flex-shrink-0">
+                    1
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">إنشاء مشروع في Google Cloud Console</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      اذهب إلى{' '}
+                      <a 
+                        href="https://console.cloud.google.com/projectcreate" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-gold hover:underline inline-flex items-center gap-1"
+                      >
+                        Google Cloud Console
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                      {' '}وأنشئ مشروعاً جديداً (أو اختر مشروعاً موجوداً).
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 2 */}
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gold text-primary-foreground flex items-center justify-center font-bold text-sm flex-shrink-0">
+                    2
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">تفعيل Google Calendar API</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      من القائمة الجانبية، اذهب إلى{' '}
+                      <code className="bg-background/50 px-1.5 py-0.5 rounded text-xs">APIs & Services → Library</code>
+                      {' '}وابحث عن "Google Calendar API" ثم اضغط "Enable".
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gold text-primary-foreground flex items-center justify-center font-bold text-sm flex-shrink-0">
+                    3
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">إنشاء Service Account</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      اذهب إلى{' '}
+                      <code className="bg-background/50 px-1.5 py-0.5 rounded text-xs">IAM & Admin → Service Accounts</code>
+                      {' '}ثم اضغط "Create Service Account". أدخل اسماً للحساب واضغط "Create and Continue".
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 4 */}
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gold text-primary-foreground flex items-center justify-center font-bold text-sm flex-shrink-0">
+                    4
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">تحميل مفتاح JSON</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      بعد إنشاء الحساب، اضغط عليه ثم اذهب إلى تبويب "Keys" واضغط{' '}
+                      <code className="bg-background/50 px-1.5 py-0.5 rounded text-xs">Add Key → Create new key → JSON</code>.
+                      سيتم تحميل ملف JSON - افتحه وانسخ محتواه كاملاً.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 5 */}
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gold text-primary-foreground flex items-center justify-center font-bold text-sm flex-shrink-0">
+                    5
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">تفعيل Domain-Wide Delegation (اختياري)</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      إذا كنت تستخدم Google Workspace، فعّل "Enable G Suite Domain-wide Delegation" في إعدادات Service Account.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 6 */}
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                    ✓
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-green-500">الصق المفتاح أدناه</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      الصق محتوى ملف JSON في الحقل أدناه واحفظه. سيتم إنشاء روابط Google Meet تلقائياً عند تأكيد الحجوزات.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-2">
+            {/* API Key Input */}
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label>مفتاح حساب الخدمة (Service Account Key JSON)</Label>
+                <Label className="text-base font-medium">مفتاح حساب الخدمة (Service Account Key JSON)</Label>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowApiKey(!showApiKey)}
+                  className="h-8"
                 >
                   {showApiKey ? (
                     <>
@@ -862,28 +959,32 @@ const AdminSettings = () => {
               <Textarea
                 value={showApiKey ? googleApi.service_account_key : (googleApi.service_account_key ? '••••••••••••••••••••••••••••••••' : '')}
                 onChange={(e) => setGoogleApi(prev => ({ ...prev, service_account_key: e.target.value }))}
-                placeholder='{"type": "service_account", "project_id": "...", ...}'
-                className="bg-secondary font-mono text-xs min-h-[120px]"
+                placeholder='{"type": "service_account", "project_id": "your-project-id", "private_key_id": "...", "private_key": "-----BEGIN PRIVATE KEY-----...", "client_email": "...@...iam.gserviceaccount.com", ...}'
+                className="bg-secondary font-mono text-xs min-h-[140px] resize-y"
                 dir="ltr"
                 disabled={!showApiKey && googleApi.is_configured}
               />
+              <p className="text-xs text-muted-foreground">
+                💡 تأكد من نسخ محتوى ملف JSON كاملاً بما في ذلك الأقواس { }
+              </p>
             </div>
 
-            <div className="flex gap-3">
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3 pt-2">
               <Button
                 onClick={handleSaveGoogleApi}
                 disabled={savingGoogleApi || !googleApi.service_account_key.trim()}
                 className="btn-gold"
               >
                 <Save className="w-4 h-4 ml-2" />
-                {savingGoogleApi ? 'جاري الحفظ...' : 'حفظ المفتاح'}
+                {savingGoogleApi ? 'جاري الحفظ...' : googleApi.is_configured ? 'تحديث المفتاح' : 'حفظ وتفعيل'}
               </Button>
               {googleApi.is_configured && (
                 <Button
                   variant="outline"
                   onClick={handleRemoveGoogleApi}
                   disabled={savingGoogleApi}
-                  className="text-destructive hover:bg-destructive/10"
+                  className="text-destructive hover:bg-destructive/10 border-destructive/30"
                 >
                   <X className="w-4 h-4 ml-2" />
                   إزالة المفتاح
@@ -891,10 +992,31 @@ const AdminSettings = () => {
               )}
             </div>
 
-            {!googleApi.is_configured && (
-              <p className="text-xs text-muted-foreground">
-                ⚠️ بدون تفعيل هذا الخيار، ستحتاج لإضافة روابط Google Meet يدوياً لكل استشارة.
-              </p>
+            {/* Status Message */}
+            {googleApi.is_configured ? (
+              <div className="p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-green-500">Google Meet API مُفعّل ✓</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      سيتم إنشاء روابط Google Meet تلقائياً عند تأكيد حجوزات الاستشارة من صفحة إدارة الاستشارات.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-amber-500">Google Meet API غير مُفعّل</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      بدون تفعيل هذا الخيار، ستحتاج لإضافة روابط Google Meet يدوياً لكل استشارة عند التأكيد.
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </motion.div>
