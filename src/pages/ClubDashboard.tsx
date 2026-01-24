@@ -17,7 +17,6 @@ import {
   CheckCircle,
   XCircle,
   Crown,
-  MessageSquare,
   Heart,
   Zap,
   ArrowUpCircle,
@@ -522,13 +521,6 @@ const ClubDashboard = () => {
             <h1 className="text-lg md:text-xl font-bold text-gradient-gold">لوحة تحكم النادي</h1>
             <div className="flex items-center gap-2 md:gap-4">
               <NotificationBell />
-              <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => navigate("/messages")}>
-                <MessageSquare className="w-4 h-4 ml-2" />
-                الرسائل
-              </Button>
-              <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => navigate("/messages")}>
-                <MessageSquare className="w-5 h-5" />
-              </Button>
               <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => navigate("/account-settings")}>
                 <Settings className="w-4 h-4 ml-2" />
                 الإعدادات

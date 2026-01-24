@@ -18,7 +18,6 @@ import {
   Video,
   ArrowRight,
   LogOut,
-  MessageSquare,
   Edit,
   Settings,
   Plus
@@ -222,13 +221,6 @@ const PlayerDashboard = () => {
               </Button>
               <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => navigate("/my-consultations")}>
                 <Video className="w-5 h-5" />
-              </Button>
-              <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => navigate("/messages")}>
-                <MessageSquare className="w-4 h-4 ml-2" />
-                الرسائل
-              </Button>
-              <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => navigate("/messages")}>
-                <MessageSquare className="w-5 h-5" />
               </Button>
               <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => navigate("/account-settings")}>
                 <Settings className="w-4 h-4 ml-2" />
