@@ -1,12 +1,13 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Save, DollarSign, Globe, Image, Upload, X, Type, Sun, Moon, Maximize2, Minus, Square, Star } from 'lucide-react';
+import { Save, DollarSign, Globe, Image, Upload, X, Type, Sun, Moon, Maximize2, Minus, Square, Star, Video, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -31,6 +32,11 @@ interface FaviconSettings {
   dark_url: string | null;
 }
 
+interface GoogleApiSettings {
+  service_account_key: string;
+  is_configured: boolean;
+}
+
 const AdminSettings = () => {
   const { toast } = useToast();
   const [settings, setSettings] = useState<SiteSetting[]>([]);
@@ -48,6 +54,9 @@ const AdminSettings = () => {
   const [siteDescription, setSiteDescription] = useState({ en: '', ar: '' });
   const [siteLogo, setSiteLogo] = useState<SiteLogo>({ type: 'text', image_url: null });
   const [siteFavicon, setSiteFavicon] = useState<FaviconSettings>({ light_url: null, dark_url: null });
+  const [googleApi, setGoogleApi] = useState<GoogleApiSettings>({ service_account_key: '', is_configured: false });
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [savingGoogleApi, setSavingGoogleApi] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -83,6 +92,12 @@ const AdminSettings = () => {
           setSiteLogo(setting.value as SiteLogo);
         } else if (setting.key === 'site_favicon') {
           setSiteFavicon(setting.value as FaviconSettings);
+        } else if (setting.key === 'google_api_settings') {
+          const apiSettings = setting.value as GoogleApiSettings;
+          setGoogleApi({
+            service_account_key: apiSettings.service_account_key || '',
+            is_configured: !!apiSettings.service_account_key
+          });
         }
       });
     } catch (error) {
@@ -259,6 +274,69 @@ const AdminSettings = () => {
       setSiteFavicon(prev => ({ ...prev, light_url: null }));
     } else {
       setSiteFavicon(prev => ({ ...prev, dark_url: null }));
+    }
+  };
+
+  const handleSaveGoogleApi = async () => {
+    setSavingGoogleApi(true);
+    try {
+      // Validate JSON format if key is provided
+      if (googleApi.service_account_key.trim()) {
+        try {
+          JSON.parse(googleApi.service_account_key);
+        } catch {
+          toast({
+            title: 'خطأ',
+            description: 'صيغة مفتاح الخدمة غير صحيحة. يجب أن يكون JSON صالح.',
+            variant: 'destructive',
+          });
+          setSavingGoogleApi(false);
+          return;
+        }
+      }
+
+      const success = await saveSetting('google_api_settings', {
+        service_account_key: googleApi.service_account_key,
+        is_configured: !!googleApi.service_account_key.trim()
+      });
+
+      if (success) {
+        setGoogleApi(prev => ({ ...prev, is_configured: !!googleApi.service_account_key.trim() }));
+        toast({ title: 'تم حفظ إعدادات Google API بنجاح' });
+      } else {
+        throw new Error('Failed to save');
+      }
+    } catch (error) {
+      toast({
+        title: 'خطأ',
+        description: 'حدث خطأ أثناء حفظ الإعدادات',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingGoogleApi(false);
+    }
+  };
+
+  const handleRemoveGoogleApi = async () => {
+    setSavingGoogleApi(true);
+    try {
+      const success = await saveSetting('google_api_settings', {
+        service_account_key: '',
+        is_configured: false
+      });
+
+      if (success) {
+        setGoogleApi({ service_account_key: '', is_configured: false });
+        toast({ title: 'تم إزالة مفتاح Google API' });
+      }
+    } catch (error) {
+      toast({
+        title: 'خطأ',
+        description: 'حدث خطأ أثناء إزالة المفتاح',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingGoogleApi(false);
     }
   };
 
@@ -715,6 +793,108 @@ const AdminSettings = () => {
                   />
                 </div>
               </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Google Calendar/Meet API Settings */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="card-glass rounded-2xl p-6"
+        >
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
+              <Video className="w-5 h-5 text-gold" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-bold">Google Calendar/Meet API</h2>
+              <p className="text-sm text-muted-foreground">لإنشاء روابط Google Meet تلقائياً للاستشارات</p>
+            </div>
+            {googleApi.is_configured ? (
+              <div className="flex items-center gap-2 text-green-500 bg-green-500/10 px-3 py-1.5 rounded-full">
+                <CheckCircle2 className="w-4 h-4" />
+                <span className="text-sm font-medium">مُفعّل</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-amber-500 bg-amber-500/10 px-3 py-1.5 rounded-full">
+                <AlertCircle className="w-4 h-4" />
+                <span className="text-sm font-medium">غير مُفعّل</span>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <div className="p-4 bg-secondary/50 rounded-xl">
+              <h3 className="font-medium mb-2">كيفية الحصول على مفتاح الخدمة:</h3>
+              <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                <li>انتقل إلى <a href="https://console.cloud.google.com" target="_blank" rel="noopener noreferrer" className="text-gold hover:underline">Google Cloud Console</a></li>
+                <li>أنشئ مشروعاً جديداً أو اختر مشروعاً موجوداً</li>
+                <li>فعّل Google Calendar API</li>
+                <li>أنشئ Service Account وحمّل مفتاح JSON</li>
+                <li>الصق محتوى ملف JSON أدناه</li>
+              </ol>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>مفتاح حساب الخدمة (Service Account Key JSON)</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                >
+                  {showApiKey ? (
+                    <>
+                      <EyeOff className="w-4 h-4 ml-1" />
+                      إخفاء
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-4 h-4 ml-1" />
+                      إظهار
+                    </>
+                  )}
+                </Button>
+              </div>
+              <Textarea
+                value={showApiKey ? googleApi.service_account_key : (googleApi.service_account_key ? '••••••••••••••••••••••••••••••••' : '')}
+                onChange={(e) => setGoogleApi(prev => ({ ...prev, service_account_key: e.target.value }))}
+                placeholder='{"type": "service_account", "project_id": "...", ...}'
+                className="bg-secondary font-mono text-xs min-h-[120px]"
+                dir="ltr"
+                disabled={!showApiKey && googleApi.is_configured}
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={handleSaveGoogleApi}
+                disabled={savingGoogleApi || !googleApi.service_account_key.trim()}
+                className="btn-gold"
+              >
+                <Save className="w-4 h-4 ml-2" />
+                {savingGoogleApi ? 'جاري الحفظ...' : 'حفظ المفتاح'}
+              </Button>
+              {googleApi.is_configured && (
+                <Button
+                  variant="outline"
+                  onClick={handleRemoveGoogleApi}
+                  disabled={savingGoogleApi}
+                  className="text-destructive hover:bg-destructive/10"
+                >
+                  <X className="w-4 h-4 ml-2" />
+                  إزالة المفتاح
+                </Button>
+              )}
+            </div>
+
+            {!googleApi.is_configured && (
+              <p className="text-xs text-muted-foreground">
+                ⚠️ بدون تفعيل هذا الخيار، ستحتاج لإضافة روابط Google Meet يدوياً لكل استشارة.
+              </p>
             )}
           </div>
         </motion.div>
