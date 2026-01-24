@@ -33,6 +33,10 @@ interface TimeSlot {
   start_time: string;
   end_time: string;
   is_active: boolean;
+  recurrence_type?: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  specific_dates?: string[] | null;
 }
 
 interface PaymentMethod {
@@ -157,7 +161,38 @@ const ConsultationBooking = () => {
 
   const getSlotsForDate = (date: Date) => {
     const dayOfWeek = date.getDay();
-    return slots.filter(slot => slot.day_of_week === dayOfWeek);
+    const dateStr = format(date, 'yyyy-MM-dd');
+    
+    return slots.filter(slot => {
+      // Check if day of week matches
+      if (slot.day_of_week !== dayOfWeek) return false;
+      
+      // Check recurrence type
+      const recurrenceType = slot.recurrence_type || 'weekly';
+      
+      if (recurrenceType === 'weekly') {
+        // For weekly, check if date is within start_date and end_date if specified
+        if (slot.start_date && isBefore(date, new Date(slot.start_date))) return false;
+        if (slot.end_date && isAfter(date, new Date(slot.end_date))) return false;
+        return true;
+      }
+      
+      if (recurrenceType === 'date_range') {
+        // For date range, check if date falls within the range
+        if (!slot.start_date || !slot.end_date) return false;
+        const startDate = new Date(slot.start_date);
+        const endDate = new Date(slot.end_date);
+        return !isBefore(date, startDate) && !isAfter(date, endDate);
+      }
+      
+      if (recurrenceType === 'specific_dates') {
+        // For specific dates, check if date is in the list
+        if (!slot.specific_dates || slot.specific_dates.length === 0) return false;
+        return slot.specific_dates.includes(dateStr);
+      }
+      
+      return true;
+    });
   };
 
   const isSlotBooked = (date: Date, slot: TimeSlot) => {

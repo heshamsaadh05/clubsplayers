@@ -6,7 +6,6 @@ import {
   DollarSign, 
   Settings2, 
   Users, 
-  Plus, 
   Trash2, 
   Save,
   CheckCircle2,
@@ -15,7 +14,9 @@ import {
   Video,
   FileText,
   AlertCircle,
-  Loader2
+  Loader2,
+  CalendarRange,
+  Repeat
 } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -50,8 +51,9 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { AddSlotDialog } from '@/components/admin/AddSlotDialog';
 
 interface ConsultationSettings {
   id: string;
@@ -69,6 +71,10 @@ interface ConsultationSlot {
   start_time: string;
   end_time: string;
   is_active: boolean;
+  recurrence_type: string;
+  start_date: string | null;
+  end_date: string | null;
+  specific_dates: string[] | null;
 }
 
 interface ConsultationBooking {
@@ -130,12 +136,6 @@ const AdminConsultations = () => {
   
   // Slots state
   const [slots, setSlots] = useState<ConsultationSlot[]>([]);
-  const [newSlot, setNewSlot] = useState({
-    day_of_week: 0,
-    start_time: '09:00',
-    end_time: '10:00',
-  });
-  const [addingSlot, setAddingSlot] = useState(false);
   
   // Bookings state
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
@@ -271,36 +271,9 @@ const AdminConsultations = () => {
     }
   };
 
-  const handleAddSlot = async () => {
-    setAddingSlot(true);
-    try {
-      const { data, error } = await supabase
-        .from('consultation_slots')
-        .insert({
-          day_of_week: newSlot.day_of_week,
-          start_time: newSlot.start_time,
-          end_time: newSlot.end_time,
-          is_active: true,
-        })
-        .select()
-        .single();
+  // handleAddSlot removed - now using AddSlotDialog component
 
-      if (error) throw error;
 
-      setSlots([...slots, data]);
-      setNewSlot({ day_of_week: 0, start_time: '09:00', end_time: '10:00' });
-      toast({ title: 'تم إضافة الفترة الزمنية' });
-    } catch (error) {
-      console.error('Error adding slot:', error);
-      toast({
-        title: 'خطأ',
-        description: 'حدث خطأ أثناء إضافة الفترة',
-        variant: 'destructive',
-      });
-    } finally {
-      setAddingSlot(false);
-    }
-  };
 
   const handleToggleSlot = async (slotId: string, isActive: boolean) => {
     try {
@@ -633,64 +606,33 @@ const AdminConsultations = () => {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
             >
-              {/* Add New Slot */}
+              {/* Add New Slot - New Dialog Component */}
               <Card className="card-glass">
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
-                    <Plus className="w-5 h-5" />
-                    إضافة فترة زمنية جديدة
+                    <CalendarRange className="w-5 h-5 text-gold" />
+                    إدارة الفترات الزمنية
                   </CardTitle>
+                  <AddSlotDialog onSlotAdded={fetchSlots} />
                 </CardHeader>
                 <CardContent>
-                  <div className="flex flex-wrap items-end gap-4">
-                    <div className="space-y-2">
-                      <Label>اليوم</Label>
-                      <Select
-                        value={newSlot.day_of_week.toString()}
-                        onValueChange={(value) => setNewSlot({ ...newSlot, day_of_week: parseInt(value) })}
-                      >
-                        <SelectTrigger className="w-[150px] bg-secondary">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DAYS_OF_WEEK.map(day => (
-                            <SelectItem key={day.value} value={day.value.toString()}>
-                              {day.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>من الساعة</Label>
-                      <Input
-                        type="time"
-                        value={newSlot.start_time}
-                        onChange={(e) => setNewSlot({ ...newSlot, start_time: e.target.value })}
-                        className="w-[130px] bg-secondary"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>إلى الساعة</Label>
-                      <Input
-                        type="time"
-                        value={newSlot.end_time}
-                        onChange={(e) => setNewSlot({ ...newSlot, end_time: e.target.value })}
-                        className="w-[130px] bg-secondary"
-                      />
-                    </div>
-                    <Button onClick={handleAddSlot} disabled={addingSlot} className="btn-gold">
-                      <Plus className="w-4 h-4 ml-2" />
-                      {addingSlot ? 'جاري الإضافة...' : 'إضافة'}
-                    </Button>
-                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    أضف فترات زمنية متكررة أسبوعياً أو لنطاق تاريخ محدد أو لتواريخ مخصصة
+                  </p>
                 </CardContent>
               </Card>
 
-              {/* Slots List */}
+              {/* Slots List - Enhanced View */}
               <Card className="card-glass">
                 <CardHeader>
-                  <CardTitle>الفترات الزمنية المتاحة</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>الفترات الزمنية المتاحة ({slots.length})</span>
+                    {slots.length > 0 && (
+                      <Badge variant="secondary">
+                        {slots.filter(s => s.is_active).length} نشطة
+                      </Badge>
+                    )}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {slots.length === 0 ? (
@@ -700,41 +642,73 @@ const AdminConsultations = () => {
                       <p className="text-sm">أضف فترات لتمكين اللاعبين من الحجز</p>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {DAYS_OF_WEEK.map(day => {
                         const daySlots = slots.filter(s => s.day_of_week === day.value);
                         if (daySlots.length === 0) return null;
 
                         return (
                           <div key={day.value} className="border border-border rounded-xl p-4">
-                            <h4 className="font-semibold mb-3">{day.label}</h4>
+                            <h4 className="font-semibold mb-3 flex items-center gap-2">
+                              {day.label}
+                              <Badge variant="outline" className="text-xs">
+                                {daySlots.length} فترة
+                              </Badge>
+                            </h4>
                             <div className="flex flex-wrap gap-2">
                               {daySlots.map(slot => (
                                 <div
                                   key={slot.id}
-                                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
+                                  className={`flex flex-col gap-1 px-3 py-2 rounded-lg border transition-colors ${
                                     slot.is_active 
                                       ? 'bg-gold/10 border-gold/30' 
                                       : 'bg-secondary/50 border-border opacity-50'
                                   }`}
                                 >
-                                  <Clock className="w-4 h-4 text-muted-foreground" />
-                                  <span className="text-sm font-medium">
-                                    {slot.start_time} - {slot.end_time}
-                                  </span>
-                                  <Switch
-                                    checked={slot.is_active}
-                                    onCheckedChange={(checked) => handleToggleSlot(slot.id, checked)}
-                                    className="scale-75"
-                                  />
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 text-destructive hover:text-destructive"
-                                    onClick={() => handleDeleteSlot(slot.id)}
-                                  >
-                                    <Trash2 className="w-3 h-3" />
-                                  </Button>
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="w-4 h-4 text-muted-foreground" />
+                                    <span className="text-sm font-medium">
+                                      {slot.start_time} - {slot.end_time}
+                                    </span>
+                                    <Switch
+                                      checked={slot.is_active}
+                                      onCheckedChange={(checked) => handleToggleSlot(slot.id, checked)}
+                                      className="scale-75"
+                                    />
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-6 w-6 text-destructive hover:text-destructive"
+                                      onClick={() => handleDeleteSlot(slot.id)}
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                  {/* Show recurrence info */}
+                                  {slot.recurrence_type && slot.recurrence_type !== 'weekly' && (
+                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                      {slot.recurrence_type === 'date_range' && (
+                                        <>
+                                          <CalendarRange className="w-3 h-3" />
+                                          <span>
+                                            {slot.start_date && format(parseISO(slot.start_date), 'dd/MM')} - {slot.end_date && format(parseISO(slot.end_date), 'dd/MM')}
+                                          </span>
+                                        </>
+                                      )}
+                                      {slot.recurrence_type === 'specific_dates' && (
+                                        <>
+                                          <Calendar className="w-3 h-3" />
+                                          <span>{slot.specific_dates?.length || 0} تواريخ</span>
+                                        </>
+                                      )}
+                                    </div>
+                                  )}
+                                  {slot.recurrence_type === 'weekly' && slot.end_date && (
+                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                      <Repeat className="w-3 h-3" />
+                                      <span>حتى {format(parseISO(slot.end_date), 'dd/MM/yyyy')}</span>
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                             </div>

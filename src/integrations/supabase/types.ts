@@ -195,27 +195,39 @@ export type Database = {
         Row: {
           created_at: string
           day_of_week: number
+          end_date: string | null
           end_time: string
           id: string
           is_active: boolean
+          recurrence_type: string
+          specific_dates: string[] | null
+          start_date: string | null
           start_time: string
           updated_at: string
         }
         Insert: {
           created_at?: string
           day_of_week: number
+          end_date?: string | null
           end_time: string
           id?: string
           is_active?: boolean
+          recurrence_type?: string
+          specific_dates?: string[] | null
+          start_date?: string | null
           start_time: string
           updated_at?: string
         }
         Update: {
           created_at?: string
           day_of_week?: number
+          end_date?: string | null
           end_time?: string
           id?: string
           is_active?: boolean
+          recurrence_type?: string
+          specific_dates?: string[] | null
+          start_date?: string | null
           start_time?: string
           updated_at?: string
         }
