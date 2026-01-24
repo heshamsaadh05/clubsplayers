@@ -31,6 +31,7 @@ import ClubDashboard from "./pages/ClubDashboard";
 import BrowsePlayers from "./pages/BrowsePlayers";
 import PlayerProfile from "./pages/PlayerProfile";
 import Subscription from "./pages/Subscription";
+import ConsultationBooking from "./pages/ConsultationBooking";
 import PlansComparison from "./pages/PlansComparison";
 import AccountSettings from "./pages/AccountSettings";
 import PageView from "./pages/PageView";
@@ -58,6 +59,7 @@ const App = () => (
                 <Route path="/browse-players" element={<BrowsePlayers />} />
                 <Route path="/player/:id" element={<PlayerProfile />} />
                 <Route path="/subscription" element={<Subscription />} />
+                <Route path="/consultation-booking" element={<ConsultationBooking />} />
                 <Route path="/plans" element={<PlansComparison />} />
                 <Route path="/account-settings" element={<AccountSettings />} />
                 <Route path="/page/:slug" element={<PageView />} />
