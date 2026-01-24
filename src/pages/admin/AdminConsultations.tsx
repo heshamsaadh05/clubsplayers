@@ -54,6 +54,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { AddSlotDialog } from '@/components/admin/AddSlotDialog';
+import PrivateImage from '@/components/admin/PrivateImage';
 
 interface ConsultationSettings {
   id: string;
@@ -833,15 +834,12 @@ const AdminConsultations = () => {
                                   {booking.proof_url && (
                                     <div>
                                       <p className="text-muted-foreground text-sm mb-2">إثبات الدفع</p>
-                                      <a
-                                        href={booking.proof_url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-gold hover:underline flex items-center gap-1"
-                                      >
-                                        <FileText className="w-4 h-4" />
-                                        عرض الإثبات
-                                      </a>
+                                      <PrivateImage
+                                        bucket="payment-proofs"
+                                        url={booking.proof_url}
+                                        alt="إثبات الدفع"
+                                        className="max-w-full max-h-64 mx-auto"
+                                      />
                                     </div>
                                   )}
 
