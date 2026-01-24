@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Save, DollarSign, Globe, Image, Upload, X, Type, Sun, Moon, Maximize2, Minus, Square, Star, Video, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Save, DollarSign, Globe, Image, Upload, X, Type, Sun, Moon, Maximize2, Minus, Square, Star, Video, Eye, EyeOff, AlertCircle, CheckCircle2, Loader2, Wifi } from 'lucide-react';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,6 +57,8 @@ const AdminSettings = () => {
   const [googleApi, setGoogleApi] = useState<GoogleApiSettings>({ service_account_key: '', is_configured: false });
   const [showApiKey, setShowApiKey] = useState(false);
   const [savingGoogleApi, setSavingGoogleApi] = useState(false);
+  const [testingGoogleApi, setTestingGoogleApi] = useState(false);
+  const [googleApiTestResult, setGoogleApiTestResult] = useState<{ success: boolean; message: string } | null>(null);
 
   useEffect(() => {
     fetchSettings();
@@ -327,6 +329,7 @@ const AdminSettings = () => {
 
       if (success) {
         setGoogleApi({ service_account_key: '', is_configured: false });
+        setGoogleApiTestResult(null);
         toast({ title: 'تم إزالة مفتاح Google API' });
       }
     } catch (error) {
@@ -337,6 +340,47 @@ const AdminSettings = () => {
       });
     } finally {
       setSavingGoogleApi(false);
+    }
+  };
+
+  const handleTestGoogleApi = async () => {
+    setTestingGoogleApi(true);
+    setGoogleApiTestResult(null);
+    
+    try {
+      // Validate JSON format first
+      if (!googleApi.service_account_key.trim()) {
+        setGoogleApiTestResult({ success: false, message: 'يرجى إدخال مفتاح Google Service Account أولاً' });
+        setTestingGoogleApi(false);
+        return;
+      }
+
+      try {
+        JSON.parse(googleApi.service_account_key);
+      } catch {
+        setGoogleApiTestResult({ success: false, message: 'صيغة مفتاح الخدمة غير صحيحة. يجب أن يكون JSON صالح.' });
+        setTestingGoogleApi(false);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('test-google-api', {
+        body: { service_account_key: googleApi.service_account_key }
+      });
+
+      if (error) {
+        console.error('Test Google API error:', error);
+        setGoogleApiTestResult({ success: false, message: error.message || 'حدث خطأ أثناء اختبار الاتصال' });
+      } else if (data?.success) {
+        setGoogleApiTestResult({ success: true, message: data.message || 'تم التحقق من الاتصال بنجاح!' });
+        toast({ title: 'نجاح', description: 'تم التحقق من اتصال Google API بنجاح!' });
+      } else {
+        setGoogleApiTestResult({ success: false, message: data?.error || 'فشل اختبار الاتصال' });
+      }
+    } catch (error) {
+      console.error('Error testing Google API:', error);
+      setGoogleApiTestResult({ success: false, message: 'حدث خطأ غير متوقع أثناء اختبار الاتصال' });
+    } finally {
+      setTestingGoogleApi(false);
     }
   };
 
@@ -969,8 +1013,44 @@ const AdminSettings = () => {
               </p>
             </div>
 
+            {/* Test Result */}
+            {googleApiTestResult && (
+              <div className={`p-4 rounded-xl flex items-start gap-3 ${
+                googleApiTestResult.success 
+                  ? 'bg-green-500/10 border border-green-500/30' 
+                  : 'bg-destructive/10 border border-destructive/30'
+              }`}>
+                {googleApiTestResult.success ? (
+                  <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                ) : (
+                  <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                )}
+                <p className={`text-sm ${googleApiTestResult.success ? 'text-green-500' : 'text-destructive'}`}>
+                  {googleApiTestResult.message}
+                </p>
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3 pt-2">
+              <Button
+                onClick={handleTestGoogleApi}
+                disabled={testingGoogleApi || !googleApi.service_account_key.trim()}
+                variant="outline"
+                className="border-blue-500/30 text-blue-600 hover:bg-blue-500/10"
+              >
+                {testingGoogleApi ? (
+                  <>
+                    <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                    جاري الاختبار...
+                  </>
+                ) : (
+                  <>
+                    <Wifi className="w-4 h-4 ml-2" />
+                    اختبار الاتصال
+                  </>
+                )}
+              </Button>
               <Button
                 onClick={handleSaveGoogleApi}
                 disabled={savingGoogleApi || !googleApi.service_account_key.trim()}
