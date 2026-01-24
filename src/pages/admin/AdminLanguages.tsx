@@ -57,18 +57,22 @@ interface Translation {
 }
 
 const TRANSLATION_CATEGORIES = [
-  { id: 'general', label: 'عام' },
-  { id: 'nav', label: 'القائمة' },
-  { id: 'auth', label: 'التسجيل والدخول' },
-  { id: 'player', label: 'اللاعبين' },
-  { id: 'club', label: 'الأندية' },
-  { id: 'subscription', label: 'الاشتراكات' },
-  { id: 'common', label: 'مشترك' },
-  { id: 'admin', label: 'لوحة التحكم' },
-  { id: 'consultation', label: 'الاستشارات' },
-  { id: 'meet', label: 'اجتماعات Meet' },
-  { id: 'messages', label: 'الرسائل' },
-  { id: 'notifications', label: 'الإشعارات' },
+  { id: 'general', label: 'عام', labelEn: 'General' },
+  { id: 'nav', label: 'القائمة', labelEn: 'Navigation' },
+  { id: 'auth', label: 'التسجيل والدخول', labelEn: 'Authentication' },
+  { id: 'player', label: 'اللاعبين', labelEn: 'Players' },
+  { id: 'club', label: 'الأندية', labelEn: 'Clubs' },
+  { id: 'subscription', label: 'الاشتراكات', labelEn: 'Subscriptions' },
+  { id: 'common', label: 'مشترك', labelEn: 'Common' },
+  { id: 'admin', label: 'لوحة التحكم', labelEn: 'Admin Panel' },
+  { id: 'consultation', label: 'الاستشارات', labelEn: 'Consultations' },
+  { id: 'meet', label: 'اجتماعات Meet', labelEn: 'Meet Logs' },
+  { id: 'messages', label: 'الرسائل', labelEn: 'Messages' },
+  { id: 'notifications', label: 'الإشعارات', labelEn: 'Notifications' },
+  { id: 'interests', label: 'الاهتمامات', labelEn: 'Interests' },
+  { id: 'validation', label: 'التحقق', labelEn: 'Validation' },
+  { id: 'upload', label: 'الرفع', labelEn: 'Upload' },
+  { id: 'days', label: 'أيام الأسبوع', labelEn: 'Days of Week' },
 ];
 
 const AdminLanguages = () => {

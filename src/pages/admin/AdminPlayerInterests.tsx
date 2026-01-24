@@ -40,6 +40,7 @@ import {
 import AdminLayout from '@/components/admin/AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/useLanguage';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
@@ -62,6 +63,7 @@ interface PlayerInterest {
 
 const AdminPlayerInterests = () => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [interests, setInterests] = useState<PlayerInterest[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -94,21 +96,21 @@ const AdminPlayerInterests = () => {
         const playerPrivateMap = new Map(playerPrivateRes.data?.map(p => [p.user_id, p]));
         const clubMap = new Map(clubsRes.data?.map(c => [c.user_id, c]));
 
-        const enrichedInterests = interestsData.map(interest => {
-          const player = playerMap.get(interest.player_id);
-          const playerPrivate = player ? playerPrivateMap.get(player.user_id) : null;
-          const club = clubMap.get(interest.club_user_id);
+          const enrichedInterests = interestsData.map(interest => {
+            const player = playerMap.get(interest.player_id);
+            const playerPrivate = player ? playerPrivateMap.get(player.user_id) : null;
+            const club = clubMap.get(interest.club_user_id);
 
-          return {
-            ...interest,
-            player_name: player?.full_name || 'غير معروف',
-            player_email: playerPrivate?.email,
-            player_phone: playerPrivate?.phone,
-            club_name: club?.name || 'غير معروف',
-            club_email: club?.email,
-            club_phone: club?.phone,
-          };
-        });
+            return {
+              ...interest,
+              player_name: player?.full_name || t('common.unknown'),
+              player_email: playerPrivate?.email,
+              player_phone: playerPrivate?.phone,
+              club_name: club?.name || t('common.unknown'),
+              club_email: club?.email,
+              club_phone: club?.phone,
+            };
+          });
 
         setInterests(enrichedInterests);
       } else {
@@ -117,10 +119,14 @@ const AdminPlayerInterests = () => {
     } catch (error) {
       console.error('Error fetching interests:', error);
       toast({
-        title: 'خطأ',
-        description: 'حدث خطأ في جلب البيانات',
+        title: t('common.error'),
+        description: t('admin.fetchError'),
         variant: 'destructive',
       });
+    } finally {
+      setLoading(false);
+    }
+  };
     } finally {
       setLoading(false);
     }
@@ -144,15 +150,15 @@ const AdminPlayerInterests = () => {
 
       if (error) throw error;
 
-      toast({ title: 'تم تحديث الحالة بنجاح' });
+      toast({ title: t('interests.statusUpdated') });
       fetchInterests();
       setSelectedInterest(null);
       setAdminNotes('');
     } catch (error) {
       console.error('Error updating interest:', error);
       toast({
-        title: 'خطأ',
-        description: 'حدث خطأ في تحديث الحالة',
+        title: t('common.error'),
+        description: t('interests.updateError'),
         variant: 'destructive',
       });
     } finally {
@@ -170,10 +176,10 @@ const AdminPlayerInterests = () => {
 
   const getStatusBadge = (status: string) => {
     const config: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-      pending: { label: 'قيد المراجعة', variant: 'secondary' },
-      reviewed: { label: 'تمت المراجعة', variant: 'outline' },
-      contacted: { label: 'تم التواصل', variant: 'default' },
-      rejected: { label: 'مرفوض', variant: 'destructive' },
+      pending: { label: t('interests.pending'), variant: 'secondary' },
+      reviewed: { label: t('interests.reviewed'), variant: 'outline' },
+      contacted: { label: t('interests.contacted'), variant: 'default' },
+      rejected: { label: t('interests.rejected'), variant: 'destructive' },
     };
     const { label, variant } = config[status] || config.pending;
     return <Badge variant={variant}>{label}</Badge>;
@@ -181,9 +187,9 @@ const AdminPlayerInterests = () => {
 
   const getTypeBadge = (type: string) => {
     return type === 'offer' ? (
-      <Badge className="bg-gold text-gold-foreground">عرض رسمي</Badge>
+      <Badge className="bg-gold text-gold-foreground">{t('interests.offer')}</Badge>
     ) : (
-      <Badge variant="outline">مهتم</Badge>
+      <Badge variant="outline">{t('interests.interested')}</Badge>
     );
   };
 
@@ -201,9 +207,9 @@ const AdminPlayerInterests = () => {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Heart className="w-6 h-6 text-gold" />
-            اهتمامات الأندية
+            {t('interests.title')}
           </h1>
-          <p className="text-muted-foreground">إدارة طلبات الأندية للتواصل مع اللاعبين</p>
+          <p className="text-muted-foreground">{t('interests.subtitle')}</p>
         </div>
 
         {/* Stats */}
@@ -211,25 +217,25 @@ const AdminPlayerInterests = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="text-2xl font-bold">{stats.total}</div>
-              <p className="text-sm text-muted-foreground">إجمالي الطلبات</p>
+              <p className="text-sm text-muted-foreground">{t('interests.totalRequests')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
               <div className="text-2xl font-bold text-yellow-500">{stats.pending}</div>
-              <p className="text-sm text-muted-foreground">قيد المراجعة</p>
+              <p className="text-sm text-muted-foreground">{t('interests.pendingReview')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
               <div className="text-2xl font-bold text-green-500">{stats.contacted}</div>
-              <p className="text-sm text-muted-foreground">تم التواصل</p>
+              <p className="text-sm text-muted-foreground">{t('interests.contacted')}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6">
               <div className="text-2xl font-bold text-gold">{stats.offers}</div>
-              <p className="text-sm text-muted-foreground">عروض رسمية</p>
+              <p className="text-sm text-muted-foreground">{t('interests.officialOffers')}</p>
             </CardContent>
           </Card>
         </div>
@@ -239,7 +245,7 @@ const AdminPlayerInterests = () => {
           <div className="relative flex-1">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="بحث باسم اللاعب أو النادي..."
+              placeholder={t('interests.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pr-10"
@@ -248,14 +254,14 @@ const AdminPlayerInterests = () => {
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full sm:w-48">
               <Filter className="w-4 h-4 ml-2" />
-              <SelectValue placeholder="تصفية بالحالة" />
+              <SelectValue placeholder={t('interests.filterByStatus')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">جميع الحالات</SelectItem>
-              <SelectItem value="pending">قيد المراجعة</SelectItem>
-              <SelectItem value="reviewed">تمت المراجعة</SelectItem>
-              <SelectItem value="contacted">تم التواصل</SelectItem>
-              <SelectItem value="rejected">مرفوض</SelectItem>
+              <SelectItem value="all">{t('interests.allStatuses')}</SelectItem>
+              <SelectItem value="pending">{t('interests.pending')}</SelectItem>
+              <SelectItem value="reviewed">{t('interests.reviewed')}</SelectItem>
+              <SelectItem value="contacted">{t('interests.contacted')}</SelectItem>
+              <SelectItem value="rejected">{t('interests.rejected')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -269,7 +275,7 @@ const AdminPlayerInterests = () => {
           <Card>
             <CardContent className="py-12 text-center">
               <Heart className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">لا توجد طلبات اهتمام</p>
+              <p className="text-muted-foreground">{t('interests.noInterests')}</p>
             </CardContent>
           </Card>
         ) : (
@@ -317,6 +323,9 @@ const AdminPlayerInterests = () => {
                         }}
                       >
                         <Eye className="w-4 h-4 ml-2" />
+                        {t('interests.viewDetails')}
+                      </Button>
+                        <Eye className="w-4 h-4 ml-2" />
                         عرض التفاصيل
                       </Button>
                     </div>
@@ -330,8 +339,9 @@ const AdminPlayerInterests = () => {
         {/* Details Dialog */}
         <Dialog open={!!selectedInterest} onOpenChange={() => setSelectedInterest(null)}>
           <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>تفاصيل طلب الاهتمام</DialogTitle>
+          <DialogHeader>
+              <DialogTitle>{t('interests.requestDetails')}</DialogTitle>
+            </DialogHeader>
             </DialogHeader>
 
             {selectedInterest && (
@@ -342,13 +352,13 @@ const AdminPlayerInterests = () => {
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-gold" />
-                        معلومات النادي
+                        {t('interests.clubInfo')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm">
-                      <p><strong>الاسم:</strong> {selectedInterest.club_name}</p>
-                      <p><strong>البريد:</strong> {selectedInterest.club_email || '—'}</p>
-                      <p><strong>الهاتف:</strong> {selectedInterest.club_phone || '—'}</p>
+                      <p><strong>{t('common.name')}:</strong> {selectedInterest.club_name}</p>
+                      <p><strong>{t('common.email')}:</strong> {selectedInterest.club_email || '—'}</p>
+                      <p><strong>{t('common.phone')}:</strong> {selectedInterest.club_phone || '—'}</p>
                     </CardContent>
                   </Card>
 
@@ -357,24 +367,24 @@ const AdminPlayerInterests = () => {
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2">
                         <User className="w-4 h-4 text-gold" />
-                        معلومات اللاعب
+                        {t('interests.playerInfo')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2 text-sm">
-                      <p><strong>الاسم:</strong> {selectedInterest.player_name}</p>
-                      <p><strong>البريد:</strong> {selectedInterest.player_email || '—'}</p>
-                      <p><strong>الهاتف:</strong> {selectedInterest.player_phone || '—'}</p>
+                      <p><strong>{t('common.name')}:</strong> {selectedInterest.player_name}</p>
+                      <p><strong>{t('common.email')}:</strong> {selectedInterest.player_email || '—'}</p>
+                      <p><strong>{t('common.phone')}:</strong> {selectedInterest.player_phone || '—'}</p>
                     </CardContent>
                   </Card>
                 </div>
 
                 {/* Interest Details */}
                 <div className="space-y-2">
-                  <p><strong>نوع الاهتمام:</strong> {getTypeBadge(selectedInterest.interest_type)}</p>
-                  <p><strong>الحالة الحالية:</strong> {getStatusBadge(selectedInterest.status)}</p>
+                  <p><strong>{t('interests.interestType')}:</strong> {getTypeBadge(selectedInterest.interest_type)}</p>
+                  <p><strong>{t('interests.currentStatus')}:</strong> {getStatusBadge(selectedInterest.status)}</p>
                   {selectedInterest.message && (
                     <div>
-                      <strong>رسالة النادي:</strong>
+                      <strong>{t('interests.clubMessage')}:</strong>
                       <p className="mt-1 p-3 bg-muted rounded-lg">{selectedInterest.message}</p>
                     </div>
                   )}
@@ -382,15 +392,14 @@ const AdminPlayerInterests = () => {
 
                 {/* Admin Notes */}
                 <div className="space-y-2">
-                  <Label>ملاحظات الإدارة</Label>
+                  <Label>{t('interests.adminNotes')}</Label>
                   <Textarea
                     value={adminNotes}
                     onChange={(e) => setAdminNotes(e.target.value)}
-                    placeholder="أضف ملاحظات..."
+                    placeholder={t('interests.addNotes')}
                     className="min-h-[80px]"
                   />
                 </div>
-
                 {/* Actions */}
                 <div className="flex flex-wrap gap-2">
                   <Button
@@ -399,7 +408,7 @@ const AdminPlayerInterests = () => {
                     className="btn-gold"
                   >
                     <CheckCircle className="w-4 h-4 ml-2" />
-                    تم التواصل
+                    {t('interests.markContacted')}
                   </Button>
                   <Button
                     variant="outline"
@@ -407,7 +416,7 @@ const AdminPlayerInterests = () => {
                     disabled={updating}
                   >
                     <Eye className="w-4 h-4 ml-2" />
-                    تمت المراجعة
+                    {t('interests.markReviewed')}
                   </Button>
                   <Button
                     variant="destructive"
@@ -415,7 +424,7 @@ const AdminPlayerInterests = () => {
                     disabled={updating}
                   >
                     <XCircle className="w-4 h-4 ml-2" />
-                    رفض
+                    {t('interests.reject')}
                   </Button>
                 </div>
               </div>
