@@ -127,10 +127,6 @@ const AdminPlayerInterests = () => {
       setLoading(false);
     }
   };
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     fetchInterests();
@@ -325,9 +321,6 @@ const AdminPlayerInterests = () => {
                         <Eye className="w-4 h-4 ml-2" />
                         {t('interests.viewDetails')}
                       </Button>
-                        <Eye className="w-4 h-4 ml-2" />
-                        عرض التفاصيل
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -340,9 +333,8 @@ const AdminPlayerInterests = () => {
         <Dialog open={!!selectedInterest} onOpenChange={() => setSelectedInterest(null)}>
           <DialogContent className="max-w-2xl">
           <DialogHeader>
-              <DialogTitle>{t('interests.requestDetails')}</DialogTitle>
-            </DialogHeader>
-            </DialogHeader>
+            <DialogTitle>{t('interests.requestDetails')}</DialogTitle>
+          </DialogHeader>
 
             {selectedInterest && (
               <div className="space-y-6 mt-4">
