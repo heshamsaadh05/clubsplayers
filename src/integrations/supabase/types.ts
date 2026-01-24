@@ -109,6 +109,7 @@ export type Database = {
           player_notes: string | null
           player_user_id: string
           proof_url: string | null
+          reminder_sent: boolean
           start_time: string
           status: string
           updated_at: string
@@ -129,6 +130,7 @@ export type Database = {
           player_notes?: string | null
           player_user_id: string
           proof_url?: string | null
+          reminder_sent?: boolean
           start_time: string
           status?: string
           updated_at?: string
@@ -149,6 +151,7 @@ export type Database = {
           player_notes?: string | null
           player_user_id?: string
           proof_url?: string | null
+          reminder_sent?: boolean
           start_time?: string
           status?: string
           updated_at?: string
@@ -400,6 +403,45 @@ export type Database = {
           sender_id?: string
           subject?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          message_ar: string | null
+          metadata: Json | null
+          title: string
+          title_ar: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          message_ar?: string | null
+          metadata?: Json | null
+          title: string
+          title_ar?: string | null
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          message_ar?: string | null
+          metadata?: Json | null
+          title?: string
+          title_ar?: string | null
+          type?: string
+          user_id?: string
         }
         Relationships: []
       }
