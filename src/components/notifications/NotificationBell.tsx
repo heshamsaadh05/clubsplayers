@@ -72,6 +72,8 @@ const NotificationBell = () => {
     switch (type) {
       case 'consultation_reminder':
         return <Calendar className="w-5 h-5 text-gold" />;
+      case 'new_consultation_booking':
+        return <Clock className="w-5 h-5 text-gold" />;
       default:
         return <Bell className="w-5 h-5 text-gold" />;
     }
