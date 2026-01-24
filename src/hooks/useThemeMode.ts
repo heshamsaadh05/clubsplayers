@@ -148,13 +148,28 @@ export const useThemeMode = () => {
   // Get effective mode (localStorage takes priority for quick loading, then database)
   const effectiveMode = hasLocalPreference ? localMode : (settings?.mode || localMode);
   
-  const applyTheme = useCallback((theme: 'light' | 'dark') => {
+  const applyTheme = useCallback((theme: 'light' | 'dark', skipTransition = false) => {
     setResolvedTheme(theme);
     const root = document.documentElement;
+    
+    // Temporarily disable transitions to prevent flash on initial load
+    if (skipTransition) {
+      root.classList.add('no-transition');
+    }
+    
     if (theme === 'dark') {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
+    }
+    
+    // Re-enable transitions after a short delay
+    if (skipTransition) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          root.classList.remove('no-transition');
+        });
+      });
     }
   }, []);
 
@@ -171,11 +186,14 @@ export const useThemeMode = () => {
     applyTheme(newTheme);
   }, [settings, effectiveMode, applyTheme, hasLocalPreference]);
 
-  // Apply theme immediately on mount from localStorage
+  // Apply theme immediately on mount from localStorage (skip transition to prevent flash)
   useEffect(() => {
     const storedMode = getLocalStorageTheme();
     if (storedMode) {
-      applyTheme(getResolvedTheme(storedMode));
+      applyTheme(getResolvedTheme(storedMode), true);
+    } else {
+      // Apply default theme without transition on first load
+      applyTheme(getResolvedTheme('dark'), true);
     }
   }, [applyTheme]);
 

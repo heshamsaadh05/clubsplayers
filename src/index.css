@@ -133,6 +133,35 @@
     direction: rtl;
   }
 
+  /* Theme transition - smooth color changes */
+  html,
+  html *,
+  html *::before,
+  html *::after {
+    transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+  }
+
+  /* Respect prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    html,
+    html *,
+    html *::before,
+    html *::after {
+      transition-duration: 0ms !important;
+      animation-duration: 0ms !important;
+    }
+  }
+
+  /* Disable transitions during initial load to prevent flash */
+  html.no-transition,
+  html.no-transition *,
+  html.no-transition *::before,
+  html.no-transition *::after {
+    transition-duration: 0ms !important;
+  }
+
   body {
     @apply bg-background text-foreground font-cairo;
   }
