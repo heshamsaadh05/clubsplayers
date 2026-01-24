@@ -1,4 +1,4 @@
-import { Moon, Sun, Monitor } from 'lucide-react';
+import { Moon, Sun, Monitor, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -8,13 +8,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useThemeMode, useUpdateThemeModeSettings, ThemeMode } from '@/hooks/useThemeMode';
 import { useLanguage } from '@/hooks/useLanguage';
-import { toast } from 'sonner';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 const ThemeModeToggle = () => {
   const { mode, resolvedTheme, setLocalMode } = useThemeMode();
   const { t } = useLanguage();
   const updateSettings = useUpdateThemeModeSettings();
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Apply theme immediately on mount and when resolvedTheme changes
   useEffect(() => {
@@ -27,6 +28,9 @@ const ThemeModeToggle = () => {
   }, [resolvedTheme]);
 
   const handleModeChange = async (newMode: ThemeMode) => {
+    // Show transition indicator
+    setIsTransitioning(true);
+    
     // Apply theme immediately via localStorage (works for all users)
     setLocalMode(newMode);
     
@@ -37,14 +41,57 @@ const ThemeModeToggle = () => {
       // Silent fail for database - localStorage already applied
       console.log('Theme saved locally');
     }
+    
+    // Hide transition indicator after animation completes
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 350);
   };
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className={cn(
+            "relative overflow-hidden",
+            isTransitioning && "pointer-events-none"
+          )}
+        >
+          {/* Shimmer overlay during transition */}
+          {isTransitioning && (
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent animate-shimmer" />
+          )}
+          
+          {/* Loading spinner during transition */}
+          <Loader2 
+            className={cn(
+              "absolute h-5 w-5 text-primary transition-all duration-200",
+              isTransitioning ? "opacity-100 animate-spin" : "opacity-0 scale-0"
+            )} 
+          />
+          
+          {/* Sun icon */}
+          <Sun 
+            className={cn(
+              "h-5 w-5 transition-all duration-300",
+              isTransitioning 
+                ? "opacity-0 scale-0" 
+                : "rotate-0 scale-100 dark:-rotate-90 dark:scale-0"
+            )} 
+          />
+          
+          {/* Moon icon */}
+          <Moon 
+            className={cn(
+              "absolute h-5 w-5 transition-all duration-300",
+              isTransitioning 
+                ? "opacity-0 scale-0" 
+                : "rotate-90 scale-0 dark:rotate-0 dark:scale-100"
+            )} 
+          />
+          
           <span className="sr-only">{t('theme.toggle', 'تغيير الوضع')}</span>
         </Button>
       </DropdownMenuTrigger>
