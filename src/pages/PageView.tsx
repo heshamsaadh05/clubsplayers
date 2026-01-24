@@ -10,15 +10,19 @@ import { Tables } from '@/integrations/supabase/types';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { logError } from '@/lib/errorLogger';
+import { useLanguage } from '@/hooks/useLanguage';
 
 type Page = Tables<'pages'>;
 
 const PageView = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { currentLanguage, t } = useLanguage();
   const [page, setPage] = useState<Page | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  
+  const isArabic = currentLanguage?.code === 'ar';
 
   useEffect(() => {
     const fetchPage = async () => {
@@ -87,13 +91,17 @@ const PageView = () => {
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-md mx-auto text-center">
             <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h1 className="text-2xl font-bold mb-2">الصفحة غير موجودة</h1>
+            <h1 className="text-2xl font-bold mb-2">
+              {isArabic ? 'الصفحة غير موجودة' : 'Page Not Found'}
+            </h1>
             <p className="text-muted-foreground mb-6">
-              الصفحة التي تبحث عنها غير موجودة أو تم حذفها
+              {isArabic 
+                ? 'الصفحة التي تبحث عنها غير موجودة أو تم حذفها'
+                : 'The page you are looking for does not exist or has been deleted'}
             </p>
             <Button onClick={() => navigate('/')}>
-              <ChevronLeft className="w-4 h-4 ml-2" />
-              العودة للرئيسية
+              <ChevronLeft className={`w-4 h-4 ${isArabic ? 'ml-2' : 'mr-2'}`} />
+              {isArabic ? 'العودة للرئيسية' : 'Back to Home'}
             </Button>
           </div>
         </div>
@@ -102,8 +110,13 @@ const PageView = () => {
     );
   }
 
-  const title = page?.title_ar || page?.title;
-  const content = page?.content_ar || page?.content;
+  // Get content based on current language with fallback
+  const title = isArabic 
+    ? (page?.title_ar || page?.title) 
+    : (page?.title || page?.title_ar);
+  const content = isArabic 
+    ? (page?.content_ar || page?.content) 
+    : (page?.content || page?.content_ar);
 
   return (
     <div className="min-h-screen bg-background">
@@ -121,8 +134,8 @@ const PageView = () => {
             className="mb-6"
             onClick={() => navigate(-1)}
           >
-            <ChevronLeft className="w-4 h-4 ml-2" />
-            رجوع
+            <ChevronLeft className={`w-4 h-4 ${isArabic ? 'ml-2' : 'mr-2'}`} />
+            {isArabic ? 'رجوع' : 'Back'}
           </Button>
 
           {/* Page Content */}
@@ -140,16 +153,20 @@ const PageView = () => {
                       prose-strong:text-foreground prose-a:text-gold
                       prose-li:text-foreground/90 prose-blockquote:border-gold
                       prose-blockquote:text-muted-foreground"
+                    dir={isArabic ? 'rtl' : 'ltr'}
                     dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
                   />
                 ) : (
-                  <div className="prose prose-lg max-w-none text-foreground whitespace-pre-wrap">
+                  <div 
+                    className="prose prose-lg max-w-none text-foreground whitespace-pre-wrap"
+                    dir={isArabic ? 'rtl' : 'ltr'}
+                  >
                     {content}
                   </div>
                 )
               ) : (
                 <p className="text-muted-foreground text-center py-8">
-                  لا يوجد محتوى لهذه الصفحة
+                  {isArabic ? 'لا يوجد محتوى لهذه الصفحة' : 'No content available for this page'}
                 </p>
               )}
             </CardContent>
@@ -158,8 +175,8 @@ const PageView = () => {
           {/* Last Updated */}
           {page && (
             <p className="text-center text-sm text-muted-foreground mt-6">
-              آخر تحديث:{' '}
-              {new Date(page.updated_at).toLocaleDateString('ar-SA', {
+              {isArabic ? 'آخر تحديث:' : 'Last updated:'}{' '}
+              {new Date(page.updated_at).toLocaleDateString(isArabic ? 'ar-SA' : 'en-US', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
