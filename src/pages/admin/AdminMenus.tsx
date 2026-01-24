@@ -8,14 +8,16 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, ExternalLink, GripVertical, Menu } from "lucide-react";
+import { Plus, Pencil, Trash2, ExternalLink, GripVertical, Menu, FileText } from "lucide-react";
 import { useAllMenuItems, useCreateMenuItem, useUpdateMenuItem, useDeleteMenuItem, MenuItem, MenuItemInsert } from "@/hooks/useMenuItems";
 import { useLanguage } from "@/hooks/useLanguage";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { usePublishedPages } from "@/hooks/usePublishedPages";
 
 const AdminMenus = () => {
   const { t, currentLanguage } = useLanguage();
   const { data: menuItems = [], isLoading } = useAllMenuItems();
+  const { pages: publishedPages = [], loading: pagesLoading } = usePublishedPages();
   const createMenuItem = useCreateMenuItem();
   const updateMenuItem = useUpdateMenuItem();
   const deleteMenuItem = useDeleteMenuItem();
@@ -225,6 +227,45 @@ const AdminMenus = () => {
                   </div>
                 </div>
                 
+                {/* Page Selection */}
+                {publishedPages.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>اختر من الصفحات المنشورة</Label>
+                    <Select
+                      value=""
+                      onValueChange={(pageId) => {
+                        const selectedPage = publishedPages.find(p => p.id === pageId);
+                        if (selectedPage) {
+                          setFormData({
+                            ...formData,
+                            title: selectedPage.title,
+                            title_ar: selectedPage.title_ar || '',
+                            url: `/page/${selectedPage.slug}`,
+                            is_external: false,
+                          });
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر صفحة لتعبئة البيانات تلقائياً..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {publishedPages.map((page) => (
+                          <SelectItem key={page.id} value={page.id}>
+                            <span className="flex items-center gap-2">
+                              <FileText className="w-4 h-4" />
+                              {page.title_ar || page.title}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      اختر صفحة لتعبئة العنوان والرابط تلقائياً
+                    </p>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label htmlFor="url">الرابط</Label>
                   <Input
