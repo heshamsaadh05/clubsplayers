@@ -74,13 +74,15 @@ export const useThemeModeSettings = () => {
   return useQuery({
     queryKey: ['theme_mode_settings'],
     queryFn: async () => {
+      // NOTE: For public/guest browsing we don't want theme mode reads to break the UI.
+      // If the record doesn't exist (or response shape is unexpected), fall back safely.
       const { data, error } = await supabase
         .from('theme_settings')
         .select('value')
         .eq('key', 'mode_settings')
-        .maybeSingle();
-      
-      if (error) throw error;
+        .single();
+
+      if (error) return DEFAULT_SETTINGS;
       if (!data?.value) return DEFAULT_SETTINGS;
       return data.value as unknown as ThemeModeSettings;
     },
@@ -92,17 +94,23 @@ export const useUpdateThemeModeSettings = () => {
   
   return useMutation({
     mutationFn: async (settings: Partial<ThemeModeSettings>) => {
+      // Guests should not attempt DB writes; localStorage already covers them.
+      const { data: sessionData } = await supabase.auth.getSession();
+      const isAuthed = !!sessionData?.session;
+
       // Get current settings
-      const { data: existing } = await supabase
+      const { data: existing, error: existingError } = await supabase
         .from('theme_settings')
         .select('value')
         .eq('key', 'mode_settings')
-        .maybeSingle();
+        .single();
       
-      const currentSettings = existing?.value 
-        ? (existing.value as unknown as ThemeModeSettings) 
+      const currentSettings = !existingError && existing?.value
+        ? (existing.value as unknown as ThemeModeSettings)
         : DEFAULT_SETTINGS;
       const newSettings = { ...currentSettings, ...settings };
+
+      if (!isAuthed) return newSettings;
       
       const { error } = await supabase
         .from('theme_settings')
@@ -123,6 +131,9 @@ export const useUpdateThemeModeSettings = () => {
 
 export const useThemeMode = () => {
   const { data: settings, isLoading } = useThemeModeSettings();
+  const [hasLocalPreference, setHasLocalPreference] = useState<boolean>(() => {
+    return !!getLocalStorageTheme();
+  });
   
   // Initialize from localStorage first, then use database settings
   const [localMode, setLocalMode] = useState<ThemeMode>(() => {
@@ -135,7 +146,7 @@ export const useThemeMode = () => {
   });
 
   // Get effective mode (localStorage takes priority for quick loading, then database)
-  const effectiveMode = settings?.mode || localMode;
+  const effectiveMode = hasLocalPreference ? localMode : (settings?.mode || localMode);
   
   const applyTheme = useCallback((theme: 'light' | 'dark') => {
     setResolvedTheme(theme);
@@ -150,14 +161,15 @@ export const useThemeMode = () => {
   const updateTheme = useCallback(() => {
     let newTheme: 'light' | 'dark';
     
-    if (settings?.autoSwitch) {
+    // If the user explicitly picked a mode, don't override it with time-based auto switch.
+    if (!hasLocalPreference && settings?.autoSwitch) {
       newTheme = getThemeByTime(settings.lightStart, settings.darkStart);
     } else {
       newTheme = getResolvedTheme(effectiveMode);
     }
     
     applyTheme(newTheme);
-  }, [settings, effectiveMode, applyTheme]);
+  }, [settings, effectiveMode, applyTheme, hasLocalPreference]);
 
   // Apply theme immediately on mount from localStorage
   useEffect(() => {
@@ -187,12 +199,13 @@ export const useThemeMode = () => {
   
   // Auto-switch based on time
   useEffect(() => {
+    if (hasLocalPreference) return;
     if (!settings?.autoSwitch) return;
     
     // Check every minute
     const interval = setInterval(updateTheme, 60000);
     return () => clearInterval(interval);
-  }, [settings?.autoSwitch, updateTheme]);
+  }, [settings?.autoSwitch, updateTheme, hasLocalPreference]);
   
   return {
     mode: effectiveMode,
@@ -200,6 +213,7 @@ export const useThemeMode = () => {
     autoSwitch: settings?.autoSwitch || false,
     settings: settings || DEFAULT_SETTINGS,
     setLocalMode: (mode: ThemeMode) => {
+      setHasLocalPreference(true);
       setLocalMode(mode);
       setLocalStorageTheme(mode);
       applyTheme(getResolvedTheme(mode));
