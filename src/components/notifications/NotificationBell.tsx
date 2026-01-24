@@ -71,9 +71,14 @@ const NotificationBell = () => {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'consultation_reminder':
+      case 'admin_consultation_reminder':
         return <Calendar className="w-5 h-5 text-gold" />;
       case 'new_consultation_booking':
         return <Clock className="w-5 h-5 text-gold" />;
+      case 'consultation_confirmed':
+        return <Check className="w-5 h-5 text-green-500" />;
+      case 'consultation_cancelled':
+        return <Bell className="w-5 h-5 text-red-500" />;
       default:
         return <Bell className="w-5 h-5 text-gold" />;
     }

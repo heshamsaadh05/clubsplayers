@@ -95,6 +95,7 @@ export type Database = {
       consultation_bookings: {
         Row: {
           admin_notes: string | null
+          admin_reminder_sent: boolean
           booking_date: string
           confirmed_at: string | null
           created_at: string
@@ -116,6 +117,7 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          admin_reminder_sent?: boolean
           booking_date: string
           confirmed_at?: string | null
           created_at?: string
@@ -137,6 +139,7 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          admin_reminder_sent?: boolean
           booking_date?: string
           confirmed_at?: string | null
           created_at?: string
