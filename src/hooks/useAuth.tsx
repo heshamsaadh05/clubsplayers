@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  rolesLoading: boolean;
   roles: UserRole[];
   isAdmin: boolean;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -22,15 +23,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState<UserRole[]>([]);
+  const [rolesLoading, setRolesLoading] = useState(true);
 
   const fetchUserRoles = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId);
-    
-    if (!error && data) {
-      setRoles(data.map(r => r.role as UserRole));
+    setRolesLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+
+      if (error) {
+        // Keep roles empty but mark loading finished so screens can show a proper error/redirect.
+        setRoles([]);
+        return;
+      }
+
+      setRoles((data ?? []).map((r) => r.role as UserRole));
+    } finally {
+      setRolesLoading(false);
     }
   };
 
@@ -44,11 +55,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Defer role fetching
         if (session?.user) {
+          setRolesLoading(true);
           setTimeout(() => {
             fetchUserRoles(session.user.id);
           }, 0);
         } else {
           setRoles([]);
+          setRolesLoading(false);
         }
       }
     );
@@ -60,7 +73,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       
       if (session?.user) {
+        setRolesLoading(true);
         fetchUserRoles(session.user.id);
+      } else {
+        setRoles([]);
+        setRolesLoading(false);
       }
     });
 
@@ -99,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       session,
       loading,
+      rolesLoading,
       roles,
       isAdmin,
       signUp,
