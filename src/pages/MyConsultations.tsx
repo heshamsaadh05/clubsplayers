@@ -50,26 +50,28 @@ const MyConsultations = () => {
   const [bookings, setBookings] = useState<ConsultationBooking[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const isPlayer = roles.some(r => r === 'player');
+  const isPlayer = roles.includes('player');
 
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth?redirect=/my-consultations');
       return;
     }
-    if (!authLoading && user && !isPlayer) {
-      toast({
-        title: t('common.error', 'خطأ'),
-        description: t('consultation.playersOnly', 'هذه الخدمة متاحة للاعبين فقط'),
-        variant: 'destructive',
-      });
-      navigate('/');
-      return;
-    }
-    if (user) {
+    
+    // Wait for roles to be loaded before checking player status
+    if (!authLoading && user && roles.length > 0) {
+      if (!isPlayer) {
+        toast({
+          title: t('common.error', 'خطأ'),
+          description: t('consultation.playersOnly', 'هذه الخدمة متاحة للاعبين فقط'),
+          variant: 'destructive',
+        });
+        navigate('/');
+        return;
+      }
       fetchBookings();
     }
-  }, [user, authLoading, isPlayer]);
+  }, [user, authLoading, roles, isPlayer]);
 
   const fetchBookings = async () => {
     try {
