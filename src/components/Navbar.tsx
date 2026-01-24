@@ -171,7 +171,9 @@ const Navbar = () => {
                 <DropdownMenuContent align="end" className="min-w-[150px]">
                   {publishedPages.map(page => <DropdownMenuItem key={page.id} asChild>
                       <Link to={`/page/${page.slug}`} className="w-full">
-                        {page.title_ar || page.title}
+                        {currentLanguage?.code === 'en' 
+                          ? (page.title || page.title_ar) 
+                          : (page.title_ar || page.title)}
                       </Link>
                     </DropdownMenuItem>)}
                 </DropdownMenuContent>
@@ -277,9 +279,11 @@ const Navbar = () => {
 
               {/* Published Pages - Mobile */}
               {publishedPages.length > 0 && <div className="pt-2 border-t border-border/50">
-                  <p className="text-sm text-muted-foreground mb-2">صفحات</p>
+                  <p className="text-sm text-muted-foreground mb-2">{t('nav.pages', 'صفحات')}</p>
                   {publishedPages.map(page => <Link key={page.id} to={`/page/${page.slug}`} className="block text-foreground/80 hover:text-gold transition-colors py-2 pr-4" onClick={() => setIsOpen(false)}>
-                      {page.title_ar || page.title}
+                      {currentLanguage?.code === 'en' 
+                        ? (page.title || page.title_ar) 
+                        : (page.title_ar || page.title)}
                     </Link>)}
                 </div>}
               <div className="pt-4 space-y-3 border-t border-border">
