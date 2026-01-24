@@ -22,7 +22,8 @@ import {
   Share2,
   Search,
   Globe,
-  Heart
+  Heart,
+  Video
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -63,6 +64,7 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
     { icon: Users, labelKey: 'admin.players', path: '/admin/players', keywords: ['players', 'لاعب'] },
     { icon: Building2, labelKey: 'admin.clubs', path: '/admin/clubs', keywords: ['clubs', 'نادي', 'فريق'] },
     { icon: Heart, label: 'اهتمامات الأندية', path: '/admin/interests', keywords: ['interests', 'اهتمام', 'عرض', 'طلب'] },
+    { icon: Video, labelKey: 'admin.consultations', path: '/admin/consultations', keywords: ['consultations', 'استشارة', 'حجز', 'meet'] },
     { icon: Receipt, labelKey: 'admin.subscriptions', path: '/admin/subscriptions', keywords: ['subscriptions', 'اشتراك'] },
     { icon: Package, labelKey: 'admin.plans', path: '/admin/plans', keywords: ['plans', 'باقة', 'خطة'] },
     { icon: CreditCard, labelKey: 'admin.payments', path: '/admin/payments', keywords: ['payments', 'دفع', 'فلوس'] },
