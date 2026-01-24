@@ -11,8 +11,10 @@ import {
   ExternalLink,
   ArrowLeft,
   RefreshCw,
-  Ban
+  Ban,
+  FileText
 } from 'lucide-react';
+import PrivateImage from '@/components/admin/PrivateImage';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -48,6 +50,7 @@ interface ConsultationBooking {
   meet_link: string | null;
   admin_notes: string | null;
   player_notes: string | null;
+  proof_url: string | null;
   created_at: string;
   confirmed_at: string | null;
 }
@@ -419,6 +422,22 @@ const MyConsultations = () => {
                                   )}
                                 </div>
                               </div>
+
+                              {/* Payment Proof Preview */}
+                              {booking.proof_url && (
+                                <div className="mt-4 p-3 bg-secondary/50 rounded-lg">
+                                  <p className="text-xs text-muted-foreground mb-2">
+                                    {currentLanguage?.code === 'ar' ? 'إثبات الدفع' : 'Payment Proof'}:
+                                  </p>
+                                  <PrivateImage
+                                    bucket="payment-proofs"
+                                    url={booking.proof_url}
+                                    alt="إثبات الدفع"
+                                    className="max-w-full max-h-48"
+                                    showLink={true}
+                                  />
+                                </div>
+                              )}
 
                               {booking.admin_notes && (
                                 <div className="mt-4 p-3 bg-secondary/50 rounded-lg">

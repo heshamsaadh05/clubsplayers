@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, ImageOff, ExternalLink } from 'lucide-react';
+import { Loader2, ImageOff, ExternalLink, FileText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface PrivateImageProps {
   bucket: string;
@@ -9,6 +10,15 @@ interface PrivateImageProps {
   className?: string;
   showLink?: boolean;
 }
+
+/**
+ * Check if the file is an image based on its extension
+ */
+const isImageFile = (url: string): boolean => {
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'];
+  const lowerUrl = url.toLowerCase();
+  return imageExtensions.some(ext => lowerUrl.endsWith(ext));
+};
 
 /**
  * Component to display images from private storage buckets using signed URLs
@@ -84,7 +94,31 @@ const PrivateImage = ({ bucket, url, alt, className = '', showLink = true }: Pri
     return (
       <div className={`flex flex-col items-center justify-center bg-secondary rounded-lg p-4 ${className}`} style={{ minHeight: '100px' }}>
         <ImageOff className="w-8 h-8 text-muted-foreground mb-2" />
-        <p className="text-sm text-muted-foreground">تعذر تحميل الصورة</p>
+        <p className="text-sm text-muted-foreground">تعذر تحميل الملف</p>
+      </div>
+    );
+  }
+
+  // Check if it's an image or a document (PDF, etc.)
+  const isImage = isImageFile(url);
+
+  if (!isImage) {
+    // For non-image files (PDF, etc.), show a button to open
+    return (
+      <div className="space-y-2">
+        <div className={`flex flex-col items-center justify-center bg-secondary rounded-lg p-6 ${className}`}>
+          <FileText className="w-12 h-12 text-gold mb-3" />
+          <p className="text-sm text-muted-foreground mb-3">ملف مرفق</p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(signedUrl, '_blank')}
+            className="gap-2"
+          >
+            <ExternalLink className="w-4 h-4" />
+            فتح الملف
+          </Button>
+        </div>
       </div>
     );
   }
