@@ -21,6 +21,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/useLanguage';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
@@ -42,17 +43,19 @@ interface MeetLog {
   regenerated_count: number;
 }
 
-const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  created: { label: 'تم الإنشاء', color: 'bg-blue-500/10 text-blue-500 border-blue-500/30', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
-  active: { label: 'نشط', color: 'bg-green-500/10 text-green-500 border-green-500/30', icon: <Video className="w-3.5 h-3.5" /> },
-  completed: { label: 'مكتمل', color: 'bg-gray-500/10 text-gray-500 border-gray-500/30', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
-  cancelled: { label: 'ملغي', color: 'bg-orange-500/10 text-orange-500 border-orange-500/30', icon: <XCircle className="w-3.5 h-3.5" /> },
-  error: { label: 'خطأ', color: 'bg-destructive/10 text-destructive border-destructive/30', icon: <AlertCircle className="w-3.5 h-3.5" /> },
-  expired: { label: 'منتهي', color: 'bg-gray-500/10 text-gray-400 border-gray-500/30', icon: <Clock className="w-3.5 h-3.5" /> },
-};
+const getStatusConfig = (t: (key: string) => string) => ({
+  created: { label: t('meet.created'), color: 'bg-blue-500/10 text-blue-500 border-blue-500/30', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
+  active: { label: t('meet.active'), color: 'bg-green-500/10 text-green-500 border-green-500/30', icon: <Video className="w-3.5 h-3.5" /> },
+  completed: { label: t('meet.completed'), color: 'bg-gray-500/10 text-gray-500 border-gray-500/30', icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
+  cancelled: { label: t('meet.cancelled'), color: 'bg-orange-500/10 text-orange-500 border-orange-500/30', icon: <XCircle className="w-3.5 h-3.5" /> },
+  error: { label: t('meet.error'), color: 'bg-destructive/10 text-destructive border-destructive/30', icon: <AlertCircle className="w-3.5 h-3.5" /> },
+  expired: { label: t('meet.expired'), color: 'bg-gray-500/10 text-gray-400 border-gray-500/30', icon: <Clock className="w-3.5 h-3.5" /> },
+});
 
 const AdminMeetLogs = () => {
   const { toast } = useToast();
+  const { t } = useLanguage();
+  const statusConfig = getStatusConfig(t);
   const [logs, setLogs] = useState<MeetLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -81,8 +84,8 @@ const AdminMeetLogs = () => {
     } catch (error) {
       console.error('Error fetching meet logs:', error);
       toast({
-        title: 'خطأ',
-        description: 'فشل في تحميل سجلات الاجتماعات',
+        title: t('common.error'),
+        description: t('meet.loadError'),
         variant: 'destructive',
       });
     } finally {
@@ -94,7 +97,7 @@ const AdminMeetLogs = () => {
     setRefreshing(true);
     await fetchLogs();
     setRefreshing(false);
-    toast({ title: 'تم تحديث السجلات' });
+    toast({ title: t('meet.logsRefreshed') });
   };
 
   const handleUpdateStatus = async (logId: string, newStatus: string) => {
@@ -110,12 +113,12 @@ const AdminMeetLogs = () => {
         log.id === logId ? { ...log, status: newStatus } : log
       ));
 
-      toast({ title: 'تم تحديث الحالة بنجاح' });
+      toast({ title: t('meet.statusUpdated') });
     } catch (error) {
       console.error('Error updating status:', error);
       toast({
-        title: 'خطأ',
-        description: 'فشل في تحديث الحالة',
+        title: t('common.error'),
+        description: t('meet.statusUpdateError'),
         variant: 'destructive',
       });
     }
@@ -156,8 +159,8 @@ const AdminMeetLogs = () => {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">سجل اجتماعات Google Meet</h1>
-            <p className="text-muted-foreground mt-1">تتبع جميع اجتماعات Meet التي تم إنشاؤها</p>
+            <h1 className="text-3xl font-bold text-foreground">{t('meet.logs')}</h1>
+            <p className="text-muted-foreground mt-1">{t('meet.trackMeetings')}</p>
           </div>
           <Button
             onClick={handleRefresh}
@@ -166,7 +169,7 @@ const AdminMeetLogs = () => {
             className="flex-shrink-0"
           >
             <RefreshCw className={`w-4 h-4 ml-2 ${refreshing ? 'animate-spin' : ''}`} />
-            تحديث
+            {t('common.refresh')}
           </Button>
         </div>
 
@@ -183,7 +186,7 @@ const AdminMeetLogs = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-xs text-muted-foreground">إجمالي</p>
+                <p className="text-xs text-muted-foreground">{t('meet.total')}</p>
               </div>
             </div>
           </motion.div>
@@ -200,7 +203,7 @@ const AdminMeetLogs = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.created}</p>
-                <p className="text-xs text-muted-foreground">تم الإنشاء</p>
+                <p className="text-xs text-muted-foreground">{t('meet.created')}</p>
               </div>
             </div>
           </motion.div>
@@ -217,7 +220,7 @@ const AdminMeetLogs = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.active}</p>
-                <p className="text-xs text-muted-foreground">نشط</p>
+                <p className="text-xs text-muted-foreground">{t('meet.active')}</p>
               </div>
             </div>
           </motion.div>
@@ -234,7 +237,7 @@ const AdminMeetLogs = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.completed}</p>
-                <p className="text-xs text-muted-foreground">مكتمل</p>
+                <p className="text-xs text-muted-foreground">{t('meet.completed')}</p>
               </div>
             </div>
           </motion.div>
@@ -251,7 +254,7 @@ const AdminMeetLogs = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.errors}</p>
-                <p className="text-xs text-muted-foreground">أخطاء</p>
+                <p className="text-xs text-muted-foreground">{t('meet.errors')}</p>
               </div>
             </div>
           </motion.div>
@@ -268,7 +271,7 @@ const AdminMeetLogs = () => {
             <div className="relative flex-1">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="بحث باسم اللاعب أو رابط الاجتماع..."
+                placeholder={t('meet.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pr-10 bg-secondary"
@@ -278,16 +281,16 @@ const AdminMeetLogs = () => {
               <Filter className="w-4 h-4 text-muted-foreground" />
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[160px] bg-secondary">
-                  <SelectValue placeholder="الحالة" />
+                  <SelectValue placeholder={t('common.status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">جميع الحالات</SelectItem>
-                  <SelectItem value="created">تم الإنشاء</SelectItem>
-                  <SelectItem value="active">نشط</SelectItem>
-                  <SelectItem value="completed">مكتمل</SelectItem>
-                  <SelectItem value="cancelled">ملغي</SelectItem>
-                  <SelectItem value="error">خطأ</SelectItem>
-                  <SelectItem value="expired">منتهي</SelectItem>
+                  <SelectItem value="all">{t('meet.allStatuses')}</SelectItem>
+                  <SelectItem value="created">{t('meet.created')}</SelectItem>
+                  <SelectItem value="active">{t('meet.active')}</SelectItem>
+                  <SelectItem value="completed">{t('meet.completed')}</SelectItem>
+                  <SelectItem value="cancelled">{t('meet.cancelled')}</SelectItem>
+                  <SelectItem value="error">{t('meet.error')}</SelectItem>
+                  <SelectItem value="expired">{t('meet.expired')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -304,21 +307,21 @@ const AdminMeetLogs = () => {
           {filteredLogs.length === 0 ? (
             <div className="text-center py-12">
               <Video className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-muted-foreground">لا توجد سجلات اجتماعات</p>
+              <p className="text-muted-foreground">{t('meet.noLogs')}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-right">اللاعب</TableHead>
-                    <TableHead className="text-right">التاريخ</TableHead>
-                    <TableHead className="text-right">الوقت</TableHead>
-                    <TableHead className="text-right">الحالة</TableHead>
-                    <TableHead className="text-right">رابط الاجتماع</TableHead>
-                    <TableHead className="text-right">إعادة الإنشاء</TableHead>
-                    <TableHead className="text-right">تاريخ الإنشاء</TableHead>
-                    <TableHead className="text-right">إجراءات</TableHead>
+                    <TableHead className="text-right">{t('meet.player')}</TableHead>
+                    <TableHead className="text-right">{t('meet.bookingDate')}</TableHead>
+                    <TableHead className="text-right">{t('meet.bookingTime')}</TableHead>
+                    <TableHead className="text-right">{t('common.status')}</TableHead>
+                    <TableHead className="text-right">{t('meet.meetingLink')}</TableHead>
+                    <TableHead className="text-right">{t('meet.regenerateCount')}</TableHead>
+                    <TableHead className="text-right">{t('meet.createdAt')}</TableHead>
+                    <TableHead className="text-right">{t('common.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -329,7 +332,7 @@ const AdminMeetLogs = () => {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <User className="w-4 h-4 text-muted-foreground" />
-                            <span className="font-medium">{log.player_name || 'غير معروف'}</span>
+                            <span className="font-medium">{log.player_name || t('meet.unknown')}</span>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -371,7 +374,7 @@ const AdminMeetLogs = () => {
                         <TableCell>
                           {log.regenerated_count > 0 ? (
                             <Badge variant="secondary" className="text-xs">
-                              {log.regenerated_count} مرة
+                              {log.regenerated_count} {t('meet.times')}
                             </Badge>
                           ) : (
                             <span className="text-muted-foreground text-sm">-</span>
@@ -391,11 +394,11 @@ const AdminMeetLogs = () => {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="created">تم الإنشاء</SelectItem>
-                              <SelectItem value="active">نشط</SelectItem>
-                              <SelectItem value="completed">مكتمل</SelectItem>
-                              <SelectItem value="cancelled">ملغي</SelectItem>
-                              <SelectItem value="expired">منتهي</SelectItem>
+                              <SelectItem value="created">{t('meet.created')}</SelectItem>
+                              <SelectItem value="active">{t('meet.active')}</SelectItem>
+                              <SelectItem value="completed">{t('meet.completed')}</SelectItem>
+                              <SelectItem value="cancelled">{t('meet.cancelled')}</SelectItem>
+                              <SelectItem value="expired">{t('meet.expired')}</SelectItem>
                             </SelectContent>
                           </Select>
                         </TableCell>
