@@ -338,7 +338,7 @@ Deno.serve(async (req) => {
     // Only update status if updateStatus is true
     if (updateStatus) {
       updateData.status = 'confirmed';
-      updateData.payment_status = 'completed';
+      updateData.payment_status = 'paid';
       updateData.confirmed_at = new Date().toISOString();
     }
 
