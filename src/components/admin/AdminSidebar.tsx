@@ -65,6 +65,7 @@ const AdminSidebar = ({ isOpen: externalIsOpen, onClose }: AdminSidebarProps) =>
     { icon: Building2, labelKey: 'admin.clubs', path: '/admin/clubs', keywords: ['clubs', 'نادي', 'فريق'] },
     { icon: Heart, label: 'اهتمامات الأندية', path: '/admin/interests', keywords: ['interests', 'اهتمام', 'عرض', 'طلب'] },
     { icon: Video, labelKey: 'admin.consultations', path: '/admin/consultations', keywords: ['consultations', 'استشارة', 'حجز', 'meet'] },
+    { icon: Video, label: 'سجل Meet', path: '/admin/meet-logs', keywords: ['meet', 'logs', 'سجل', 'اجتماعات', 'google'] },
     { icon: Receipt, labelKey: 'admin.subscriptions', path: '/admin/subscriptions', keywords: ['subscriptions', 'اشتراك'] },
     { icon: Package, labelKey: 'admin.plans', path: '/admin/plans', keywords: ['plans', 'باقة', 'خطة'] },
     { icon: CreditCard, labelKey: 'admin.payments', path: '/admin/payments', keywords: ['payments', 'دفع', 'فلوس'] },

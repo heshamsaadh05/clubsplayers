@@ -24,6 +24,7 @@ import AdminFooter from "./pages/admin/AdminFooter";
 import AdminSections from "./pages/admin/AdminSections";
 import AdminPlayerInterests from "./pages/admin/AdminPlayerInterests";
 import AdminConsultations from "./pages/admin/AdminConsultations";
+import AdminMeetLogs from "./pages/admin/AdminMeetLogs";
 import PlayerRegistration from "./pages/PlayerRegistration";
 import PlayerDashboard from "./pages/PlayerDashboard";
 import ClubRegistration from "./pages/ClubRegistration";
@@ -80,6 +81,7 @@ const App = () => (
                 <Route path="/admin/footer" element={<AdminFooter />} />
                 <Route path="/admin/sections" element={<AdminSections />} />
                 <Route path="/admin/consultations" element={<AdminConsultations />} />
+                <Route path="/admin/meet-logs" element={<AdminMeetLogs />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
