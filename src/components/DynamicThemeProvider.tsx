@@ -1,6 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useThemeSettings, ThemeColors } from '@/hooks/useThemeSettings';
-import { useThemeMode } from '@/hooks/useThemeMode';
 
 interface DynamicThemeProviderProps {
   children: React.ReactNode;
@@ -11,38 +10,44 @@ interface DynamicThemeProviderProps {
 /**
  * Component that dynamically applies theme colors from the database
  * Also supports preview mode for live color changes before saving
- * And handles light/dark mode switching
+ * And handles light/dark mode switching by observing DOM changes
  */
 const DynamicThemeProvider = ({ children, previewColors, previewMode }: DynamicThemeProviderProps) => {
   const { data: themeColors } = useThemeSettings();
-  const { resolvedTheme } = useThemeMode();
+  
+  // Track the actual theme from DOM instead of hook state
+  const [currentTheme, setCurrentTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof document !== 'undefined') {
+      return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    }
+    return 'dark';
+  });
 
-  useEffect(() => {
+  // Map theme keys to CSS variable names
+  const cssVarMap: Record<string, string> = {
+    primary: '--primary',
+    primary_foreground: '--primary-foreground',
+    secondary: '--secondary',
+    secondary_foreground: '--secondary-foreground',
+    background: '--background',
+    foreground: '--foreground',
+    accent: '--accent',
+    accent_foreground: '--accent-foreground',
+    muted: '--muted',
+    muted_foreground: '--muted-foreground',
+  };
+
+  // Function to apply colors
+  const applyColors = useCallback((theme: 'light' | 'dark') => {
     if (!themeColors) return;
-
+    
     const root = document.documentElement;
-
-    // Map theme keys to CSS variable names
-    const cssVarMap: Record<string, string> = {
-      primary: '--primary',
-      primary_foreground: '--primary-foreground',
-      secondary: '--secondary',
-      secondary_foreground: '--secondary-foreground',
-      background: '--background',
-      foreground: '--foreground',
-      accent: '--accent',
-      accent_foreground: '--accent-foreground',
-      muted: '--muted',
-      muted_foreground: '--muted-foreground',
-    };
-
-    // Get colors for current theme mode
-    const currentModeColors = themeColors[resolvedTheme];
+    const currentModeColors = themeColors[theme];
     
     if (!currentModeColors) return;
 
     // Merge database colors with preview colors if preview is for current mode
-    const colorsToApply = previewMode === resolvedTheme && previewColors 
+    const colorsToApply = previewMode === theme && previewColors 
       ? { ...currentModeColors, ...previewColors }
       : currentModeColors;
 
@@ -53,20 +58,49 @@ const DynamicThemeProvider = ({ children, previewColors, previewMode }: DynamicT
         root.style.setProperty(cssVar, value);
       }
     });
+  }, [themeColors, previewColors, previewMode, cssVarMap]);
 
-    // Cleanup function to reset colors when component unmounts
-    return () => {
-      // Only reset if we were in preview mode
-      if (previewColors && previewMode === resolvedTheme) {
-        Object.entries(currentModeColors).forEach(([key, value]) => {
-          const cssVar = cssVarMap[key];
-          if (cssVar && value) {
-            root.style.setProperty(cssVar, value);
-          }
-        });
-      }
+  // Watch for dark class changes on documentElement using MutationObserver
+  useEffect(() => {
+    const root = document.documentElement;
+    
+    const updateTheme = () => {
+      const isDark = root.classList.contains('dark');
+      const newTheme = isDark ? 'dark' : 'light';
+      setCurrentTheme(newTheme);
     };
-  }, [themeColors, previewColors, previewMode, resolvedTheme]);
+
+    // Initial check
+    updateTheme();
+
+    // Create observer to watch for class changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          updateTheme();
+        }
+      });
+    });
+
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Apply colors when theme or themeColors change
+  useEffect(() => {
+    applyColors(currentTheme);
+  }, [currentTheme, themeColors, applyColors]);
+
+  // Also apply when preview colors change
+  useEffect(() => {
+    if (previewColors && previewMode === currentTheme) {
+      applyColors(currentTheme);
+    }
+  }, [previewColors, previewMode, currentTheme, applyColors]);
 
   return <>{children}</>;
 };
