@@ -180,11 +180,11 @@ const PlayerDashboard = () => {
             <h1 className="text-lg md:text-xl font-bold text-gradient-gold">لوحة تحكم اللاعب</h1>
             <div className="flex items-center gap-2 md:gap-4">
               <NotificationBell />
-              <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => navigate("/consultation-booking")}>
+              <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => navigate("/my-consultations")}>
                 <Video className="w-4 h-4 ml-2" />
-                حجز استشارة
+                استشاراتي
               </Button>
-              <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => navigate("/consultation-booking")}>
+              <Button variant="ghost" size="icon" className="sm:hidden" onClick={() => navigate("/my-consultations")}>
                 <Video className="w-5 h-5" />
               </Button>
               <Button variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => navigate("/messages")}>
