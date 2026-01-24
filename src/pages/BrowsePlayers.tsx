@@ -208,7 +208,12 @@ const BrowsePlayers = () => {
       );
     }
 
-    // Note: Age filter removed - date_of_birth is private PII and not available in public view
+    // Age filter - uses date_of_birth to calculate age
+    result = result.filter((player) => {
+      if (!player.date_of_birth) return true;
+      const age = calculateAge(player.date_of_birth);
+      return age >= ageRange[0] && age <= ageRange[1];
+    });
 
     // Height filter
     result = result.filter((player) => {
@@ -249,10 +254,16 @@ const BrowsePlayers = () => {
           return (a.height_cm || 0) - (b.height_cm || 0);
         case 'height_desc':
           return (b.height_cm || 0) - (a.height_cm || 0);
-        // Note: Age sorting removed - date_of_birth is private PII
-        case 'age_asc':
-        case 'age_desc':
-          return 0;
+        case 'age_asc': {
+          const ageA = a.date_of_birth ? calculateAge(a.date_of_birth) : 999;
+          const ageB = b.date_of_birth ? calculateAge(b.date_of_birth) : 999;
+          return ageA - ageB;
+        }
+        case 'age_desc': {
+          const ageA = a.date_of_birth ? calculateAge(a.date_of_birth) : 0;
+          const ageB = b.date_of_birth ? calculateAge(b.date_of_birth) : 0;
+          return ageB - ageA;
+        }
         default:
           return 0;
       }
