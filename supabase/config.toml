@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.paypal-checkout]
 verify_jwt = false
+
+[functions.create-google-meet]
+verify_jwt = false
