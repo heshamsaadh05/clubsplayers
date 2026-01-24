@@ -347,7 +347,7 @@ const AdminConsultations = () => {
       // Manual confirmation with provided meet link
       await handleUpdateBooking(booking.id, {
         status: 'confirmed',
-        payment_status: 'completed',
+        payment_status: 'paid',
         meet_link: meetLink || booking.meet_link,
         admin_notes: adminNotes || booking.admin_notes,
       });
@@ -367,7 +367,7 @@ const AdminConsultations = () => {
         // Update local state
         setBookings(bookings.map(b => 
           b.id === booking.id 
-            ? { ...b, status: 'confirmed', payment_status: 'completed', meet_link: data.meetLink }
+            ? { ...b, status: 'confirmed', payment_status: 'paid', meet_link: data.meetLink }
             : b
         ));
         setSelectedBooking(null);
