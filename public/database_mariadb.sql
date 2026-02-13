@@ -15,6 +15,46 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- =============================================
 
 -- =============================================
+-- Table: users (Authentication - replaces Supabase Auth)
+-- =============================================
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
+  `email` VARCHAR(255) NOT NULL,
+  `password_hash` VARCHAR(255) NOT NULL COMMENT 'Use bcrypt or argon2 hashing in your application',
+  `email_confirmed_at` TIMESTAMP NULL DEFAULT NULL,
+  `last_sign_in_at` TIMESTAMP NULL DEFAULT NULL,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `confirmation_token` VARCHAR(255) DEFAULT NULL,
+  `recovery_token` VARCHAR(255) DEFAULT NULL,
+  `recovery_token_expires_at` TIMESTAMP NULL DEFAULT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_users_email` (`email`),
+  KEY `idx_users_email` (`email`),
+  KEY `idx_users_confirmation_token` (`confirmation_token`),
+  KEY `idx_users_recovery_token` (`recovery_token`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================
+-- Table: user_sessions (Session Management)
+-- =============================================
+CREATE TABLE IF NOT EXISTS `user_sessions` (
+  `id` CHAR(36) NOT NULL DEFAULT (UUID()),
+  `user_id` CHAR(36) NOT NULL,
+  `token` VARCHAR(512) NOT NULL,
+  `ip_address` VARCHAR(45) DEFAULT NULL,
+  `user_agent` TEXT DEFAULT NULL,
+  `expires_at` TIMESTAMP NOT NULL,
+  `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_sessions_token` (`token`(255)),
+  KEY `idx_sessions_user_id` (`user_id`),
+  KEY `idx_sessions_expires` (`expires_at`),
+  CONSTRAINT `fk_sessions_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================
 -- Table: user_roles
 -- =============================================
 CREATE TABLE IF NOT EXISTS `user_roles` (
@@ -23,7 +63,8 @@ CREATE TABLE IF NOT EXISTS `user_roles` (
   `role` ENUM('admin', 'player', 'club') NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_user_roles_user_role` (`user_id`, `role`),
-  KEY `idx_user_roles_user_id` (`user_id`)
+  KEY `idx_user_roles_user_id` (`user_id`),
+  CONSTRAINT `fk_user_roles_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================
@@ -938,14 +979,244 @@ INSERT INTO `pages` (`id`, `slug`, `title`, `title_ar`, `content`, `content_ar`,
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- =============================================
+-- PART 4: AUTHENTICATION STORED PROCEDURES
+-- =============================================
+
+DELIMITER //
+
+-- =============================================
+-- Procedure: register_user
+-- Registers a new user with hashed password
+-- NOTE: Password hashing should be done in your 
+-- application layer using bcrypt/argon2.
+-- This procedure stores the pre-hashed password.
+-- =============================================
+CREATE PROCEDURE IF NOT EXISTS `register_user`(
+  IN p_email VARCHAR(255),
+  IN p_password_hash VARCHAR(255),
+  IN p_role ENUM('admin', 'player', 'club'),
+  IN p_full_name VARCHAR(255)
+)
+BEGIN
+  DECLARE v_user_id CHAR(36);
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION
+  BEGIN
+    ROLLBACK;
+    RESIGNAL;
+  END;
+
+  SET v_user_id = UUID();
+  
+  START TRANSACTION;
+  
+  -- Create user
+  INSERT INTO `users` (`id`, `email`, `password_hash`)
+  VALUES (v_user_id, LOWER(TRIM(p_email)), p_password_hash);
+  
+  -- Assign role
+  INSERT INTO `user_roles` (`user_id`, `role`)
+  VALUES (v_user_id, p_role);
+  
+  -- Create profile
+  INSERT INTO `profiles` (`user_id`, `email`, `full_name`)
+  VALUES (v_user_id, LOWER(TRIM(p_email)), p_full_name);
+  
+  COMMIT;
+  
+  SELECT v_user_id AS user_id;
+END //
+
+-- =============================================
+-- Procedure: authenticate_user
+-- Validates email exists and returns hash for 
+-- application-layer password verification
+-- =============================================
+CREATE PROCEDURE IF NOT EXISTS `authenticate_user`(
+  IN p_email VARCHAR(255)
+)
+BEGIN
+  DECLARE v_user_id CHAR(36);
+  DECLARE v_password_hash VARCHAR(255);
+  DECLARE v_is_active TINYINT(1);
+  DECLARE v_email_confirmed TIMESTAMP;
+
+  SELECT `id`, `password_hash`, `is_active`, `email_confirmed_at`
+  INTO v_user_id, v_password_hash, v_is_active, v_email_confirmed
+  FROM `users`
+  WHERE `email` = LOWER(TRIM(p_email))
+  LIMIT 1;
+
+  IF v_user_id IS NULL THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid email or password';
+  END IF;
+
+  IF v_is_active = 0 THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Account is deactivated';
+  END IF;
+
+  -- Return user data for application-layer password check
+  SELECT v_user_id AS user_id, v_password_hash AS password_hash,
+         v_email_confirmed AS email_confirmed_at;
+END //
+
+-- =============================================
+-- Procedure: create_session
+-- Creates a new session after successful login
+-- =============================================
+CREATE PROCEDURE IF NOT EXISTS `create_session`(
+  IN p_user_id CHAR(36),
+  IN p_token VARCHAR(512),
+  IN p_ip_address VARCHAR(45),
+  IN p_user_agent TEXT,
+  IN p_expires_hours INT
+)
+BEGIN
+  -- Update last sign in
+  UPDATE `users` SET `last_sign_in_at` = NOW() WHERE `id` = p_user_id;
+  
+  -- Create session
+  INSERT INTO `user_sessions` (`user_id`, `token`, `ip_address`, `user_agent`, `expires_at`)
+  VALUES (p_user_id, p_token, p_ip_address, p_user_agent, 
+          DATE_ADD(NOW(), INTERVAL p_expires_hours HOUR));
+  
+  SELECT p_token AS session_token;
+END //
+
+-- =============================================
+-- Procedure: validate_session
+-- Checks if a session token is valid
+-- =============================================
+CREATE PROCEDURE IF NOT EXISTS `validate_session`(
+  IN p_token VARCHAR(512)
+)
+BEGIN
+  SELECT u.`id` AS user_id, u.`email`, ur.`role`,
+         s.`expires_at`
+  FROM `user_sessions` s
+  INNER JOIN `users` u ON u.`id` = s.`user_id`
+  LEFT JOIN `user_roles` ur ON ur.`user_id` = u.`id`
+  WHERE s.`token` = p_token
+    AND s.`expires_at` > NOW()
+    AND u.`is_active` = 1
+  LIMIT 1;
+END //
+
+-- =============================================
+-- Procedure: logout_user
+-- Invalidates a session
+-- =============================================
+CREATE PROCEDURE IF NOT EXISTS `logout_user`(
+  IN p_token VARCHAR(512)
+)
+BEGIN
+  DELETE FROM `user_sessions` WHERE `token` = p_token;
+END //
+
+-- =============================================
+-- Procedure: request_password_reset
+-- Stores a recovery token (generate token in app)
+-- =============================================
+CREATE PROCEDURE IF NOT EXISTS `request_password_reset`(
+  IN p_email VARCHAR(255),
+  IN p_recovery_token VARCHAR(255),
+  IN p_expires_hours INT
+)
+BEGIN
+  UPDATE `users`
+  SET `recovery_token` = p_recovery_token,
+      `recovery_token_expires_at` = DATE_ADD(NOW(), INTERVAL p_expires_hours HOUR)
+  WHERE `email` = LOWER(TRIM(p_email))
+    AND `is_active` = 1;
+END //
+
+-- =============================================
+-- Procedure: reset_password
+-- Resets password using recovery token
+-- =============================================
+CREATE PROCEDURE IF NOT EXISTS `reset_password`(
+  IN p_recovery_token VARCHAR(255),
+  IN p_new_password_hash VARCHAR(255)
+)
+BEGIN
+  DECLARE v_user_id CHAR(36);
+
+  SELECT `id` INTO v_user_id
+  FROM `users`
+  WHERE `recovery_token` = p_recovery_token
+    AND `recovery_token_expires_at` > NOW()
+    AND `is_active` = 1
+  LIMIT 1;
+
+  IF v_user_id IS NULL THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid or expired recovery token';
+  END IF;
+
+  UPDATE `users`
+  SET `password_hash` = p_new_password_hash,
+      `recovery_token` = NULL,
+      `recovery_token_expires_at` = NULL
+  WHERE `id` = v_user_id;
+
+  -- Invalidate all sessions
+  DELETE FROM `user_sessions` WHERE `user_id` = v_user_id;
+  
+  SELECT 'Password reset successful' AS message;
+END //
+
+-- =============================================
+-- Procedure: confirm_email
+-- Confirms user email with token
+-- =============================================
+CREATE PROCEDURE IF NOT EXISTS `confirm_email`(
+  IN p_confirmation_token VARCHAR(255)
+)
+BEGIN
+  DECLARE v_user_id CHAR(36);
+
+  SELECT `id` INTO v_user_id
+  FROM `users`
+  WHERE `confirmation_token` = p_confirmation_token
+    AND `email_confirmed_at` IS NULL
+  LIMIT 1;
+
+  IF v_user_id IS NULL THEN
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid confirmation token';
+  END IF;
+
+  UPDATE `users`
+  SET `email_confirmed_at` = NOW(),
+      `confirmation_token` = NULL
+  WHERE `id` = v_user_id;
+  
+  SELECT 'Email confirmed successfully' AS message;
+END //
+
+-- =============================================
+-- Event: cleanup_expired_sessions
+-- Automatically removes expired sessions
+-- =============================================
+CREATE EVENT IF NOT EXISTS `cleanup_expired_sessions`
+ON SCHEDULE EVERY 1 HOUR
+DO
+  DELETE FROM `user_sessions` WHERE `expires_at` < NOW() //
+
+DELIMITER ;
+
+-- =============================================
 -- NOTES:
 -- 1. Row Level Security (RLS) is NOT available in MariaDB
 --    You must implement access control in your application layer
--- 2. Supabase Auth is NOT included - you need a separate auth system
---    Create a `users` table with password hashing for authentication
--- 3. Storage buckets (player-images, player-documents, etc.) 
+-- 2. PASSWORD HASHING: Use bcrypt (cost 12+) or argon2id 
+--    in your application code BEFORE calling register_user
+--    Example (PHP): password_hash($password, PASSWORD_BCRYPT, ['cost' => 12])
+--    Example (Node.js): await bcrypt.hash(password, 12)
+-- 3. SESSION TOKENS: Generate cryptographically secure random 
+--    tokens in your application (e.g., crypto.randomBytes(64))
+-- 4. Storage buckets (player-images, player-documents, etc.) 
 --    are NOT included - use a file storage service
--- 4. Realtime subscriptions - Use polling or WebSocket solutions
--- 5. The google_api_settings in site_settings contains sensitive API keys
+-- 5. Realtime subscriptions - Use polling or WebSocket solutions
+-- 6. The google_api_settings in site_settings contains sensitive API keys
 --    Make sure to secure them properly in your environment
+-- 7. Enable MariaDB Event Scheduler for session cleanup:
+--    SET GLOBAL event_scheduler = ON;
 -- =============================================
