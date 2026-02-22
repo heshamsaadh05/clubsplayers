@@ -1,0 +1,30 @@
+RewriteEngine On
+
+# Redirect all requests to index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Security headers
+Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options "DENY"
+Header set X-XSS-Protection "1; mode=block"
+
+# Deny access to sensitive files
+<FilesMatch "\.(php|json|lock|env)$">
+    <If "%{REQUEST_URI} !~ m#^/api/index\.php$#">
+        # Allow only index.php
+    </If>
+</FilesMatch>
+
+# Deny access to config and core directories directly
+<IfModule mod_rewrite.c>
+    RewriteRule ^config/ - [F,L]
+    RewriteRule ^core/ - [F,L]
+    RewriteRule ^controllers/ - [F,L]
+</IfModule>
+
+# PHP settings
+php_value upload_max_filesize 10M
+php_value post_max_size 12M
+php_value max_execution_time 60
