@@ -66,7 +66,7 @@ type PublicPlayer = {
   status: "pending" | "approved" | "rejected";
   created_at: string;
   updated_at: string;
-  date_of_birth: string | null;
+  age: number | null;
 };
 
 const positions = [
@@ -208,11 +208,10 @@ const BrowsePlayers = () => {
       );
     }
 
-    // Age filter - uses date_of_birth to calculate age
+    // Age filter
     result = result.filter((player) => {
-      if (!player.date_of_birth) return true;
-      const age = calculateAge(player.date_of_birth);
-      return age >= ageRange[0] && age <= ageRange[1];
+      if (player.age == null) return true;
+      return player.age >= ageRange[0] && player.age <= ageRange[1];
     });
 
     // Height filter
@@ -254,16 +253,10 @@ const BrowsePlayers = () => {
           return (a.height_cm || 0) - (b.height_cm || 0);
         case 'height_desc':
           return (b.height_cm || 0) - (a.height_cm || 0);
-        case 'age_asc': {
-          const ageA = a.date_of_birth ? calculateAge(a.date_of_birth) : 999;
-          const ageB = b.date_of_birth ? calculateAge(b.date_of_birth) : 999;
-          return ageA - ageB;
-        }
-        case 'age_desc': {
-          const ageA = a.date_of_birth ? calculateAge(a.date_of_birth) : 0;
-          const ageB = b.date_of_birth ? calculateAge(b.date_of_birth) : 0;
-          return ageB - ageA;
-        }
+        case 'age_asc':
+          return (a.age ?? 999) - (b.age ?? 999);
+        case 'age_desc':
+          return (b.age ?? 0) - (a.age ?? 0);
         default:
           return 0;
       }
