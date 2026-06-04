@@ -57,7 +57,7 @@ export const useUpdateCustomColorTemplate = () => {
   
   return useMutation({
     mutationFn: async ({ id, name, colors }: { id: string; name?: string; colors?: Record<string, string> }) => {
-      const updates: Record<string, unknown> = {};
+      const updates: { name?: string; colors?: Record<string, string> } = {};
       if (name !== undefined) updates.name = name;
       if (colors !== undefined) updates.colors = colors;
       
