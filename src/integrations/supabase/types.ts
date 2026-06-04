@@ -1267,9 +1267,9 @@ export type Database = {
       }
       players_public: {
         Row: {
+          age: number | null
           bio: string | null
           created_at: string | null
-          date_of_birth: string | null
           full_name: string | null
           height_cm: number | null
           id: string | null
