@@ -51,7 +51,7 @@ type PublicPlayer = {
   status: "pending" | "approved" | "rejected";
   created_at: string;
   updated_at: string;
-  date_of_birth: string | null;
+  age: number | null;
 };
 
 const PlayerProfile = () => {
@@ -249,7 +249,7 @@ const PlayerProfile = () => {
     );
   }
 
-  const playerAge = calculateAge(player.date_of_birth);
+  const playerAge = player.age;
 
   return (
     <div className="min-h-screen bg-background">
