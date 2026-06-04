@@ -249,7 +249,7 @@ const PlayerProfile = () => {
     );
   }
 
-  const playerAge = calculateAge(player.date_of_birth);
+  const playerAge = player.age;
 
   return (
     <div className="min-h-screen bg-background">
