@@ -287,7 +287,12 @@ const Navbar = () => {
                     </Link>)}
                 </div>}
               <div className="pt-4 space-y-3 border-t border-border">
+                <div className="flex items-center justify-between gap-2 pb-2">
+                  <ThemeModeToggle />
+                  <LanguageSwitcher />
+                </div>
                 {user ? <>
+
                     <Button variant="outline" className="w-full justify-start border-gold/30" asChild>
                       <Link to={getDashboardLink()} onClick={() => setIsOpen(false)}>
                         <LayoutDashboard className="w-4 h-4 ml-2" />
