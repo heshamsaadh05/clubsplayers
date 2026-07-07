@@ -212,7 +212,7 @@ const PlayersSlider = () => {
             </>
           )}
 
-          <div className="overflow-hidden px-4">
+          <div className="overflow-hidden px-4" dir="ltr">
             <div
               className="flex gap-6"
               style={{
