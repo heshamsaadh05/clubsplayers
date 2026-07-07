@@ -76,6 +76,11 @@ export const useSiteLogo = () => {
             siteDescription: next.siteDescription ?? siteDescription,
           }));
         } catch {}
+      } catch (error) {
+        console.error('Error fetching site logo settings:', error);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchSettings();
