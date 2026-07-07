@@ -39,6 +39,8 @@ const AdminFooter = () => {
     logo_url: '',
     description: '',
     description_en: '',
+    copyright: '',
+    copyright_en: '',
   });
 
   const [style, setStyle] = useState<FooterStyle>({
