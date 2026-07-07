@@ -28,11 +28,22 @@ const LOGO_SIZE_CLASSES: Record<LogoSize, string> = {
   large: 'h-14',
 };
 
+const CACHE_KEY = 'site_logo_cache_v1';
+
+const readCache = () => {
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(CACHE_KEY) : null;
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return null;
+};
+
 export const useSiteLogo = () => {
-  const [logo, setLogo] = useState<SiteLogo>({ type: 'text', image_url: null });
-  const [siteName, setSiteName] = useState<SiteName>({ en: 'Stars Agency', ar: 'ستارز إيجنسي' });
-  const [siteDescription, setSiteDescription] = useState<SiteDescription>({ en: '', ar: '' });
-  const [loading, setLoading] = useState(true);
+  const cached = readCache();
+  const [logo, setLogo] = useState<SiteLogo>(cached?.logo || { type: 'text', image_url: null });
+  const [siteName, setSiteName] = useState<SiteName>(cached?.siteName || { en: '', ar: '' });
+  const [siteDescription, setSiteDescription] = useState<SiteDescription>(cached?.siteDescription || { en: '', ar: '' });
+  const [loading, setLoading] = useState(!cached);
   const { currentLanguage } = useLanguage();
 
   useEffect(() => {
