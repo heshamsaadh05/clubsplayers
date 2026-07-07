@@ -37,6 +37,8 @@ export interface FooterBranding {
   logo_url: string;
   description: string;
   description_en: string;
+  copyright?: string;
+  copyright_en?: string;
 }
 
 export interface FooterStyle {
