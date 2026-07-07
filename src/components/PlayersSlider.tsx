@@ -5,6 +5,7 @@ import { useSliderSettings, useSliderItems } from "@/hooks/useSliderSettings";
 import { usePageSections } from "@/hooks/usePageSections";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/hooks/useLanguage";
+import { useIsMobile } from "@/hooks/use-mobile";
 interface SectionSettings {
   badge?: string;
   badge_ar?: string;
