@@ -56,20 +56,26 @@ export const useSiteLogo = () => {
 
         if (error) throw error;
 
+        const next: { logo?: SiteLogo; siteName?: SiteName; siteDescription?: SiteDescription } = {};
         data?.forEach((setting) => {
           if (setting.key === 'site_logo' && setting.value) {
-            setLogo(setting.value as unknown as SiteLogo);
+            const v = setting.value as unknown as SiteLogo;
+            setLogo(v); next.logo = v;
           } else if (setting.key === 'site_name' && setting.value) {
-            setSiteName(setting.value as unknown as SiteName);
+            const v = setting.value as unknown as SiteName;
+            setSiteName(v); next.siteName = v;
           } else if (setting.key === 'site_description' && setting.value) {
-            setSiteDescription(setting.value as unknown as SiteDescription);
+            const v = setting.value as unknown as SiteDescription;
+            setSiteDescription(v); next.siteDescription = v;
           }
         });
-      } catch (error) {
-        console.error('Error fetching site logo settings:', error);
-      } finally {
-        setLoading(false);
-      }
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify({
+            logo: next.logo ?? logo,
+            siteName: next.siteName ?? siteName,
+            siteDescription: next.siteDescription ?? siteDescription,
+          }));
+        } catch {}
     };
 
     fetchSettings();
