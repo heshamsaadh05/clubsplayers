@@ -116,8 +116,8 @@ const Navbar = () => {
               ) : (
                 <span className="text-2xl font-bold text-gradient-gold font-playfair">
                   {currentLanguage?.code === 'en' 
-                    ? (siteNameSettings.en || 'Stars Agency')
-                    : (siteNameSettings.ar || siteNameSettings.en || 'Stars Agency')}
+                    ? (siteNameSettings.en || siteNameSettings.ar || '')
+                    : (siteNameSettings.ar || siteNameSettings.en || '')}
                 </span>
               )}
             </Link>

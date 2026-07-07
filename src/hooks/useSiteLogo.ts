@@ -28,11 +28,22 @@ const LOGO_SIZE_CLASSES: Record<LogoSize, string> = {
   large: 'h-14',
 };
 
+const CACHE_KEY = 'site_logo_cache_v1';
+
+const readCache = () => {
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(CACHE_KEY) : null;
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return null;
+};
+
 export const useSiteLogo = () => {
-  const [logo, setLogo] = useState<SiteLogo>({ type: 'text', image_url: null });
-  const [siteName, setSiteName] = useState<SiteName>({ en: 'Stars Agency', ar: 'ستارز إيجنسي' });
-  const [siteDescription, setSiteDescription] = useState<SiteDescription>({ en: '', ar: '' });
-  const [loading, setLoading] = useState(true);
+  const cached = readCache();
+  const [logo, setLogo] = useState<SiteLogo>(cached?.logo || { type: 'text', image_url: null });
+  const [siteName, setSiteName] = useState<SiteName>(cached?.siteName || { en: '', ar: '' });
+  const [siteDescription, setSiteDescription] = useState<SiteDescription>(cached?.siteDescription || { en: '', ar: '' });
+  const [loading, setLoading] = useState(!cached);
   const { currentLanguage } = useLanguage();
 
   useEffect(() => {
@@ -45,15 +56,26 @@ export const useSiteLogo = () => {
 
         if (error) throw error;
 
+        const next: { logo?: SiteLogo; siteName?: SiteName; siteDescription?: SiteDescription } = {};
         data?.forEach((setting) => {
           if (setting.key === 'site_logo' && setting.value) {
-            setLogo(setting.value as unknown as SiteLogo);
+            const v = setting.value as unknown as SiteLogo;
+            setLogo(v); next.logo = v;
           } else if (setting.key === 'site_name' && setting.value) {
-            setSiteName(setting.value as unknown as SiteName);
+            const v = setting.value as unknown as SiteName;
+            setSiteName(v); next.siteName = v;
           } else if (setting.key === 'site_description' && setting.value) {
-            setSiteDescription(setting.value as unknown as SiteDescription);
+            const v = setting.value as unknown as SiteDescription;
+            setSiteDescription(v); next.siteDescription = v;
           }
         });
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify({
+            logo: next.logo ?? logo,
+            siteName: next.siteName ?? siteName,
+            siteDescription: next.siteDescription ?? siteDescription,
+          }));
+        } catch {}
       } catch (error) {
         console.error('Error fetching site logo settings:', error);
       } finally {

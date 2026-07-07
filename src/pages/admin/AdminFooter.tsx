@@ -39,6 +39,8 @@ const AdminFooter = () => {
     logo_url: '',
     description: '',
     description_en: '',
+    copyright: '',
+    copyright_en: '',
   });
 
   const [style, setStyle] = useState<FooterStyle>({
@@ -302,6 +304,26 @@ const AdminFooter = () => {
                     rows={3}
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <Label>نص حقوق النشر (عربي)</Label>
+                  <Input
+                    value={branding.copyright || ''}
+                    onChange={(e) => setBranding({ ...branding, copyright: e.target.value })}
+                    placeholder="© 2025 ستارز إيجنسي. جميع الحقوق محفوظة."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>نص حقوق النشر (إنجليزي)</Label>
+                  <Input
+                    value={branding.copyright_en || ''}
+                    onChange={(e) => setBranding({ ...branding, copyright_en: e.target.value })}
+                    placeholder="© 2025 Stars Agency. All Rights Reserved."
+                    dir="ltr"
+                  />
+                </div>
+                
                 
                 <Button onClick={handleSaveBranding} disabled={updateSetting.isPending}>
                   {updateSetting.isPending ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Save className="w-4 h-4 ml-2" />}
