@@ -88,8 +88,10 @@ const PlayersSlider = () => {
   
   const activeItems = items?.filter(item => item.is_active) || [];
   const itemCount = activeItems.length;
+  const isMobile = useIsMobile();
   const configuredItemsPerView = settings?.items_per_view || 3;
-  const itemsPerView = Math.min(configuredItemsPerView, Math.max(1, itemCount));
+  const responsiveItemsPerView = isMobile ? 1 : configuredItemsPerView;
+  const itemsPerView = Math.min(responsiveItemsPerView, Math.max(1, itemCount));
   const needsLoop = itemCount > itemsPerView;
 
   // Auto-play
