@@ -155,7 +155,7 @@ export const useFooterSettings = () => {
     contact: contact || { phone: '', email: '', location: '', location_en: '' },
     social: social || { facebook: '', twitter: '', instagram: '', youtube: '', tiktok: '', whatsapp: '', snapchat: '' },
     socialAdvanced: { platforms: getPlatforms() },
-    branding: branding || { logo_url: '', description: '', description_en: '' },
+    branding: branding || { logo_url: '', description: '', description_en: '', copyright: '', copyright_en: '' },
     style: style || { background_color: '', text_color: '', accent_color: '', border_color: '' },
     isLoading: contactLoading || socialLoading || socialAdvancedLoading || brandingLoading || styleLoading,
   };
