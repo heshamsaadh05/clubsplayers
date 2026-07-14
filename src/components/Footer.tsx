@@ -78,7 +78,7 @@ const Footer = () => {
                 style={style.accent_color ? accentStyle : undefined}
               >
                 <span className={style.accent_color ? '' : 'text-gradient-gold'}>
-                  {t('hero.title', 'ستارز إيجنسي')}
+                  {displaySiteName}
                 </span>
               </h3>
             )}
