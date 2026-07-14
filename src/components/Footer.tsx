@@ -6,13 +6,18 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useMenuItems } from "@/hooks/useMenuItems";
 import { useFooterSettings } from "@/hooks/useFooterSettings";
 import { SocialIcon } from "@/components/SocialIcon";
+import { useSiteLogo } from "@/hooks/useSiteLogo";
 
 const Footer = () => {
   const { pages: publishedPages } = usePublishedPages();
   const { t, currentLanguage } = useLanguage();
   const { data: footerMenuItems = [] } = useMenuItems('footer');
   const { contact, socialAdvanced, branding, style } = useFooterSettings();
+  const { siteName } = useSiteLogo();
   const isEnglish = currentLanguage?.code === 'en';
+  const displaySiteName = isEnglish
+    ? (siteName.en || siteName.ar || t('hero.title', 'Stars Agency'))
+    : (siteName.ar || siteName.en || t('hero.title', 'ستارز إيجنسي'));
 
   // Build social links array from advanced platforms
   // Note: we show enabled platforms even if URL is empty/# (admin may still be configuring links).
