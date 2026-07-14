@@ -6,13 +6,18 @@ import { useLanguage } from "@/hooks/useLanguage";
 import { useMenuItems } from "@/hooks/useMenuItems";
 import { useFooterSettings } from "@/hooks/useFooterSettings";
 import { SocialIcon } from "@/components/SocialIcon";
+import { useSiteLogo } from "@/hooks/useSiteLogo";
 
 const Footer = () => {
   const { pages: publishedPages } = usePublishedPages();
   const { t, currentLanguage } = useLanguage();
   const { data: footerMenuItems = [] } = useMenuItems('footer');
   const { contact, socialAdvanced, branding, style } = useFooterSettings();
+  const { siteName } = useSiteLogo();
   const isEnglish = currentLanguage?.code === 'en';
+  const displaySiteName = isEnglish
+    ? (siteName.en || siteName.ar || t('hero.title', 'Stars Agency'))
+    : (siteName.ar || siteName.en || t('hero.title', 'ستارز إيجنسي'));
 
   // Build social links array from advanced platforms
   // Note: we show enabled platforms even if URL is empty/# (admin may still be configuring links).
@@ -73,7 +78,7 @@ const Footer = () => {
                 style={style.accent_color ? accentStyle : undefined}
               >
                 <span className={style.accent_color ? '' : 'text-gradient-gold'}>
-                  {t('hero.title', 'ستارز إيجنسي')}
+                  {displaySiteName}
                 </span>
               </h3>
             )}
@@ -261,8 +266,8 @@ const Footer = () => {
         >
           <p>
             {isEnglish
-              ? (branding.copyright_en || branding.copyright || `© 2025 ${t('hero.title', 'Stars Agency')}. ${t('footer.rights', 'All Rights Reserved')}.`)
-              : (branding.copyright || branding.copyright_en || `© 2025 ${t('hero.title', 'ستارز إيجنسي')}. ${t('footer.rights', 'جميع الحقوق محفوظة')}.`)}
+              ? (branding.copyright_en || branding.copyright || `© 2025 ${displaySiteName}. ${t('footer.rights', 'All Rights Reserved')}.`)
+              : (branding.copyright || branding.copyright_en || `© 2025 ${displaySiteName}. ${t('footer.rights', 'جميع الحقوق محفوظة')}.`)}
           </p>
         </div>
       </div>
