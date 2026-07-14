@@ -266,8 +266,8 @@ const Footer = () => {
         >
           <p>
             {isEnglish
-              ? (branding.copyright_en || branding.copyright || `© 2025 ${t('hero.title', 'Stars Agency')}. ${t('footer.rights', 'All Rights Reserved')}.`)
-              : (branding.copyright || branding.copyright_en || `© 2025 ${t('hero.title', 'ستارز إيجنسي')}. ${t('footer.rights', 'جميع الحقوق محفوظة')}.`)}
+              ? (branding.copyright_en || branding.copyright || `© 2025 ${displaySiteName}. ${t('footer.rights', 'All Rights Reserved')}.`)
+              : (branding.copyright || branding.copyright_en || `© 2025 ${displaySiteName}. ${t('footer.rights', 'جميع الحقوق محفوظة')}.`)}
           </p>
         </div>
       </div>
